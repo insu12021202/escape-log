@@ -1,10 +1,16 @@
 <script setup lang="ts">
-// ReviewCreatePage — /review/new
+import ReviewCreateForm from '@/features/review-create/ui/ReviewCreateForm.vue'
 </script>
 
 <template>
-  <div>
-    <h2>리뷰 작성</h2>
-    <p>route: /review/new</p>
+  <div class="review-create">
+    <h2 class="review-create__title">리뷰 작성</h2>
+    <ReviewCreateForm />
   </div>
 </template>
+
+<style scoped>
+.review-create__title {
+  margin-bottom: 20px;
+}
+</style>
