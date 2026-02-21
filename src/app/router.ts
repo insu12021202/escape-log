@@ -1,6 +1,13 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useSessionStore } from '@/app/stores/session'
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/pages/login/ui/LoginPage.vue'),
+    meta: { public: true },
+  },
   {
     path: '/',
     name: 'review-list',
@@ -33,4 +40,13 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// 비로그인 시 /login으로 리다이렉트  Spec: §5
+router.beforeEach(async (to) => {
+  if (to.meta.public) return true
+
+  const session = useSessionStore()
+  if (!session.ready) await session.init()
+  if (!session.user) return { name: 'login' }
 })
