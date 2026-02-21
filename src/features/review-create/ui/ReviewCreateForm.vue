@@ -1,13 +1,36 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import type { SubMetrics, Visibility } from '@/entities/review/types'
-import { fetchGenreTags, createReview } from '@/entities/review/api'
+import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
+import { fetchGenreTags, createReview, updateReview } from '@/entities/review/api'
 import { searchRooms } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
+
+const props = withDefaults(
+  defineProps<{
+    mode?: 'create' | 'edit'
+    reviewId?: string
+    initialData?: Partial<{
+      roomId: string
+      visitedAt: string
+      rating: number
+      summary: string
+      subMetrics: SubMetrics
+      isSuccess: boolean
+      remainingMinutes: number | null
+      headcount: number
+      genreTags: string[]
+      customGenre: string | null
+      wouldRevisit: boolean
+      body: string
+      visibility: Visibility
+    }>
+  }>(),
+  { mode: 'create' },
+)
 
 const router = useRouter()
 
@@ -17,26 +40,26 @@ const submitting = ref(false)
 const submitError = ref<string | null>(null)
 
 const form = reactive({
-  roomId: '',
-  visitedAt: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
-  rating: 0,
-  summary: '',
-  subMetrics: {
+  roomId: props.initialData?.roomId ?? '',
+  visitedAt: props.initialData?.visitedAt ?? new Date().toISOString().slice(0, 10),
+  rating: props.initialData?.rating ?? 0,
+  summary: props.initialData?.summary ?? '',
+  subMetrics: (props.initialData?.subMetrics ?? {
     puzzleQuality: 3,
     storyDirection: 3,
     setQuality: 3,
     horror: 3,
     puzzleDifficulty: 3,
     clearDifficulty: 3,
-  } as SubMetrics,
-  isSuccess: true,
-  remainingMinutes: null as number | null,
-  headcount: 2,
-  genreTags: [] as string[], // 선택된 태그 이름 목록
-  customGenre: null as string | null,
-  wouldRevisit: true,
-  body: '',
-  visibility: 'group' as Visibility,
+  }) as SubMetrics,
+  isSuccess: props.initialData?.isSuccess ?? true,
+  remainingMinutes: (props.initialData?.remainingMinutes ?? null) as number | null,
+  headcount: props.initialData?.headcount ?? 2,
+  genreTags: props.initialData?.genreTags ?? ([] as string[]),
+  customGenre: (props.initialData?.customGenre ?? null) as string | null,
+  wouldRevisit: props.initialData?.wouldRevisit ?? true,
+  body: props.initialData?.body ?? '',
+  visibility: (props.initialData?.visibility ?? 'group') as Visibility,
 })
 
 onMounted(async () => {
@@ -50,25 +73,16 @@ async function handleSubmit() {
   submitError.value = null
 
   try {
-    if (!form.roomId) {
-      submitError.value = '방을 선택해주세요.'
-      return
-    }
-
-    const defaultGroupId = import.meta.env.VITE_DEFAULT_GROUP_ID as string
-
     // 선택한 태그 이름 → ID 매핑
     const genreTagIds = form.genreTags
       .map((name) => genreTagOptions.value.find((t) => t.name === name)?.id)
       .filter((id): id is string => !!id)
 
-    await createReview({
-      roomId: form.roomId,
-      groupId: defaultGroupId,
+    const payload = {
       visitedAt: form.visitedAt,
       rating: form.rating,
       summary: form.summary,
-      subMetrics: form.subMetrics,
+      subMetrics: form.subMetrics as Review['subMetrics'],
       visitMeta: {
         isSuccess: form.isSuccess,
         remainingMinutes: form.remainingMinutes,
@@ -79,9 +93,20 @@ async function handleSubmit() {
       customGenre: form.customGenre,
       body: form.body,
       visibility: form.visibility,
-    })
+    }
 
-    router.push('/')
+    if (props.mode === 'edit' && props.reviewId) {
+      await updateReview(props.reviewId, payload)
+      router.push(`/review/${props.reviewId}`)
+    } else {
+      if (!form.roomId) {
+        submitError.value = '방을 선택해주세요.'
+        return
+      }
+      const defaultGroupId = import.meta.env.VITE_DEFAULT_GROUP_ID as string
+      await createReview({ roomId: form.roomId, groupId: defaultGroupId, ...payload })
+      router.push('/')
+    }
   } catch (e) {
     console.error(e)
     submitError.value = '리뷰 저장 중 오류가 발생했습니다.'
@@ -93,15 +118,23 @@ async function handleSubmit() {
 
 <template>
   <form class="review-form" @submit.prevent="handleSubmit">
-    <!-- 방 선택 -->
+    <!-- 방 선택 (수정 모드에서는 고정) -->
     <div class="review-form__field">
       <label class="review-form__label" for="room-select">방 선택 *</label>
-      <select id="room-select" v-model="form.roomId" class="review-form__select" required>
-        <option value="" disabled>테마를 선택하세요</option>
-        <option v-for="room in rooms" :key="room.id" :value="room.id">
-          {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
-        </option>
-      </select>
+      <template v-if="mode === 'edit'">
+        <p class="review-form__room-fixed">
+          {{ rooms.find((r) => r.id === form.roomId)?.vendorName }} ·
+          {{ rooms.find((r) => r.id === form.roomId)?.themeName }}
+        </p>
+      </template>
+      <template v-else>
+        <select id="room-select" v-model="form.roomId" class="review-form__select" required>
+          <option value="" disabled>테마를 선택하세요</option>
+          <option v-for="room in rooms" :key="room.id" :value="room.id">
+            {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
+          </option>
+        </select>
+      </template>
     </div>
 
     <!-- 방문일 -->
@@ -237,7 +270,7 @@ async function handleSubmit() {
     <p v-if="submitError" class="review-form__error">{{ submitError }}</p>
 
     <button type="submit" class="review-form__submit" :disabled="submitting">
-      {{ submitting ? '저장 중...' : '리뷰 저장' }}
+      {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
     </button>
   </form>
 </template>
@@ -332,6 +365,15 @@ async function handleSubmit() {
 .review-form__error {
   font-size: 0.875rem;
   color: #e53935;
+}
+
+.review-form__room-fixed {
+  font-size: 0.875rem;
+  color: #555;
+  padding: 8px 12px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background: #f9f9f9;
 }
 
 .review-form__submit {

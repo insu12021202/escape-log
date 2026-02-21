@@ -25,6 +25,7 @@ export interface VisitMeta {
 export interface Review {
   id: string
   userId: string
+  authorName: string | null
   roomId: string
   rating: number
   summary: string

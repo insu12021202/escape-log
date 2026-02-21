@@ -25,6 +25,12 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   {
+    path: '/review/:id/edit',
+    name: 'review-edit',
+    component: () => import('@/pages/review-edit/ui/ReviewEditPage.vue'),
+    props: true,
+  },
+  {
     path: '/room/search',
     name: 'room-search',
     component: () => import('@/pages/room-search/ui/RoomSearchPage.vue'),

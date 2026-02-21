@@ -9,6 +9,7 @@ defineProps<{
   region: string
   isSuccess: boolean
   genreTags: string[]
+  authorName?: string | null
 }>()
 </script>
 
@@ -26,7 +27,10 @@ defineProps<{
     <p class="review-card__summary">{{ summary }}</p>
     <div class="review-card__meta">
       <span class="review-card__theme">{{ vendorName }} · {{ themeName }}</span>
-      <span class="review-card__region">{{ region }}</span>
+      <div class="review-card__meta-right">
+        <span v-if="authorName" class="review-card__author">{{ authorName }}</span>
+        <span class="review-card__region">{{ region }}</span>
+      </div>
     </div>
     <div v-if="genreTags.length" class="review-card__tags">
       <span v-for="tag in genreTags" :key="tag" class="review-card__tag">{{ tag }}</span>
@@ -87,9 +91,22 @@ defineProps<{
 .review-card__meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.8125rem;
   color: #666;
   margin-bottom: 8px;
+}
+
+.review-card__meta-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-card__author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #555;
 }
 
 .review-card__tags {

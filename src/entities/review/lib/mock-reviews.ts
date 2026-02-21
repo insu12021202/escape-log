@@ -4,6 +4,7 @@ export const MOCK_REVIEWS: Review[] = [
   {
     id: '1',
     userId: 'user-1',
+    authorName: '테스터',
     roomId: 'room-1',
     rating: 4,
     summary: '퍼즐 구성이 탄탄하고 스토리 몰입감이 좋았다',
@@ -34,6 +35,7 @@ export const MOCK_REVIEWS: Review[] = [
   {
     id: '2',
     userId: 'user-1',
+    authorName: '테스터',
     roomId: 'room-2',
     rating: 3,
     summary: '장치는 좋았지만 스토리가 아쉬움',
@@ -64,6 +66,7 @@ export const MOCK_REVIEWS: Review[] = [
   {
     id: '3',
     userId: 'user-1',
+    authorName: '테스터',
     roomId: 'room-3',
     rating: 5,
     summary: '역대급 테마, 무조건 추천',

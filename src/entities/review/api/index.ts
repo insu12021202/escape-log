@@ -10,7 +10,8 @@ const REVIEW_SELECT = `
   content, visibility, share_token,
   created_at, updated_at,
   review_tags ( tags ( name ) ),
-  review_photos ( path, sort_order )
+  review_photos ( path, sort_order ),
+  profiles ( display_name )
 `.trim()
 
 /** DB 행 → Review 엔티티 변환 */
@@ -23,9 +24,11 @@ function toReview(row: Record<string, unknown>): Review {
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((p) => p.path)
 
+  const profileRow = row.profiles as { display_name: string } | null
   return {
     id: row.id as string,
     userId: row.user_id as string,
+    authorName: profileRow?.display_name ?? null,
     roomId: row.room_id as string,
     rating: row.overall_rating as number,
     summary: row.one_liner as string,
@@ -135,6 +138,64 @@ export async function createReview(params: {
   return created
 }
 
+/** 리뷰 수정. Spec: §5 (작성자만 가능) */
+export async function updateReview(
+  id: string,
+  params: {
+    visitedAt: string
+    rating: number
+    summary: string
+    subMetrics: Review['subMetrics']
+    visitMeta: Omit<Review['visitMeta'], 'genreTags' | 'customGenre'>
+    genreTagIds: string[]
+    customGenre: string | null
+    body: string
+    visibility: Visibility
+  },
+): Promise<Review> {
+  const { error: updateError } = await supabase
+    .from('reviews')
+    .update({
+      visited_at: params.visitedAt,
+      overall_rating: params.rating,
+      one_liner: params.summary,
+      puzzle_quality: params.subMetrics.puzzleQuality,
+      story_direction: params.subMetrics.storyDirection,
+      set_device_quality: params.subMetrics.setQuality,
+      fear: params.subMetrics.horror,
+      puzzle_difficulty: params.subMetrics.puzzleDifficulty,
+      clear_difficulty: params.subMetrics.clearDifficulty,
+      success: params.visitMeta.isSuccess,
+      time_left_min: params.visitMeta.remainingMinutes,
+      party_size: params.visitMeta.headcount,
+      revisit_intent: params.visitMeta.wouldRevisit,
+      custom_genre: params.customGenre,
+      content: params.body,
+      visibility: params.visibility,
+    })
+    .eq('id', id)
+
+  if (updateError) throw updateError
+
+  // 태그 재설정: 기존 삭제 후 재삽입
+  const { error: deleteTagError } = await supabase
+    .from('review_tags')
+    .delete()
+    .eq('review_id', id)
+  if (deleteTagError) throw deleteTagError
+
+  if (params.genreTagIds.length > 0) {
+    const { error: tagError } = await supabase
+      .from('review_tags')
+      .insert(params.genreTagIds.map((tagId) => ({ review_id: id, tag_id: tagId })))
+    if (tagError) throw tagError
+  }
+
+  const updated = await fetchReviewById(id)
+  if (!updated) throw new Error('리뷰 조회 실패')
+  return updated
+}
+
 /** RPC를 통한 공유 리뷰 조회. Spec: §6 */
 export async function getSharedReview(
   shareToken: string,
@@ -156,6 +217,7 @@ export async function getSharedReview(
   const review: Review = {
     id: row.review_id as string,
     userId: '',
+    authorName: null,
     roomId: row.room_id as string,
     rating: row.overall_rating as number,
     summary: row.one_liner as string,
