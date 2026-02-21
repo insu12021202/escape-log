@@ -74,7 +74,7 @@ export async function fetchReviewById(id: string): Promise<Review | null> {
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  return toReview(data as Record<string, unknown>)
+  return toReview(data as unknown as Record<string, unknown>)
 }
 
 /** 리뷰 생성. Spec: §3 */
