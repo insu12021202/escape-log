@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
 import { ref, watch } from 'vue'
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { searchRooms, createRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 
@@ -81,7 +82,9 @@ async function submitNewRoom() {
     <!-- 방 등록 -->
     <div class="room-search__register">
       <button class="room-search__toggle-btn" @click="showForm = !showForm">
-        {{ showForm ? '닫기' : '+ 새 방 등록' }}
+        <XMarkIcon v-if="showForm" class="room-search__toggle-icon" />
+        <PlusIcon v-else class="room-search__toggle-icon" />
+        {{ showForm ? '닫기' : '새 방 등록' }}
       </button>
 
       <form v-if="showForm" class="room-search__form" @submit.prevent="submitNewRoom">
@@ -206,6 +209,9 @@ async function submitNewRoom() {
 
 .room-search__toggle-btn {
   align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 16px;
   border: 1px solid #4a90d9;
   border-radius: 8px;
@@ -213,6 +219,12 @@ async function submitNewRoom() {
   color: #4a90d9;
   font-size: 0.9375rem;
   cursor: pointer;
+}
+
+.room-search__toggle-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .room-search__toggle-btn:hover {

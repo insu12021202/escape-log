@@ -6,6 +6,7 @@ import { searchRooms } from '@/entities/room/api'
 import { supabase } from '@/shared/api/supabase'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
+import { ArrowLeftIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 
 const route = useRoute()
@@ -41,13 +42,16 @@ onMounted(async () => {
 <template>
   <div class="review-detail-page">
     <div class="review-detail-page__nav">
-      <RouterLink to="/" class="review-detail-page__back">&larr; 목록으로</RouterLink>
+      <RouterLink to="/" class="review-detail-page__back">
+        <ArrowLeftIcon class="review-detail-page__back-icon" /> 목록으로
+      </RouterLink>
       <RouterLink
         v-if="review && currentUserId && review.userId === currentUserId"
         :to="`/review/${review.id}/edit`"
         class="review-detail-page__edit-btn"
+        title="수정"
       >
-        수정
+        <PencilSquareIcon class="review-detail-page__edit-icon" />
       </RouterLink>
     </div>
     <div v-if="loading" class="review-detail-page__status">불러오는 중...</div>
@@ -68,6 +72,9 @@ onMounted(async () => {
 }
 
 .review-detail-page__back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.875rem;
   color: #4a90d9;
   text-decoration: none;
@@ -77,20 +84,31 @@ onMounted(async () => {
   text-decoration: underline;
 }
 
+.review-detail-page__back-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 .review-detail-page__edit-btn {
-  font-size: 0.875rem;
-  font-weight: 600;
   color: #4a90d9;
   text-decoration: none;
-  padding: 6px 14px;
+  padding: 6px;
   border: 1px solid #4a90d9;
   border-radius: 6px;
+  display: flex;
+  align-items: center;
   transition: background 0.15s, color 0.15s;
 }
 
 .review-detail-page__edit-btn:hover {
   background: #4a90d9;
   color: #fff;
+}
+
+.review-detail-page__edit-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .review-detail-page__status {

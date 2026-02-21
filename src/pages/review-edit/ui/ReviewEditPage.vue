@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchReviewById } from '@/entities/review/api'
 import type { Review } from '@/entities/review/types'
+import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import ReviewCreateForm from '@/features/review-create/ui/ReviewCreateForm.vue'
 
 const route = useRoute()
@@ -45,7 +46,9 @@ const initialData = computed(() => {
 
 <template>
   <div class="review-edit-page">
-    <RouterLink :to="`/review/${$route.params.id}`" class="review-edit-page__back">&larr; 돌아가기</RouterLink>
+    <RouterLink :to="`/review/${$route.params.id}`" class="review-edit-page__back">
+      <ArrowLeftIcon class="review-edit-page__back-icon" /> 돌아가기
+    </RouterLink>
     <h2 class="review-edit-page__title">리뷰 수정</h2>
     <div v-if="loading" class="review-edit-page__status">불러오는 중...</div>
     <p v-else-if="fetchError" class="review-edit-page__status review-edit-page__status--error">
@@ -63,7 +66,9 @@ const initialData = computed(() => {
 
 <style scoped>
 .review-edit-page__back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-bottom: 16px;
   font-size: 0.875rem;
   color: #4a90d9;
@@ -72,6 +77,12 @@ const initialData = computed(() => {
 
 .review-edit-page__back:hover {
   text-decoration: underline;
+}
+
+.review-edit-page__back-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .review-edit-page__title {
