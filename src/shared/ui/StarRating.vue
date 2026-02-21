@@ -83,7 +83,7 @@ function calcTouchVal(clientX: number): number {
 }
 
 function onTouchStart(e: TouchEvent) {
-  if (props.readonly) return
+  if (props.readonly || !e.touches[0]) return
   isDragging.value = true
   const val = calcTouchVal(e.touches[0].clientX)
   hoverValue.value = val
@@ -91,7 +91,7 @@ function onTouchStart(e: TouchEvent) {
 }
 
 function onTouchMove(e: TouchEvent) {
-  if (props.readonly || !isDragging.value) return
+  if (props.readonly || !isDragging.value || !e.touches[0]) return
   e.preventDefault() // 스크롤 방지
   const val = calcTouchVal(e.touches[0].clientX)
   hoverValue.value = val
