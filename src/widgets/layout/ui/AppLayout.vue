@@ -1,6 +1,15 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
 import logoUrl from '@/app/assets/logo.png'
+import { useSessionStore } from '@/app/stores/session'
+
+const session = useSessionStore()
+const router = useRouter()
+
+async function handleSignOut() {
+  await session.signOut()
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
@@ -13,6 +22,7 @@ import logoUrl from '@/app/assets/logo.png'
         <RouterLink to="/">목록</RouterLink>
         <RouterLink to="/review/new">리뷰 작성</RouterLink>
         <RouterLink to="/room/search">방 검색</RouterLink>
+        <button class="app-nav__signout" @click="handleSignOut">로그아웃</button>
       </nav>
     </header>
     <main class="app-main">
@@ -60,6 +70,19 @@ import logoUrl from '@/app/assets/logo.png'
 
 .app-nav a.router-link-active {
   font-weight: 600;
+}
+
+.app-nav__signout {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+}
+
+.app-nav__signout:hover {
+  color: #e53935;
 }
 
 .app-main {
