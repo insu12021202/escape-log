@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -15,6 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const hoverValue = ref(0)
+const isDragging = ref(false)
 
 const STAR_PATH =
   'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z'
@@ -27,31 +28,57 @@ function fillPct(index: number): number {
   return 0
 }
 
-function onMove(e: MouseEvent, index: number) {
-  if (props.readonly) return
+function calcVal(e: MouseEvent, index: number): number {
   const { left, width } = (e.currentTarget as Element).getBoundingClientRect()
-  hoverValue.value = e.clientX - left < width / 2 ? index - 0.5 : index
+  return e.clientX - left < width / 2 ? index - 0.5 : index
 }
 
-function onClick(e: MouseEvent, index: number) {
+function onMouseDown(e: MouseEvent, index: number) {
   if (props.readonly) return
-  const { left, width } = (e.currentTarget as Element).getBoundingClientRect()
-  emit('update:modelValue', e.clientX - left < width / 2 ? index - 0.5 : index)
+  isDragging.value = true
+  const val = calcVal(e, index)
+  hoverValue.value = val
+  emit('update:modelValue', val)
+  // 컴포넌트 밖에서 마우스를 떼도 드래그 종료
+  document.addEventListener('mouseup', endDrag, { once: true })
 }
+
+function onMove(e: MouseEvent, index: number) {
+  if (props.readonly) return
+  const val = calcVal(e, index)
+  hoverValue.value = val
+  if (isDragging.value) {
+    emit('update:modelValue', val)
+  }
+}
+
+function onContainerLeave() {
+  // 드래그 중에는 hover 표시 유지
+  if (!isDragging.value) hoverValue.value = 0
+}
+
+function endDrag() {
+  isDragging.value = false
+  hoverValue.value = 0
+}
+
+onUnmounted(() => {
+  document.removeEventListener('mouseup', endDrag)
+})
 </script>
 
 <template>
   <div
     class="star-rating"
     :class="[`star-rating--${size}`, { 'star-rating--readonly': readonly }]"
-    @mouseleave="hoverValue = 0"
+    @mouseleave="onContainerLeave"
   >
     <span
       v-for="n in 5"
       :key="n"
       class="star-wrap"
+      @mousedown="onMouseDown($event, n)"
       @mousemove="onMove($event, n)"
-      @click="onClick($event, n)"
     >
       <!-- 배경별 (항상 회색) -->
       <svg class="star star--bg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -75,6 +102,7 @@ function onClick(e: MouseEvent, index: number) {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  user-select: none;
 }
 
 .star-wrap {
