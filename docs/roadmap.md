@@ -243,5 +243,5 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 1 완료 → Phase 2 진입 대기**
-- 마지막 완료 PR: feat: FSD 기반 프로젝트 스캐폴딩 및 CI 구성 (#1)
+- 현재 Phase: **Phase 2 완료 → Phase 3 진입 대기**
+- 마지막 완료 PR: feat: 링크 공유 리뷰 열람 페이지 구현 (#7)
