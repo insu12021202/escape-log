@@ -128,11 +128,13 @@
 
 ## 8. HANDOFF CHECKLIST
 
-- [ ] Supabase DDL/RLS 적용
-- [ ] 태그 시드 데이터 입력
-- [ ] `/share/:token` 라우트 + RPC 연동
-- [ ] 리뷰 작성 폼 유효성 검증
-- [ ] 사진 업로드 실패 재시도 UX
+- [x] Supabase DDL/RLS 적용 (PR #9)
+- [x] 태그 시드 데이터 입력 (PR #9)
+- [x] `/share/:token` 라우트 + RPC 연동 (PR #7, #9)
+- [x] 리뷰 수정 권한 검증 — 본인만 수정 가능 (PR #10)
+- [x] 작성자 이름 표시 — profiles 테이블 JOIN (PR #10)
+- [ ] 리뷰 작성 폼 유효성 검증 (Phase 5)
+- [ ] 사진 업로드 / 실패 재시도 UX (Phase 5~6)
 
 ---
 

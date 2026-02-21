@@ -243,5 +243,28 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 2 완료 → Phase 3 진입 대기**
-- 마지막 완료 PR: feat: 링크 공유 리뷰 열람 페이지 구현 (#7)
+- 현재 Phase: **Phase 4 완료 → Phase 5 진입 예정**
+- 마지막 완료 PR: feat: 리뷰 수정 기능 및 작성자 이름 표시 (#10)
+
+### 완료된 작업 요약
+
+#### Phase 3 (Supabase 연동) — 사진 업로드 제외 완료
+- Supabase client 설정, DDL 적용 (reviews, rooms, tags, review_tags, profiles)
+- 태그 시드 데이터 12개 입력
+- 리뷰 CRUD API (`fetchReviews`, `fetchReviewById`, `createReview`, `updateReview`)
+- 방 검색/등록 API (`searchRooms`, `upsertRoom`)
+- `get_shared_review(token)` RPC 연동, share_token 발급 (visibility=link 전환 시)
+- mock 데이터 → Supabase 연동으로 교체
+- 별점 0.5 단위 입력, 드래그/터치 지원 추가
+
+#### Phase 4 (인증/권한) — 완료
+- Google OAuth 로그인 (Supabase Auth)
+- 비로그인 접근 차단 (router guard)
+- profiles 테이블 + FK 설정 (작성자 이름 PostgREST JOIN)
+- 리뷰 상세에서 본인 리뷰에만 수정 버튼 노출 (`review.userId === currentUserId`)
+- 리뷰 수정 페이지 (`/review/:id/edit`) + ReviewCreateForm 공용 재사용
+
+### 미완료 항목
+- [ ] 사진 업로드 (Supabase Storage) — Phase 3 기획 범위, 추후 구현
+- [ ] 리뷰 작성 폼 유효성 검증 — Phase 5
+- [ ] 로딩/에러/빈 상태 UI 다듬기 — Phase 5
