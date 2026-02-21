@@ -85,8 +85,8 @@ function onClick(e: MouseEvent, index: number) {
 
 /* 인터랙티브 md */
 .star-rating--md .star-wrap {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   transition: transform 0.1s ease;
 }
@@ -97,8 +97,8 @@ function onClick(e: MouseEvent, index: number) {
 
 /* 작은 사이즈 sm */
 .star-rating--sm .star-wrap {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .star-rating--readonly .star-wrap {
