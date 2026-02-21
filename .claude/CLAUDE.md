@@ -7,7 +7,7 @@
 - Vue 3 + Vite + TypeScript
 - Vue Router 4 (lazy-loaded routes)
 - Pinia 2 (state management)
-- Supabase (backend — not yet connected)
+- Supabase (backend — 연동 완료: Auth, DB, RLS, RPC)
 
 ## Architecture: Feature-Sliced Design (FSD)
 ```
@@ -85,6 +85,25 @@ shared → entities → features → widgets → pages → app
 1. PR 제목 (한국어)
 2. PR 설명 (한국어, What/Why/Notes)
 3. 아직 미구현 항목 목록
+
+## Docs Sync Protocol (REQUIRED)
+**PR merge를 확인받는 즉시** 다음 두 파일을 최신 상태로 업데이트하고, `docs(spec): ...` 커밋을 main에 남긴다.
+
+### 업데이트 대상
+1. **`docs/roadmap.md`** — "현재 상태 기록" 섹션
+   - 현재 Phase 갱신
+   - 마지막 완료 PR 번호/제목 기록
+   - 완료된 작업 요약에 해당 PR 내용 추가
+   - 미완료 항목 목록 갱신
+
+2. **`docs/agent_handoff_spec_v_1.md`** — "HANDOFF CHECKLIST" 섹션
+   - 완료된 항목에 `[x]` 체크 + PR 번호 표기
+   - 신규 미완료 항목 추가 (필요 시)
+
+### 규칙
+- merge 확인 후 다른 작업 전에 먼저 docs 업데이트
+- 커밋: `docs(spec): <PR 제목 또는 완료 내용> 완료 반영`
+- main 브랜치에 직접 커밋 (docs 전용)
 
 ## Guardrails
 - 현재 태스크 범위 밖은 구현하지 않는다.
