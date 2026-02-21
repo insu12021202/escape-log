@@ -16,11 +16,11 @@ const emit = defineEmits<{
 
 const hoverValue = ref(0)
 const isDragging = ref(false)
+const containerRef = ref<HTMLDivElement>()
 
 const STAR_PATH =
   'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z'
 
-/** 해당 별의 채우기 비율 (0~100) */
 function fillPct(index: number): number {
   const val = hoverValue.value || props.modelValue
   if (val >= index) return 100
@@ -28,7 +28,9 @@ function fillPct(index: number): number {
   return 0
 }
 
-function calcVal(e: MouseEvent, index: number): number {
+// ── 마우스 ──────────────────────────────────────────
+
+function calcMouseVal(e: MouseEvent, index: number): number {
   const { left, width } = (e.currentTarget as Element).getBoundingClientRect()
   return e.clientX - left < width / 2 ? index - 0.5 : index
 }
@@ -36,28 +38,67 @@ function calcVal(e: MouseEvent, index: number): number {
 function onMouseDown(e: MouseEvent, index: number) {
   if (props.readonly) return
   isDragging.value = true
-  const val = calcVal(e, index)
+  const val = calcMouseVal(e, index)
   hoverValue.value = val
   emit('update:modelValue', val)
-  // 컴포넌트 밖에서 마우스를 떼도 드래그 종료
   document.addEventListener('mouseup', endDrag, { once: true })
 }
 
-function onMove(e: MouseEvent, index: number) {
+function onMouseMove(e: MouseEvent, index: number) {
   if (props.readonly) return
-  const val = calcVal(e, index)
+  const val = calcMouseVal(e, index)
   hoverValue.value = val
-  if (isDragging.value) {
-    emit('update:modelValue', val)
-  }
+  if (isDragging.value) emit('update:modelValue', val)
 }
 
 function onContainerLeave() {
-  // 드래그 중에는 hover 표시 유지
   if (!isDragging.value) hoverValue.value = 0
 }
 
 function endDrag() {
+  isDragging.value = false
+  hoverValue.value = 0
+}
+
+// ── 터치 ──────────────────────────────────────────
+
+/** 터치 좌표에서 어느 별 몇 번째인지 계산 */
+function calcTouchVal(clientX: number): number {
+  if (!containerRef.value) return props.modelValue
+  // data-n 속성이 붙은 star-wrap span들을 순회해서 어느 별 위인지 찾음
+  const wraps = containerRef.value.querySelectorAll<HTMLElement>('[data-n]')
+  for (const wrap of wraps) {
+    const { left, right, width } = wrap.getBoundingClientRect()
+    if (clientX >= left && clientX <= right) {
+      const n = parseInt(wrap.dataset.n!)
+      return clientX - left < width / 2 ? n - 0.5 : n
+    }
+  }
+  // 범위 밖이면 가장 가까운 끝값 반환
+  const first = wraps[0]?.getBoundingClientRect()
+  const last = wraps[wraps.length - 1]?.getBoundingClientRect()
+  if (first && clientX < first.left) return 0.5
+  if (last && clientX > last.right) return 5
+  return props.modelValue
+}
+
+function onTouchStart(e: TouchEvent) {
+  if (props.readonly) return
+  isDragging.value = true
+  const val = calcTouchVal(e.touches[0].clientX)
+  hoverValue.value = val
+  emit('update:modelValue', val)
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (props.readonly || !isDragging.value) return
+  e.preventDefault() // 스크롤 방지
+  const val = calcTouchVal(e.touches[0].clientX)
+  hoverValue.value = val
+  emit('update:modelValue', val)
+}
+
+function onTouchEnd() {
   isDragging.value = false
   hoverValue.value = 0
 }
@@ -69,16 +110,21 @@ onUnmounted(() => {
 
 <template>
   <div
+    ref="containerRef"
     class="star-rating"
     :class="[`star-rating--${size}`, { 'star-rating--readonly': readonly }]"
     @mouseleave="onContainerLeave"
+    @touchstart.prevent="onTouchStart"
+    @touchmove.prevent="onTouchMove"
+    @touchend="onTouchEnd"
   >
     <span
       v-for="n in 5"
       :key="n"
+      :data-n="n"
       class="star-wrap"
       @mousedown="onMouseDown($event, n)"
-      @mousemove="onMove($event, n)"
+      @mousemove="onMouseMove($event, n)"
     >
       <!-- 배경별 (항상 회색) -->
       <svg class="star star--bg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -103,6 +149,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y; /* 수직 스크롤은 허용, 수평 터치는 컴포넌트가 처리 */
 }
 
 .star-wrap {
