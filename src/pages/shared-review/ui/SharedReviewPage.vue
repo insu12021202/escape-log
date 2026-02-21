@@ -1,21 +1,41 @@
 <script setup lang="ts">
 // SharedReviewPage — /share/:token  Spec: §6
-import { computed } from 'vue'
-import { MOCK_REVIEWS } from '@/entities/review/lib/mock-reviews'
-import { MOCK_ROOMS } from '@/entities/room/lib/mock-rooms'
+import { ref, onMounted } from 'vue'
+import { getSharedReview } from '@/entities/review/api'
+import type { Review } from '@/entities/review/types'
+import type { Room } from '@/entities/room/types'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 
 const props = defineProps<{ token: string }>()
 
-const review = computed(() => MOCK_REVIEWS.find(r => r.shareToken === props.token) ?? null)
-const room = computed(() =>
-  review.value ? (MOCK_ROOMS.find(r => r.id === review.value!.roomId) ?? null) : null,
-)
+const review = ref<Review | null>(null)
+const room = ref<Room | null>(null)
+const loading = ref(true)
+const fetchError = ref(false)
+
+onMounted(async () => {
+  try {
+    const result = await getSharedReview(props.token)
+    if (result) {
+      review.value = result.review
+      room.value = result.room
+    }
+  } catch (e) {
+    fetchError.value = true
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
   <div class="shared-review">
-    <template v-if="review && room">
+    <div v-if="loading" class="shared-review__status">불러오는 중...</div>
+    <p v-else-if="fetchError" class="shared-review__status shared-review__status--error">
+      리뷰를 불러오는 데 실패했습니다.
+    </p>
+    <template v-else-if="review && room">
       <p class="shared-review__badge">공유된 리뷰</p>
       <ReviewDetail :review="review" :room="room" />
     </template>
@@ -32,6 +52,16 @@ const room = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.shared-review__status {
+  color: #999;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.shared-review__status--error {
+  color: #e53935;
 }
 
 .shared-review__badge {

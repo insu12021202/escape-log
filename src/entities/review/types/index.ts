@@ -30,6 +30,7 @@ export interface Review {
   summary: string
   subMetrics: SubMetrics
   visitMeta: VisitMeta
+  visitedAt: string
   body: string
   photos: string[]
   visibility: Visibility
