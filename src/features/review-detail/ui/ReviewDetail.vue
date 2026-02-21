@@ -105,7 +105,10 @@ function formatDate(iso: string): string {
 
     <!-- 메타 -->
     <footer class="review-detail__footer">
-      <span class="review-detail__visibility">{{ VISIBILITY_LABEL[review.visibility] }}</span>
+      <div class="review-detail__footer-left">
+        <span v-if="review.authorName" class="review-detail__author">{{ review.authorName }}</span>
+        <span class="review-detail__visibility">{{ VISIBILITY_LABEL[review.visibility] }}</span>
+      </div>
       <span class="review-detail__date">{{ formatDate(review.createdAt) }}</span>
     </footer>
   </article>
@@ -246,6 +249,18 @@ function formatDate(iso: string): string {
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid #eee;
+}
+
+.review-detail__footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-detail__author {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #444;
 }
 
 .review-detail__visibility {

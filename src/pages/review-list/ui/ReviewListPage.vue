@@ -77,6 +77,7 @@ onMounted(async () => {
           :region="rooms[review.roomId]?.region ?? ''"
           :is-success="review.visitMeta.isSuccess"
           :genre-tags="review.visitMeta.genreTags"
+          :author-name="review.authorName"
         />
       </div>
       <p v-else class="review-list__status">조건에 맞는 리뷰가 없습니다.</p>
