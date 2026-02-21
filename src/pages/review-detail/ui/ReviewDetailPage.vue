@@ -1,23 +1,46 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { MOCK_REVIEWS } from '@/entities/review/lib/mock-reviews'
-import { MOCK_ROOMS } from '@/entities/room/lib/mock-rooms'
+import { fetchReviewById } from '@/entities/review/api'
+import { searchRooms } from '@/entities/room/api'
+import type { Review } from '@/entities/review/types'
+import type { Room } from '@/entities/room/types'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 
 const route = useRoute()
 
-const rooms = Object.fromEntries(MOCK_ROOMS.map((r) => [r.id, r]))
+const review = ref<Review | null>(null)
+const room = ref<Room | null>(null)
+const loading = ref(true)
+const fetchError = ref(false)
 
-const review = computed(() => MOCK_REVIEWS.find((r) => r.id === route.params.id))
-const room = computed(() => (review.value ? rooms[review.value.roomId] : undefined))
+onMounted(async () => {
+  try {
+    const id = route.params.id as string
+    const data = await fetchReviewById(id)
+    if (!data) return
+    review.value = data
+
+    const allRooms = await searchRooms('')
+    room.value = allRooms.find((r) => r.id === data.roomId) ?? null
+  } catch (e) {
+    fetchError.value = true
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
   <div class="review-detail-page">
     <RouterLink to="/" class="review-detail-page__back">&larr; 목록으로</RouterLink>
-    <ReviewDetail v-if="review && room" :review="review" :room="room" />
-    <p v-else class="review-detail-page__not-found">리뷰를 찾을 수 없습니다.</p>
+    <div v-if="loading" class="review-detail-page__status">불러오는 중...</div>
+    <p v-else-if="fetchError" class="review-detail-page__status review-detail-page__status--error">
+      리뷰를 불러오는 데 실패했습니다.
+    </p>
+    <ReviewDetail v-else-if="review && room" :review="review" :room="room" />
+    <p v-else class="review-detail-page__status">리뷰를 찾을 수 없습니다.</p>
   </div>
 </template>
 
@@ -34,9 +57,13 @@ const room = computed(() => (review.value ? rooms[review.value.roomId] : undefin
   text-decoration: underline;
 }
 
-.review-detail-page__not-found {
+.review-detail-page__status {
   color: #999;
   text-align: center;
   padding: 40px 0;
+}
+
+.review-detail-page__status--error {
+  color: #e53935;
 }
 </style>

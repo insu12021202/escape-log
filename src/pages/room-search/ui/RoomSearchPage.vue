@@ -1,34 +1,57 @@
 <script setup lang="ts">
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
-import { ref, computed } from 'vue'
-import { MOCK_ROOMS } from '@/entities/room/lib/mock-rooms'
+import { ref, watch } from 'vue'
+import { searchRooms, createRoom } from '@/entities/room/api'
+import type { Room } from '@/entities/room/types'
 
 const keyword = ref('')
-
-const filteredRooms = computed(() => {
-  const q = keyword.value.trim().toLowerCase()
-  if (!q) return MOCK_ROOMS
-  return MOCK_ROOMS.filter(
-    r =>
-      r.vendorName.toLowerCase().includes(q) ||
-      r.themeName.toLowerCase().includes(q) ||
-      r.region.toLowerCase().includes(q),
-  )
-})
+const rooms = ref<Room[]>([])
+const loading = ref(false)
 
 const newRoom = ref({ vendorName: '', themeName: '', region: '' })
 const showForm = ref(false)
+const registering = ref(false)
+const registerError = ref<string | null>(null)
 
-function submitNewRoom() {
+async function doSearch() {
+  loading.value = true
+  try {
+    rooms.value = await searchRooms(keyword.value)
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 입력할 때마다 검색 (debounce 없이 단순하게)
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(keyword, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(doSearch, 300)
+})
+
+// 초기 로드
+doSearch()
+
+async function submitNewRoom() {
   if (!newRoom.value.vendorName || !newRoom.value.themeName || !newRoom.value.region) {
-    alert('업체명, 테마명, 지역을 모두 입력해주세요.')
+    registerError.value = '업체명, 테마명, 지역을 모두 입력해주세요.'
     return
   }
-  alert(
-    `방 등록 완료 (mock)\n업체: ${newRoom.value.vendorName}\n테마: ${newRoom.value.themeName}\n지역: ${newRoom.value.region}`,
-  )
-  newRoom.value = { vendorName: '', themeName: '', region: '' }
-  showForm.value = false
+  registering.value = true
+  registerError.value = null
+  try {
+    const created = await createRoom(newRoom.value)
+    rooms.value = [created, ...rooms.value]
+    newRoom.value = { vendorName: '', themeName: '', region: '' }
+    showForm.value = false
+  } catch (e) {
+    console.error(e)
+    registerError.value = '방 등록 중 오류가 발생했습니다.'
+  } finally {
+    registering.value = false
+  }
 }
 </script>
 
@@ -45,8 +68,9 @@ function submitNewRoom() {
     />
 
     <!-- 검색 결과 -->
-    <ul v-if="filteredRooms.length" class="room-search__list">
-      <li v-for="room in filteredRooms" :key="room.id" class="room-search__item">
+    <div v-if="loading" class="room-search__empty">검색 중...</div>
+    <ul v-else-if="rooms.length" class="room-search__list">
+      <li v-for="room in rooms" :key="room.id" class="room-search__item">
         <span class="room-search__vendor">{{ room.vendorName }}</span>
         <span class="room-search__theme">{{ room.themeName }}</span>
         <span class="room-search__region">{{ room.region }}</span>
@@ -88,7 +112,10 @@ function submitNewRoom() {
             placeholder="예) 강남"
           />
         </div>
-        <button type="submit" class="room-search__submit-btn">등록</button>
+        <p v-if="registerError" class="room-search__error">{{ registerError }}</p>
+        <button type="submit" class="room-search__submit-btn" :disabled="registering">
+          {{ registering ? '등록 중...' : '등록' }}
+        </button>
       </form>
     </div>
   </div>
@@ -210,6 +237,11 @@ function submitNewRoom() {
   color: #444;
 }
 
+.room-search__error {
+  font-size: 0.875rem;
+  color: #e53935;
+}
+
 .room-search__submit-btn {
   padding: 10px;
   background: #4a90d9;
@@ -221,7 +253,12 @@ function submitNewRoom() {
   cursor: pointer;
 }
 
-.room-search__submit-btn:hover {
+.room-search__submit-btn:hover:not(:disabled) {
   background: #3a7bc8;
+}
+
+.room-search__submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

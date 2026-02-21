@@ -1,16 +1,24 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { SubMetrics, Visibility } from '@/entities/review/types'
-import { MOCK_ROOMS } from '@/entities/room/lib/mock-rooms'
+import { fetchGenreTags, createReview } from '@/entities/review/api'
+import { searchRooms } from '@/entities/room/api'
+import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
 
 const router = useRouter()
 
+const rooms = ref<Room[]>([])
+const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
+const submitting = ref(false)
+const submitError = ref<string | null>(null)
+
 const form = reactive({
   roomId: '',
+  visitedAt: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
   rating: 0,
   summary: '',
   subMetrics: {
@@ -24,18 +32,62 @@ const form = reactive({
   isSuccess: true,
   remainingMinutes: null as number | null,
   headcount: 2,
-  genreTags: [] as string[],
+  genreTags: [] as string[], // 선택된 태그 이름 목록
   customGenre: null as string | null,
   wouldRevisit: true,
   body: '',
   visibility: 'group' as Visibility,
 })
 
-function handleSubmit() {
-  /* Phase 3에서 Supabase 연동 예정 — 현재는 콘솔 확인용 */
-  console.log('리뷰 제출:', { ...form })
-  alert('리뷰가 저장되었습니다. (mock)')
-  router.push('/')
+onMounted(async () => {
+  const [roomList, tagList] = await Promise.all([searchRooms(''), fetchGenreTags()])
+  rooms.value = roomList
+  genreTagOptions.value = tagList
+})
+
+async function handleSubmit() {
+  submitting.value = true
+  submitError.value = null
+
+  try {
+    if (!form.roomId) {
+      submitError.value = '방을 선택해주세요.'
+      return
+    }
+
+    const defaultGroupId = import.meta.env.VITE_DEFAULT_GROUP_ID as string
+
+    // 선택한 태그 이름 → ID 매핑
+    const genreTagIds = form.genreTags
+      .map((name) => genreTagOptions.value.find((t) => t.name === name)?.id)
+      .filter((id): id is string => !!id)
+
+    await createReview({
+      roomId: form.roomId,
+      groupId: defaultGroupId,
+      visitedAt: form.visitedAt,
+      rating: form.rating,
+      summary: form.summary,
+      subMetrics: form.subMetrics,
+      visitMeta: {
+        isSuccess: form.isSuccess,
+        remainingMinutes: form.remainingMinutes,
+        headcount: form.headcount,
+        wouldRevisit: form.wouldRevisit,
+      },
+      genreTagIds,
+      customGenre: form.customGenre,
+      body: form.body,
+      visibility: form.visibility,
+    })
+
+    router.push('/')
+  } catch (e) {
+    console.error(e)
+    submitError.value = '리뷰 저장 중 오류가 발생했습니다.'
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
@@ -46,10 +98,22 @@ function handleSubmit() {
       <label class="review-form__label" for="room-select">방 선택 *</label>
       <select id="room-select" v-model="form.roomId" class="review-form__select" required>
         <option value="" disabled>테마를 선택하세요</option>
-        <option v-for="room in MOCK_ROOMS" :key="room.id" :value="room.id">
+        <option v-for="room in rooms" :key="room.id" :value="room.id">
           {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
         </option>
       </select>
+    </div>
+
+    <!-- 방문일 -->
+    <div class="review-form__field">
+      <label class="review-form__label" for="visited-at-input">방문일 *</label>
+      <input
+        id="visited-at-input"
+        v-model="form.visitedAt"
+        class="review-form__input"
+        type="date"
+        required
+      />
     </div>
 
     <!-- 총평 별점 Spec: §3.1 -->
@@ -170,7 +234,11 @@ function handleSubmit() {
       </select>
     </div>
 
-    <button type="submit" class="review-form__submit">리뷰 저장</button>
+    <p v-if="submitError" class="review-form__error">{{ submitError }}</p>
+
+    <button type="submit" class="review-form__submit" :disabled="submitting">
+      {{ submitting ? '저장 중...' : '리뷰 저장' }}
+    </button>
   </form>
 </template>
 
@@ -261,6 +329,11 @@ function handleSubmit() {
   text-align: center;
 }
 
+.review-form__error {
+  font-size: 0.875rem;
+  color: #e53935;
+}
+
 .review-form__submit {
   padding: 12px;
   background: #4a90d9;
@@ -273,7 +346,12 @@ function handleSubmit() {
   transition: background 0.15s;
 }
 
-.review-form__submit:hover {
+.review-form__submit:hover:not(:disabled) {
   background: #357abd;
+}
+
+.review-form__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

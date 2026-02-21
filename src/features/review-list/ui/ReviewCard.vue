@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import StarRating from '@/shared/ui/StarRating.vue'
+
 defineProps<{
   rating: number
   summary: string
@@ -13,9 +15,10 @@ defineProps<{
 <template>
   <RouterLink :to="`/review/${$attrs['data-id']}`" class="review-card">
     <div class="review-card__header">
-      <span class="review-card__rating">
-        {{ '★'.repeat(rating) }}{{ '☆'.repeat(5 - rating) }}
-      </span>
+      <div class="review-card__rating-wrap">
+        <StarRating :model-value="rating" readonly size="sm" />
+        <span class="review-card__rating-num">{{ rating }}</span>
+      </div>
       <span class="review-card__result" :class="{ 'review-card__result--fail': !isSuccess }">
         {{ isSuccess ? '성공' : '실패' }}
       </span>
@@ -53,10 +56,16 @@ defineProps<{
   margin-bottom: 8px;
 }
 
-.review-card__rating {
-  color: #f5a623;
-  font-size: 1rem;
-  letter-spacing: 1px;
+.review-card__rating-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-card__rating-num {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #D97706;
 }
 
 .review-card__result {
