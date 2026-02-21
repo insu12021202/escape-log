@@ -91,9 +91,11 @@ export async function createReview(params: {
   body: string
   visibility: Visibility
 }): Promise<Review> {
+  const { data: { user } } = await supabase.auth.getUser()
   const { data: reviewRow, error: insertError } = await supabase
     .from('reviews')
     .insert({
+      user_id: user?.id,
       room_id: params.roomId,
       group_id: params.groupId,
       visited_at: params.visitedAt,

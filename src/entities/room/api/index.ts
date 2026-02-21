@@ -41,12 +41,14 @@ export async function createRoom(params: {
   themeName: string
   region: string
 }): Promise<Room> {
+  const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase
     .from('rooms')
     .insert({
       vendor_name: params.vendorName,
       theme_name: params.themeName,
       region: params.region,
+      created_by: user?.id,
     })
     .select('id, vendor_name, theme_name, region, created_at')
     .single()
