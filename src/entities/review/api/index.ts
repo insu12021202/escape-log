@@ -65,7 +65,7 @@ export async function fetchReviews(): Promise<Review[]> {
     .select(REVIEW_SELECT)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []).map(toReview)
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map(toReview)
 }
 
 /** 리뷰 단건 조회. Spec: §5 */
@@ -77,7 +77,7 @@ export async function fetchReviewById(id: string): Promise<Review | null> {
     .maybeSingle()
   if (error) throw error
   if (!data) return null
-  return toReview(data as Record<string, unknown>)
+  return toReview(data as unknown as Record<string, unknown>)
 }
 
 /** 리뷰 생성. Spec: §3 */
