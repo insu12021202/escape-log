@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import logoUrl from '@/app/assets/logo.png'
 </script>
 
 <template>
   <div class="app-layout">
     <header class="app-header">
-      <h1 class="app-title">
-        <RouterLink to="/">방탈출 리뷰</RouterLink>
-      </h1>
+      <RouterLink to="/" class="app-logo-link">
+        <img :src="logoUrl" alt="방탈출 리뷰 로고" class="app-logo" />
+      </RouterLink>
       <nav class="app-nav">
         <RouterLink to="/">목록</RouterLink>
         <RouterLink to="/review/new">리뷰 작성</RouterLink>
@@ -36,13 +37,14 @@ import { RouterView } from 'vue-router'
   background-color: #fafafa;
 }
 
-.app-title {
-  font-size: 1.25rem;
+.app-logo-link {
+  display: flex;
+  align-items: center;
 }
 
-.app-title a {
-  text-decoration: none;
-  color: inherit;
+.app-logo {
+  height: 32px;
+  width: auto;
 }
 
 .app-nav {
