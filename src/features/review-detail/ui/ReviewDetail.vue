@@ -64,7 +64,7 @@ function formatDate(iso: string): string {
           class="review-detail__metric-row"
         >
           <span class="review-detail__metric-label">{{ SUB_METRIC_LABELS[key] ?? key }}</span>
-          <StarRating :model-value="value" readonly />
+          <StarRating :model-value="value" readonly size="sm" />
         </div>
       </div>
     </section>
