@@ -58,8 +58,6 @@ onMounted(async () => {
 
 <template>
   <div class="review-list">
-    <h2 class="review-list__title">리뷰 목록</h2>
-
     <AppSpinner v-if="loading" />
 
     <template v-else-if="error">
@@ -87,37 +85,57 @@ onMounted(async () => {
           :author-name="review.authorName"
         />
       </div>
-      <p v-else class="review-list__status">조건에 맞는 리뷰가 없습니다.</p>
+      <div v-else class="review-list__empty">
+        <p class="review-list__empty-title">리뷰가 없어요</p>
+        <p class="review-list__empty-desc">조건을 바꾸거나 새 리뷰를 작성해보세요.</p>
+      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
-.review-list__title {
-  margin-bottom: 16px;
-}
-
 .review-list__status {
-  color: #999;
+  color: var(--color-text-muted);
   text-align: center;
   padding: 40px 0;
 }
 
 .review-list__status--error {
-  color: #e53935;
+  color: var(--color-error);
 }
 
 .review-list__filters {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 52px;
+  background: var(--color-bg);
+  padding: 12px 0;
+  z-index: 10;
 }
-
 
 .review-list__grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+.review-list__empty {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.review-list__empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  margin-bottom: 6px;
+}
+
+.review-list__empty-desc {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
 }
 </style>

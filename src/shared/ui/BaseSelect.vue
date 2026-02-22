@@ -70,15 +70,16 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 20px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 99px;
   font-size: 0.8125rem;
   font-weight: 500;
-  background: #fafafa;
-  color: #444;
+  background: var(--color-surface);
+  color: var(--color-text-sub);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
   white-space: nowrap;
   user-select: none;
@@ -86,9 +87,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 
 .base-select__trigger:hover,
 .base-select__trigger--open {
-  border-color: #4a90d9;
-  background: #f0f6ff;
-  color: #2a6db5;
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
 }
 
 .base-select__trigger--open {
@@ -98,14 +99,14 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 .base-select__chevron {
   width: 14px;
   height: 14px;
-  color: #999;
-  transition: transform 0.2s, color 0.15s;
+  color: var(--color-text-muted);
+  transition: transform 0.2s, color var(--transition-fast);
   flex-shrink: 0;
 }
 
 .base-select__trigger:hover .base-select__chevron,
 .base-select__trigger--open .base-select__chevron {
-  color: #4a90d9;
+  color: var(--color-primary);
 }
 
 .base-select__chevron--open {
@@ -118,10 +119,10 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   left: 0;
   z-index: 100;
   min-width: 100%;
-  background: #fff;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card-hover);
   padding: 4px;
   margin: 0;
   list-style: none;
@@ -129,23 +130,23 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 }
 
 .base-select__option {
-  padding: 8px 14px;
+  padding: 9px 14px;
   font-size: 0.875rem;
-  color: #333;
-  border-radius: 6px;
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.1s, color 0.1s;
+  transition: background var(--transition-fast), color var(--transition-fast);
   white-space: nowrap;
 }
 
 .base-select__option:hover {
-  background: #f0f6ff;
-  color: #2a6db5;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
 }
 
 .base-select__option--selected {
-  background: #e8f2ff;
-  color: #2a6db5;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
   font-weight: 600;
 }
 

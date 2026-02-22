@@ -45,9 +45,13 @@ async function handleSignOut() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #fafafa;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .app-logo-link {
@@ -56,37 +60,52 @@ async function handleSignOut() {
 }
 
 .app-logo {
-  height: 32px;
+  height: 28px;
   width: auto;
 }
 
 .app-nav {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 4px;
 }
 
 .app-nav a {
   text-decoration: none;
-  color: #213547;
+  color: var(--color-text-sub);
   font-size: 0.875rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.app-nav a:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .app-nav a.router-link-active {
+  color: var(--color-primary);
   font-weight: 600;
+  background: var(--color-primary-bg);
 }
 
 .app-nav__signout {
   background: none;
   border: none;
-  color: #999;
-  cursor: pointer;
-  padding: 0;
+  color: var(--color-text-muted);
+  padding: 6px;
   display: flex;
   align-items: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  margin-left: 4px;
 }
 
 .app-nav__signout:hover {
-  color: #e53935;
+  color: var(--color-error);
+  background: var(--color-error-bg);
 }
 
 .app-nav__icon {
@@ -96,6 +115,19 @@ async function handleSignOut() {
 
 .app-main {
   flex: 1;
-  padding: 24px;
+  padding: 20px 16px;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .app-header {
+    padding: 0 24px;
+  }
+
+  .app-main {
+    padding: 28px 24px;
+  }
 }
 </style>
