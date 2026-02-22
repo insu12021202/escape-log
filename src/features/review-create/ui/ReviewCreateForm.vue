@@ -5,6 +5,7 @@ import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview } from '@/entities/review/api'
 import { searchRooms } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
+import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import StarRating from '@/shared/ui/StarRating.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
@@ -128,12 +129,15 @@ async function handleSubmit() {
         </p>
       </template>
       <template v-else>
-        <select id="room-select" v-model="form.roomId" class="review-form__select" required>
-          <option value="" disabled>테마를 선택하세요</option>
-          <option v-for="room in rooms" :key="room.id" :value="room.id">
-            {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
-          </option>
-        </select>
+        <div class="review-form__select-wrapper">
+          <select id="room-select" v-model="form.roomId" class="review-form__select" required>
+            <option value="" disabled>테마를 선택하세요</option>
+            <option v-for="room in rooms" :key="room.id" :value="room.id">
+              {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
+            </option>
+          </select>
+          <ChevronDownIcon class="review-form__select-icon" />
+        </div>
       </template>
     </div>
 
@@ -261,10 +265,13 @@ async function handleSubmit() {
     <!-- 공개 범위 -->
     <div class="review-form__field">
       <label class="review-form__label" for="visibility-select">공개 범위</label>
-      <select id="visibility-select" v-model="form.visibility" class="review-form__select">
-        <option value="group">회원 공개</option>
-        <option value="private">나만 보기</option>
-      </select>
+      <div class="review-form__select-wrapper">
+        <select id="visibility-select" v-model="form.visibility" class="review-form__select">
+          <option value="group">회원 공개</option>
+          <option value="private">나만 보기</option>
+        </select>
+        <ChevronDownIcon class="review-form__select-icon" />
+      </div>
     </div>
 
     <p v-if="submitError" class="review-form__error">{{ submitError }}</p>
@@ -295,6 +302,21 @@ async function handleSubmit() {
   color: #333;
 }
 
+.review-form__select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.review-form__select-icon {
+  position: absolute;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  color: #666;
+  pointer-events: none;
+}
+
 .review-form__input,
 .review-form__select,
 .review-form__textarea {
@@ -303,6 +325,13 @@ async function handleSubmit() {
   border-radius: 6px;
   font-size: 0.875rem;
   font-family: inherit;
+}
+
+.review-form__select {
+  appearance: none;
+  padding-right: 32px;
+  width: 100%;
+  cursor: pointer;
 }
 
 .review-form__input--short {

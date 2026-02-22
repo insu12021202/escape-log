@@ -5,6 +5,7 @@ import { searchRooms } from '@/entities/room/api'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
+import BaseSelect from '@/shared/ui/BaseSelect.vue'
 
 const reviews = ref<Review[]>([])
 const rooms = ref<Record<string, Room>>({})
@@ -15,6 +16,20 @@ const regionFilter = ref('')
 const ratingFilter = ref(0)
 
 const regions = computed(() => [...new Set(Object.values(rooms.value).map((r) => r.region))])
+
+const regionOptions = computed(() => [
+  { value: '', label: '전체 지역' },
+  ...regions.value.map((r) => ({ value: r, label: r })),
+])
+
+const ratingOptions = [
+  { value: 0, label: '전체 평점' },
+  { value: 1, label: '1점 이상' },
+  { value: 2, label: '2점 이상' },
+  { value: 3, label: '3점 이상' },
+  { value: 4, label: '4점 이상' },
+  { value: 5, label: '5점 이상' },
+]
 
 const filteredReviews = computed(() => {
   return reviews.value.filter((review) => {
@@ -52,17 +67,8 @@ onMounted(async () => {
 
     <template v-else>
       <div class="review-list__filters">
-        <select v-model="regionFilter" class="review-list__select">
-          <option value="">전체 지역</option>
-          <option v-for="region in regions" :key="region" :value="region">
-            {{ region }}
-          </option>
-        </select>
-
-        <select v-model.number="ratingFilter" class="review-list__select">
-          <option :value="0">전체 평점</option>
-          <option v-for="n in 5" :key="n" :value="n">{{ n }}점 이상</option>
-        </select>
+        <BaseSelect v-model="regionFilter" :options="regionOptions" />
+        <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
       </div>
 
       <div v-if="filteredReviews.length" class="review-list__grid">
@@ -102,17 +108,11 @@ onMounted(async () => {
 
 .review-list__filters {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.review-list__select {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: #fff;
-}
 
 .review-list__grid {
   display: flex;

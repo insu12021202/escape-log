@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ChevronRightIcon } from '@heroicons/vue/24/outline'
 import type { SubMetrics } from '@/entities/review/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 
@@ -31,7 +32,7 @@ function update(key: keyof SubMetrics, value: number) {
   <div class="sub-metrics">
     <button type="button" class="sub-metrics__toggle" @click="isOpen = !isOpen">
       보조 지표 (1~5)
-      <span class="sub-metrics__arrow" :class="{ 'sub-metrics__arrow--open': isOpen }">▸</span>
+      <ChevronRightIcon class="sub-metrics__arrow" :class="{ 'sub-metrics__arrow--open': isOpen }" />
     </button>
     <div v-if="isOpen" class="sub-metrics__body">
       <div v-for="item in labels" :key="item.key" class="sub-metrics__row">
@@ -59,7 +60,9 @@ function update(key: keyof SubMetrics, value: number) {
 }
 
 .sub-metrics__arrow {
-  font-size: 0.75rem;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   transition: transform 0.15s;
 }
 
