@@ -150,7 +150,7 @@ function toggleMode() {
   padding: 11px 14px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   outline: none;
   box-sizing: border-box;
 }
