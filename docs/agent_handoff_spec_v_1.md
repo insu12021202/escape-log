@@ -142,6 +142,7 @@
 - [x] 인라인 방 등록 폼 (PR #17)
 - [x] 리뷰 목록 통계 헤더 + CTA (PR #17)
 - [x] RLS `reviews_group_select` → 로그인 사용자 전체 허용 (Supabase Dashboard 직접 수정)
+- [x] 모바일 하단 탭바 전환 및 OG 메타태그 추가 (PR #18)
 
 ---
 

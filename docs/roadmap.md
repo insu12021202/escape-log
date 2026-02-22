@@ -244,7 +244,7 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 ## 현재 상태 기록 (수동 업데이트)
 
 - 현재 Phase: **Phase 6 진행 중** (v1 마감)
-- 마지막 완료 PR: feat/ux: UI 리프레시 + UX 개선 (#17)
+- 마지막 완료 PR: feat: 모바일 하단 탭바 전환 및 OG 메타태그 추가 (#18)
 
 ### 완료된 작업 요약
 
@@ -295,6 +295,13 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 리뷰 작성 중 방 없을 때 인라인 등록 폼 추가 (페이지 이탈 없이 등록 → 자동 선택) — PR #17
 - 리뷰 목록 상단 통계 헤더 (총 N개 · 성공률 %) + 리뷰 등록 CTA 버튼 추가 — PR #17
 - Supabase RLS `reviews_group_select` 정책 수정 (`is_group_member` → `auth.uid() IS NOT NULL`) — Dashboard 직접
+
+#### Phase 6 — 모바일 내비게이션 + OG 태그 완료
+- 모바일 내비게이션 헤더 텍스트 링크 → 하단 탭바(목록/리뷰 작성/방 검색) 전환 — PR #18
+- 데스크톱(≥640px) 헤더 nav 유지, iOS safe-area-inset-bottom 대응 — PR #18
+- OG 메타태그 추가 (og:title, og:description, og:image) — 카카오톡 링크 미리보기 개선 — PR #18
+- Apple Touch Icon 추가 (사파리 홈 화면 추가 아이콘) — PR #18
+- 리뷰 등록 CTA 버튼 크기 축소 (하단 탭 이동 수단 확보) — PR #18
 
 ### 미완료 항목
 - [ ] Vercel 배포 확인
