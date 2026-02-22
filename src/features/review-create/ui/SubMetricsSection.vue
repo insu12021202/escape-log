@@ -34,12 +34,14 @@ function update(key: keyof SubMetrics, value: number) {
       보조 지표 (1~5)
       <ChevronRightIcon class="sub-metrics__arrow" :class="{ 'sub-metrics__arrow--open': isOpen }" />
     </button>
+    <Transition name="expand">
     <div v-if="isOpen" class="sub-metrics__body">
       <div v-for="item in labels" :key="item.key" class="sub-metrics__row">
         <span class="sub-metrics__label">{{ item.label }}</span>
         <StarRating :model-value="modelValue[item.key]" @update:model-value="update(item.key, $event)" />
       </div>
     </div>
+    </Transition>
   </div>
 </template>
 
@@ -52,10 +54,10 @@ function update(key: keyof SubMetrics, value: number) {
   padding: 10px 0;
   background: none;
   border: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border-light);
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   cursor: pointer;
 }
 
@@ -63,7 +65,7 @@ function update(key: keyof SubMetrics, value: number) {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  transition: transform 0.15s;
+  transition: transform 0.22s ease;
 }
 
 .sub-metrics__arrow--open {
@@ -75,6 +77,7 @@ function update(key: keyof SubMetrics, value: number) {
   flex-direction: column;
   gap: 10px;
   padding: 8px 0 12px;
+  overflow: hidden;
 }
 
 .sub-metrics__row {
@@ -85,6 +88,25 @@ function update(key: keyof SubMetrics, value: number) {
 
 .sub-metrics__label {
   font-size: 0.875rem;
-  color: #555;
+  color: var(--color-text-sub);
+}
+
+/* 펼치기/접기 애니메이션 */
+.expand-enter-active,
+.expand-leave-active {
+  transition: max-height 0.28s ease, opacity 0.22s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 400px;
+  opacity: 1;
 }
 </style>
