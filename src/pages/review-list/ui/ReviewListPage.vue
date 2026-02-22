@@ -32,6 +32,13 @@ const ratingOptions = [
   { value: 5, label: '5점 이상' },
 ]
 
+const totalCount = computed(() => reviews.value.length)
+const successRate = computed(() => {
+  if (!totalCount.value) return null
+  const succeeded = reviews.value.filter((r) => r.visitMeta.isSuccess).length
+  return Math.round((succeeded / totalCount.value) * 100)
+})
+
 const filteredReviews = computed(() => {
   return reviews.value.filter((review) => {
     const room = rooms.value[review.roomId]
@@ -65,6 +72,17 @@ onMounted(async () => {
     </template>
 
     <template v-else>
+      <div class="review-list__hero">
+        <div class="review-list__stats">
+          <span class="review-list__stat">총 {{ totalCount }}개</span>
+          <template v-if="successRate !== null">
+            <span class="review-list__stat-sep">·</span>
+            <span class="review-list__stat">성공률 {{ successRate }}%</span>
+          </template>
+        </div>
+        <RouterLink to="/review/new" class="review-list__cta">+ 리뷰 등록</RouterLink>
+      </div>
+
       <div class="review-list__filters">
         <BaseSelect v-model="regionFilter" :options="regionOptions" />
         <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
@@ -94,6 +112,48 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.review-list__hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 16px;
+}
+
+.review-list__stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-list__stat {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.review-list__stat-sep {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.review-list__cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  min-height: 44px;
+  transition: background var(--transition-fast);
+}
+
+.review-list__cta:hover {
+  background: var(--color-primary-dark);
+}
+
 .review-list__status {
   color: var(--color-text-muted);
   text-align: center;
