@@ -38,7 +38,15 @@ const router = useRouter()
 const rooms = ref<Room[]>([])
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
-const submitError = ref<string | null>(null)
+
+const errors = reactive({
+  room: '',
+  rating: '',
+  summary: '',
+  isSuccess: '',
+  headcount: '',
+  general: '',
+})
 
 const form = reactive({
   roomId: props.initialData?.roomId ?? '',
@@ -53,9 +61,9 @@ const form = reactive({
     puzzleDifficulty: 3,
     clearDifficulty: 3,
   }) as SubMetrics,
-  isSuccess: props.initialData?.isSuccess ?? true,
+  isSuccess: (props.initialData?.isSuccess ?? null) as boolean | null,
   remainingMinutes: (props.initialData?.remainingMinutes ?? null) as number | null,
-  headcount: props.initialData?.headcount ?? 2,
+  headcount: props.initialData?.headcount ?? 0,
   genreTags: props.initialData?.genreTags ?? ([] as string[]),
   customGenre: (props.initialData?.customGenre ?? null) as string | null,
   wouldRevisit: props.initialData?.wouldRevisit ?? true,
@@ -69,9 +77,51 @@ onMounted(async () => {
   genreTagOptions.value = tagList
 })
 
+function validateForm(): boolean {
+  errors.room = ''
+  errors.rating = ''
+  errors.summary = ''
+  errors.isSuccess = ''
+  errors.headcount = ''
+  errors.general = ''
+
+  let valid = true
+
+  if (props.mode === 'create' && !form.roomId) {
+    errors.room = '방을 선택해주세요.'
+    valid = false
+  }
+  if (form.rating < 1) {
+    errors.rating = '총평 별점을 1점 이상 입력해주세요.'
+    valid = false
+  }
+  if (!form.summary.trim()) {
+    errors.summary = '한줄평을 입력해주세요.'
+    valid = false
+  } else if (form.summary.length > 100) {
+    errors.summary = '한줄평은 100자 이내로 입력해주세요.'
+    valid = false
+  }
+  if (form.isSuccess === null) {
+    errors.isSuccess = '성공/실패 여부를 선택해주세요.'
+    valid = false
+  }
+  if (!form.headcount || form.headcount < 1) {
+    errors.headcount = '인원 수를 1명 이상 입력해주세요.'
+    valid = false
+  }
+  if (form.body.length > 3000) {
+    errors.general = '본문은 3000자 이내로 입력해주세요.'
+    valid = false
+  }
+
+  return valid
+}
+
 async function handleSubmit() {
+  if (!validateForm()) return
+
   submitting.value = true
-  submitError.value = null
 
   try {
     // 선택한 태그 이름 → ID 매핑
@@ -85,7 +135,7 @@ async function handleSubmit() {
       summary: form.summary,
       subMetrics: form.subMetrics as Review['subMetrics'],
       visitMeta: {
-        isSuccess: form.isSuccess,
+        isSuccess: form.isSuccess as boolean,
         remainingMinutes: form.remainingMinutes,
         headcount: form.headcount,
         wouldRevisit: form.wouldRevisit,
@@ -100,17 +150,13 @@ async function handleSubmit() {
       await updateReview(props.reviewId, payload)
       router.push(`/review/${props.reviewId}`)
     } else {
-      if (!form.roomId) {
-        submitError.value = '방을 선택해주세요.'
-        return
-      }
       const defaultGroupId = import.meta.env.VITE_DEFAULT_GROUP_ID as string
       await createReview({ roomId: form.roomId, groupId: defaultGroupId, ...payload })
       router.push('/')
     }
   } catch (e) {
     console.error(e)
-    submitError.value = '리뷰 저장 중 오류가 발생했습니다.'
+    errors.general = '리뷰 저장 중 오류가 발생했습니다.'
   } finally {
     submitting.value = false
   }
@@ -130,7 +176,7 @@ async function handleSubmit() {
       </template>
       <template v-else>
         <div class="review-form__select-wrapper">
-          <select id="room-select" v-model="form.roomId" class="review-form__select" required>
+          <select id="room-select" v-model="form.roomId" class="review-form__select">
             <option value="" disabled>테마를 선택하세요</option>
             <option v-for="room in rooms" :key="room.id" :value="room.id">
               {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
@@ -138,6 +184,7 @@ async function handleSubmit() {
           </select>
           <ChevronDownIcon class="review-form__select-icon" />
         </div>
+        <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
       </template>
     </div>
 
@@ -157,6 +204,7 @@ async function handleSubmit() {
     <div class="review-form__field">
       <label class="review-form__label">총평 별점 *</label>
       <StarRating v-model="form.rating" />
+      <p v-if="errors.rating" class="review-form__field-error">{{ errors.rating }}</p>
     </div>
 
     <!-- 한줄평 Spec: §3.1 -->
@@ -169,9 +217,9 @@ async function handleSubmit() {
         type="text"
         maxlength="100"
         placeholder="100자 이내로 작성"
-        required
       />
       <span class="review-form__counter">{{ form.summary.length }}/100</span>
+      <p v-if="errors.summary" class="review-form__field-error">{{ errors.summary }}</p>
     </div>
 
     <!-- 보조 지표 Spec: §3.2 -->
@@ -194,6 +242,7 @@ async function handleSubmit() {
           </label>
         </div>
       </div>
+      <p v-if="errors.isSuccess" class="review-form__field-error">{{ errors.isSuccess }}</p>
 
       <div class="review-form__row">
         <label class="review-form__label" for="remaining-input">남은 시간(분)</label>
@@ -217,9 +266,9 @@ async function handleSubmit() {
           type="number"
           min="1"
           max="10"
-          required
         />
       </div>
+      <p v-if="errors.headcount" class="review-form__field-error">{{ errors.headcount }}</p>
 
       <GenreTagSelector
         v-model="form.genreTags"
@@ -274,7 +323,7 @@ async function handleSubmit() {
       </div>
     </div>
 
-    <p v-if="submitError" class="review-form__error">{{ submitError }}</p>
+    <p v-if="errors.general" class="review-form__field-error">{{ errors.general }}</p>
 
     <button type="submit" class="review-form__submit" :disabled="submitting">
       {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
@@ -391,9 +440,10 @@ async function handleSubmit() {
   text-align: center;
 }
 
-.review-form__error {
-  font-size: 0.875rem;
+.review-form__field-error {
+  font-size: 0.8125rem;
   color: #e53935;
+  margin-top: 2px;
 }
 
 .review-form__room-fixed {
