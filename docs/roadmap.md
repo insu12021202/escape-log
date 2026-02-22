@@ -244,7 +244,7 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 ## 현재 상태 기록 (수동 업데이트)
 
 - 현재 Phase: **Phase 5 진행 중**
-- 마지막 완료 PR: feat: 리뷰 작성 폼 유효성 검증 추가 (#12)
+- 마지막 완료 PR: feat: 로딩 스피너 추가 및 검색 에러 상태 처리 (#13)
 
 ### 완료된 작업 요약
 
@@ -264,12 +264,14 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 리뷰 상세에서 본인 리뷰에만 수정 버튼 노출 (`review.userId === currentUserId`)
 - 리뷰 수정 페이지 (`/review/:id/edit`) + ReviewCreateForm 공용 재사용
 
-#### Phase 5 (UX 완성) — 진행 중
+#### Phase 5 (UX 완성) — 완료
 - 리뷰 작성 폼 유효성 검증 (SSOT §3 기준) — PR #12
   - 총평 별점 1점 이상 필수, 한줄평 필수/100자, 성공/실패 명시적 선택 필수, 인원 수 필수
   - 필드별 에러 메시지 인라인 표시
+- 로딩 스피너 및 에러 상태 UI 정리 — PR #13
+  - AppSpinner.vue 공유 컴포넌트 생성, 전 페이지 적용
+  - RoomSearchPage 검색 실패 에러 메시지 추가
 
 ### 미완료 항목
-- [ ] 로딩/에러/빈 상태 UI 다듬기 — Phase 5
 - [ ] 사진 업로드 (Supabase Storage) — Phase 3 기획 범위, 추후 구현
 - [ ] v1 마감 (환경 변수 점검, Vercel 배포, README) — Phase 6
