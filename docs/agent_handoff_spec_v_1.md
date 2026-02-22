@@ -100,7 +100,7 @@
 ## 5. SECURITY_RLS (정책 요약)
 
 - 작성자: 리뷰 CRUD 가능
-- 그룹 멤버: `visibility=group` 조회 가능
+- 그룹 멤버: `visibility=group` 조회 가능 — v1 구현: `auth.uid() IS NOT NULL` (로그인 사용자 전체)
 - private: 작성자만
 - link: **로그인 사용자만 / RPC로 조회**
 
@@ -137,6 +137,11 @@
 - [x] 사진 업로드 / 실패 재시도 UX (PR #14)
 - [x] 이메일/비밀번호 회원가입 및 로그인 (PR #15)
 - [x] 모바일 iOS 자동 줌인 방지 (PR #16)
+- [x] UI 리프레시 — 디자인 토큰, 컴포넌트 스타일, BaseSelect (PR #17)
+- [x] 리뷰 작성 폼 멀티스텝 위자드 전환 (PR #17)
+- [x] 인라인 방 등록 폼 (PR #17)
+- [x] 리뷰 목록 통계 헤더 + CTA (PR #17)
+- [x] RLS `reviews_group_select` → 로그인 사용자 전체 허용 (Supabase Dashboard 직접 수정)
 
 ---
 
