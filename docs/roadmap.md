@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 5 진행 중**
-- 마지막 완료 PR: feat: 로딩 스피너 추가 및 검색 에러 상태 처리 (#13)
+- 현재 Phase: **Phase 6 진행 중** (v1 마감)
+- 마지막 완료 PR: feat: 사진 업로드 기능 추가 (#14)
 
 ### 완료된 작업 요약
 
@@ -272,6 +272,11 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
   - AppSpinner.vue 공유 컴포넌트 생성, 전 페이지 적용
   - RoomSearchPage 검색 실패 에러 메시지 추가
 
+#### Phase 3 이월 — 사진 업로드 완료
+- Supabase Storage `review-photos` 버킷 연동 — PR #14
+  - PhotoUploader.vue: 최대 3장, 5MB 제한, 즉시 미리보기
+  - 리뷰 저장 후 사진 업로드, 실패 시 재시도/건너뛰기 UI
+  - 리뷰 상세에서 사진 그리드 표시 + 라이트박스(이전/다음 탐색)
+
 ### 미완료 항목
-- [ ] 사진 업로드 (Supabase Storage) — Phase 3 기획 범위, 추후 구현
 - [ ] v1 마감 (환경 변수 점검, Vercel 배포, README) — Phase 6
