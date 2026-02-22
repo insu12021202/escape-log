@@ -4,10 +4,12 @@ import { ref, watch } from 'vue'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { searchRooms, createRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
+import AppSpinner from '@/shared/ui/AppSpinner.vue'
 
 const keyword = ref('')
 const rooms = ref<Room[]>([])
 const loading = ref(false)
+const searchError = ref(false)
 
 const newRoom = ref({ vendorName: '', themeName: '', region: '' })
 const showForm = ref(false)
@@ -16,10 +18,12 @@ const registerError = ref<string | null>(null)
 
 async function doSearch() {
   loading.value = true
+  searchError.value = false
   try {
     rooms.value = await searchRooms(keyword.value)
   } catch (e) {
     console.error(e)
+    searchError.value = true
   } finally {
     loading.value = false
   }
@@ -69,7 +73,10 @@ async function submitNewRoom() {
     />
 
     <!-- 검색 결과 -->
-    <div v-if="loading" class="room-search__empty">검색 중...</div>
+    <AppSpinner v-if="loading" />
+    <p v-else-if="searchError" class="room-search__empty room-search__empty--error">
+      방 목록을 불러오는 데 실패했습니다.
+    </p>
     <ul v-else-if="rooms.length" class="room-search__list">
       <li v-for="room in rooms" :key="room.id" class="room-search__item">
         <span class="room-search__vendor">{{ room.vendorName }}</span>
@@ -197,6 +204,10 @@ async function submitNewRoom() {
   color: #999;
   text-align: center;
   padding: 24px 0;
+}
+
+.room-search__empty--error {
+  color: #e53935;
 }
 
 .room-search__register {
