@@ -307,7 +307,7 @@ function navigateAfterSave(reviewId: string) {
           </p>
         </template>
         <template v-else>
-          <BaseSelect v-model="form.roomId" :options="roomOptions" />
+          <BaseSelect v-model="form.roomId" :options="roomOptions" variant="input" />
           <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
         </template>
       </div>
@@ -456,7 +456,7 @@ function navigateAfterSave(reviewId: string) {
 
       <div class="review-form__field">
         <label class="review-form__label">공개 범위</label>
-        <BaseSelect v-model="form.visibility" :options="visibilityOptions" />
+        <BaseSelect v-model="form.visibility" :options="visibilityOptions" variant="input" />
       </div>
     </section>
 

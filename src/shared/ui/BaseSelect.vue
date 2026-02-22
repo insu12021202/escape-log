@@ -5,6 +5,7 @@ import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 const props = defineProps<{
   modelValue: string | number
   options: Array<{ value: string | number; label: string }>
+  variant?: 'pill' | 'input'
 }>()
 
 const emit = defineEmits<{
@@ -38,8 +39,13 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 </script>
 
 <template>
-  <div ref="wrapperRef" class="base-select">
-    <button type="button" class="base-select__trigger" :class="{ 'base-select__trigger--open': isOpen }" @click="toggle">
+  <div ref="wrapperRef" class="base-select" :class="{ 'base-select--input': variant === 'input' }">
+    <button
+      type="button"
+      class="base-select__trigger"
+      :class="{ 'base-select__trigger--open': isOpen, 'base-select__trigger--input': variant === 'input' }"
+      @click="toggle"
+    >
       <span class="base-select__label">{{ selectedLabel }}</span>
       <ChevronDownIcon class="base-select__chevron" :class="{ 'base-select__chevron--open': isOpen }" />
     </button>
@@ -149,6 +155,23 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   background: var(--color-primary-bg);
   color: var(--color-primary-dark);
   font-weight: 600;
+}
+
+/* input variant */
+.base-select--input {
+  display: block;
+  width: 100%;
+}
+
+.base-select__trigger--input {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  min-height: 48px;
+  padding: 11px 14px;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text);
+  justify-content: space-between;
 }
 
 /* 드롭다운 열기/닫기 애니메이션 */
