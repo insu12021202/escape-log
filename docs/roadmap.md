@@ -245,6 +245,7 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 - 현재 Phase: **Phase 6 진행 중** (v1 마감)
 - 마지막 완료 PR: fix(login): 모바일 iOS 자동 줌인 방지 (#16)
+- 진행 중 브랜치: `feature/ui-refresh` (PR #17 준비 중)
 
 ### 완료된 작업 요약
 
@@ -286,5 +287,16 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
   - Supabase profiles FK DEFERRABLE 설정 (트리거 타이밍 이슈 해결)
 - 모바일 iOS 자동 줌인 방지 (input font-size 16px) — PR #16
 
+#### feature/ui-refresh 브랜치 작업 (PR #17 준비 중)
+- 전역 CSS 디자인 토큰 도입 (`--color-*`, `--radius-*`, `--shadow-*`, `--transition-*`)
+- AppLayout 헤더 / ReviewCard 카드 UI 스타일 개선
+- BaseSelect 커스텀 드롭다운 컴포넌트 추가 (pill / input variant, 외부 클릭 닫힘, 애니메이션)
+- 리뷰 작성 폼 4스텝 멀티스텝 위자드 전환 (create 모드 전용, 스텝별 유효성 검증)
+- SubMetricsSection 펼치기/접기 슬라이드 애니메이션 추가
+- 리뷰 작성 중 방 없을 때 인라인 등록 폼 추가 (페이지 이탈 없이 등록 → 자동 선택)
+- 리뷰 목록 상단 통계 헤더 (총 N개 · 성공률 %) + 리뷰 등록 CTA 버튼 추가
+- Supabase RLS `reviews_group_select` 정책 수정 (`is_group_member` → `auth.uid() IS NOT NULL`)
+
 ### 미완료 항목
-- [ ] v1 마감 (Vercel 배포 확인, README 정리) — Phase 6
+- [ ] PR #17 merge 및 Vercel 배포 확인
+- [ ] README 정리 — Phase 6
