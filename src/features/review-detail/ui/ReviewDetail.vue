@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onUnmounted } from 'vue'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
@@ -31,6 +32,27 @@ function formatDate(iso: string): string {
     day: 'numeric',
   })
 }
+
+// 라이트박스
+const lightboxUrl = ref<string | null>(null)
+
+function openLightbox(url: string) {
+  lightboxUrl.value = url
+  document.addEventListener('keydown', onKeydown)
+}
+
+function closeLightbox() {
+  lightboxUrl.value = null
+  document.removeEventListener('keydown', onKeydown)
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') closeLightbox()
+}
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
@@ -114,9 +136,29 @@ function formatDate(iso: string): string {
           :src="getPhotoPublicUrl(path)"
           :alt="`사진 ${i + 1}`"
           class="review-detail__photo"
+          @click="openLightbox(getPhotoPublicUrl(path))"
         />
       </div>
     </section>
+
+    <!-- 라이트박스 -->
+    <Teleport to="body">
+      <div
+        v-if="lightboxUrl"
+        class="lightbox"
+        role="dialog"
+        aria-modal="true"
+        @click="closeLightbox"
+      >
+        <img
+          :src="lightboxUrl"
+          class="lightbox__img"
+          alt="사진 크게 보기"
+          @click.stop
+        />
+        <button class="lightbox__close" aria-label="닫기" @click="closeLightbox">✕</button>
+      </div>
+    </Teleport>
 
     <!-- 메타 -->
     <footer class="review-detail__footer">
@@ -270,6 +312,46 @@ function formatDate(iso: string): string {
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid #eee;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.review-detail__photo:hover {
+  opacity: 0.85;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.lightbox__img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.lightbox__close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+.lightbox__close:hover {
+  opacity: 0.7;
 }
 
 .review-detail__footer {
