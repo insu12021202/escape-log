@@ -139,14 +139,13 @@ onMounted(async () => {
 .review-list__cta {
   display: inline-flex;
   align-items: center;
-  padding: 10px 18px;
+  padding: 6px 12px;
   background: var(--color-primary);
   color: #fff;
   border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
-  min-height: 44px;
   transition: background var(--transition-fast);
 }
 
