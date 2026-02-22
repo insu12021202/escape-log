@@ -24,10 +24,21 @@ export const useSessionStore = defineStore('session', () => {
     })
   }
 
+  async function signInWithEmail(email: string, password: string) {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+  }
+
+  async function signUpWithEmail(email: string, password: string) {
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+    return data
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     user.value = null
   }
 
-  return { user, ready, init, signInWithGoogle, signOut }
+  return { user, ready, init, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }
 })
