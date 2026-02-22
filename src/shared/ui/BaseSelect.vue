@@ -119,6 +119,8 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   left: 0;
   z-index: 100;
   min-width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -126,7 +128,6 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   padding: 4px;
   margin: 0;
   list-style: none;
-  overflow: hidden;
 }
 
 .base-select__option {
