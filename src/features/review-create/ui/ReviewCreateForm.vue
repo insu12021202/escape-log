@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
 import { uploadPhoto } from '@/shared/api/storage'
-import { searchRooms } from '@/entities/room/api'
+import { searchRooms, createRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
-import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import StarRating from '@/shared/ui/StarRating.vue'
+import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
 import PhotoUploader from './PhotoUploader.vue'
@@ -41,6 +41,16 @@ const router = useRouter()
 const rooms = ref<Room[]>([])
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
+
+// 인라인 방 등록
+const showRoomForm = ref(false)
+const roomForm = reactive({ vendorName: '', themeName: '', region: '' })
+const roomFormError = ref('')
+const roomFormSubmitting = ref(false)
+
+// 위자드 스텝 (create 모드 전용)
+const TOTAL_STEPS = 4
+const currentStep = ref(1)
 
 // 사진 업로드 상태. Spec: §3.4
 const selectedPhotos = ref<File[]>([])
@@ -81,51 +91,113 @@ const form = reactive({
   visibility: (props.initialData?.visibility ?? 'group') as Visibility,
 })
 
+const roomOptions = computed(() => [
+  { value: '', label: '테마를 선택하세요' },
+  ...rooms.value.map((r) => ({ value: r.id, label: `${r.vendorName} · ${r.themeName} (${r.region})` })),
+])
+
+const visibilityOptions = [
+  { value: 'group', label: '회원 공개' },
+  { value: 'private', label: '나만 보기' },
+]
+
 onMounted(async () => {
   const [roomList, tagList] = await Promise.all([searchRooms(''), fetchGenreTags()])
   rooms.value = roomList
   genreTagOptions.value = tagList
 })
 
+async function handleCreateRoom() {
+  roomFormError.value = ''
+  if (!roomForm.vendorName.trim()) { roomFormError.value = '업체명을 입력해주세요.'; return }
+  if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해주세요.'; return }
+  if (!roomForm.region.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
+
+  roomFormSubmitting.value = true
+  try {
+    const newRoom = await createRoom({
+      vendorName: roomForm.vendorName.trim(),
+      themeName: roomForm.themeName.trim(),
+      region: roomForm.region.trim(),
+    })
+    rooms.value.unshift(newRoom)
+    form.roomId = newRoom.id
+    showRoomForm.value = false
+    roomForm.vendorName = ''
+    roomForm.themeName = ''
+    roomForm.region = ''
+  } catch (e) {
+    console.error(e)
+    roomFormError.value = '방 등록에 실패했습니다. 다시 시도해주세요.'
+  } finally {
+    roomFormSubmitting.value = false
+  }
+}
+
+function validateStep(step: number): boolean {
+  switch (step) {
+    case 1:
+      errors.room = ''
+      if (props.mode === 'create' && !form.roomId) {
+        errors.room = '방을 선택해주세요.'
+        return false
+      }
+      return true
+    case 2:
+      errors.rating = ''
+      errors.summary = ''
+      if (form.rating < 1) {
+        errors.rating = '총평 별점을 1점 이상 입력해주세요.'
+        return false
+      }
+      if (!form.summary.trim()) {
+        errors.summary = '한줄평을 입력해주세요.'
+        return false
+      }
+      if (form.summary.length > 100) {
+        errors.summary = '한줄평은 100자 이내로 입력해주세요.'
+        return false
+      }
+      return true
+    case 3:
+      errors.isSuccess = ''
+      errors.headcount = ''
+      if (form.isSuccess === null) {
+        errors.isSuccess = '성공/실패 여부를 선택해주세요.'
+        return false
+      }
+      if (!form.headcount || form.headcount < 1) {
+        errors.headcount = '인원 수를 1명 이상 입력해주세요.'
+        return false
+      }
+      return true
+    case 4:
+      errors.general = ''
+      if (form.body.length > 3000) {
+        errors.general = '본문은 3000자 이내로 입력해주세요.'
+        return false
+      }
+      return true
+  }
+  return true
+}
+
+function goNext() {
+  if (!validateStep(currentStep.value)) return
+  currentStep.value++
+}
+
+function goPrev() {
+  currentStep.value--
+}
+
 function validateForm(): boolean {
-  errors.room = ''
-  errors.rating = ''
-  errors.summary = ''
-  errors.isSuccess = ''
-  errors.headcount = ''
-  errors.general = ''
-
-  let valid = true
-
-  if (props.mode === 'create' && !form.roomId) {
-    errors.room = '방을 선택해주세요.'
-    valid = false
-  }
-  if (form.rating < 1) {
-    errors.rating = '총평 별점을 1점 이상 입력해주세요.'
-    valid = false
-  }
-  if (!form.summary.trim()) {
-    errors.summary = '한줄평을 입력해주세요.'
-    valid = false
-  } else if (form.summary.length > 100) {
-    errors.summary = '한줄평은 100자 이내로 입력해주세요.'
-    valid = false
-  }
-  if (form.isSuccess === null) {
-    errors.isSuccess = '성공/실패 여부를 선택해주세요.'
-    valid = false
-  }
-  if (!form.headcount || form.headcount < 1) {
-    errors.headcount = '인원 수를 1명 이상 입력해주세요.'
-    valid = false
-  }
-  if (form.body.length > 3000) {
-    errors.general = '본문은 3000자 이내로 입력해주세요.'
-    valid = false
-  }
-
-  return valid
+  return (
+    validateStep(1) &&
+    validateStep(2) &&
+    validateStep(3) &&
+    validateStep(4)
+  )
 }
 
 async function handleSubmit() {
@@ -243,110 +315,154 @@ function navigateAfterSave(reviewId: string) {
 
 <template>
   <form class="review-form" @submit.prevent="handleSubmit">
-    <!-- 방 선택 (수정 모드에서는 고정) -->
-    <div class="review-form__field">
-      <label class="review-form__label" for="room-select">방 선택 *</label>
-      <template v-if="mode === 'edit'">
-        <p class="review-form__room-fixed">
-          {{ rooms.find((r) => r.id === form.roomId)?.vendorName }} ·
-          {{ rooms.find((r) => r.id === form.roomId)?.themeName }}
-        </p>
-      </template>
-      <template v-else>
-        <div class="review-form__select-wrapper">
-          <select id="room-select" v-model="form.roomId" class="review-form__select">
-            <option value="" disabled>테마를 선택하세요</option>
-            <option v-for="room in rooms" :key="room.id" :value="room.id">
-              {{ room.vendorName }} · {{ room.themeName }} ({{ room.region }})
-            </option>
-          </select>
-          <ChevronDownIcon class="review-form__select-icon" />
-        </div>
-        <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
-      </template>
+
+    <!-- 위자드 헤더: create 모드만 표시 -->
+    <div v-if="mode === 'create'" class="review-form__wizard-header">
+      <div class="review-form__wizard-nav">
+        <button v-if="currentStep > 1" type="button" class="review-form__back" @click="goPrev">← 이전</button>
+        <span class="review-form__step-counter">{{ currentStep }} / {{ TOTAL_STEPS }}</span>
+      </div>
+      <div class="review-form__progress-track">
+        <div class="review-form__progress-fill" :style="{ width: (currentStep / TOTAL_STEPS * 100) + '%' }" />
+      </div>
     </div>
 
-    <!-- 방문일 -->
-    <div class="review-form__field">
-      <label class="review-form__label" for="visited-at-input">방문일 *</label>
-      <input
-        id="visited-at-input"
-        v-model="form.visitedAt"
-        class="review-form__input"
-        type="date"
-        required
-      />
-    </div>
+    <!-- 섹션 1: 기본 -->
+    <section v-if="mode === 'edit' || currentStep === 1" class="review-form__section">
+      <h3 class="review-form__section-title">기본 정보</h3>
 
-    <!-- 총평 별점 Spec: §3.1 -->
-    <div class="review-form__field">
-      <label class="review-form__label">총평 별점 *</label>
-      <StarRating v-model="form.rating" />
-      <p v-if="errors.rating" class="review-form__field-error">{{ errors.rating }}</p>
-    </div>
+      <div class="review-form__field">
+        <label class="review-form__label" for="room-select">방 선택 *</label>
+        <template v-if="mode === 'edit'">
+          <p class="review-form__room-fixed">
+            {{ rooms.find((r) => r.id === form.roomId)?.vendorName }} ·
+            {{ rooms.find((r) => r.id === form.roomId)?.themeName }}
+          </p>
+        </template>
+        <template v-else>
+          <BaseSelect v-model="form.roomId" :options="roomOptions" variant="input" />
+          <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
 
-    <!-- 한줄평 Spec: §3.1 -->
-    <div class="review-form__field">
-      <label class="review-form__label" for="summary-input">한줄평 *</label>
-      <input
-        id="summary-input"
-        v-model="form.summary"
-        class="review-form__input"
-        type="text"
-        maxlength="100"
-        placeholder="100자 이내로 작성"
-      />
-      <span class="review-form__counter">{{ form.summary.length }}/100</span>
-      <p v-if="errors.summary" class="review-form__field-error">{{ errors.summary }}</p>
-    </div>
+          <!-- 인라인 방 등록 -->
+          <button type="button" class="review-form__add-room-toggle" @click="showRoomForm = !showRoomForm">
+            {{ showRoomForm ? '− 등록 취소' : '+ 방이 없어요? 직접 등록' }}
+          </button>
 
-    <!-- 보조 지표 Spec: §3.2 -->
-    <SubMetricsSection v-model="form.subMetrics" />
+          <Transition name="expand">
+            <div v-if="showRoomForm" class="review-form__room-mini">
+              <div class="review-form__row">
+                <div class="review-form__field review-form__field--inline">
+                  <label class="review-form__label">업체명 *</label>
+                  <input v-model="roomForm.vendorName" class="review-form__input" type="text" placeholder="예: 키이스케이프" />
+                </div>
+                <div class="review-form__field review-form__field--inline">
+                  <label class="review-form__label">테마명 *</label>
+                  <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
+                </div>
+              </div>
+              <div class="review-form__field">
+                <label class="review-form__label">지역 *</label>
+                <input v-model="roomForm.region" class="review-form__input" type="text" placeholder="예: 홍대" />
+              </div>
+              <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
+              <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
+                {{ roomFormSubmitting ? '등록 중...' : '방 등록하기' }}
+              </button>
+            </div>
+          </Transition>
+        </template>
+      </div>
 
-    <!-- 방문 메타 Spec: §3.3 -->
-    <fieldset class="review-form__fieldset">
-      <legend class="review-form__legend">방문 정보</legend>
+      <div class="review-form__field">
+        <label class="review-form__label" for="visited-at-input">방문일 *</label>
+        <input
+          id="visited-at-input"
+          v-model="form.visitedAt"
+          class="review-form__input"
+          type="date"
+          required
+        />
+      </div>
+    </section>
 
-      <div class="review-form__row">
+    <!-- 섹션 2: 평가 -->
+    <section v-if="mode === 'edit' || currentStep === 2" class="review-form__section">
+      <h3 class="review-form__section-title">평가</h3>
+
+      <div class="review-form__field">
+        <label class="review-form__label">총평 별점 *</label>
+        <StarRating v-model="form.rating" />
+        <p v-if="errors.rating" class="review-form__field-error">{{ errors.rating }}</p>
+      </div>
+
+      <div class="review-form__field">
+        <label class="review-form__label" for="summary-input">한줄평 *</label>
+        <input
+          id="summary-input"
+          v-model="form.summary"
+          class="review-form__input"
+          type="text"
+          maxlength="100"
+          placeholder="100자 이내로 작성"
+        />
+        <span class="review-form__counter">{{ form.summary.length }}/100</span>
+        <p v-if="errors.summary" class="review-form__field-error">{{ errors.summary }}</p>
+      </div>
+
+      <!-- 보조 지표 Spec: §3.2 -->
+      <SubMetricsSection v-model="form.subMetrics" />
+    </section>
+
+    <!-- 섹션 3: 방문 정보 -->
+    <section v-if="mode === 'edit' || currentStep === 3" class="review-form__section">
+      <h3 class="review-form__section-title">방문 정보</h3>
+
+      <div class="review-form__field">
         <label class="review-form__label">결과 *</label>
-        <div class="review-form__radio-group">
-          <label class="review-form__radio">
-            <input v-model="form.isSuccess" type="radio" :value="true" />
-            성공
-          </label>
-          <label class="review-form__radio">
-            <input v-model="form.isSuccess" type="radio" :value="false" />
-            실패
-          </label>
+        <div class="review-form__pill-group">
+          <button
+            type="button"
+            class="review-form__pill"
+            :class="{ 'review-form__pill--active-success': form.isSuccess === true }"
+            @click="form.isSuccess = true"
+          >성공</button>
+          <button
+            type="button"
+            class="review-form__pill"
+            :class="{ 'review-form__pill--active-fail': form.isSuccess === false }"
+            @click="form.isSuccess = false"
+          >실패</button>
+        </div>
+        <p v-if="errors.isSuccess" class="review-form__field-error">{{ errors.isSuccess }}</p>
+      </div>
+
+      <div class="review-form__row">
+        <div class="review-form__field review-form__field--inline">
+          <label class="review-form__label" for="headcount-input">인원 수 *</label>
+          <input
+            id="headcount-input"
+            v-model.number="form.headcount"
+            class="review-form__input review-form__input--short"
+            type="number"
+            min="1"
+            max="10"
+          />
+          <p v-if="errors.headcount" class="review-form__field-error">{{ errors.headcount }}</p>
+        </div>
+
+        <div class="review-form__field review-form__field--inline">
+          <label class="review-form__label" for="remaining-input">남은 시간(분)</label>
+          <input
+            id="remaining-input"
+            v-model.number="form.remainingMinutes"
+            class="review-form__input review-form__input--short"
+            type="number"
+            min="0"
+            max="120"
+            placeholder="선택"
+          />
         </div>
       </div>
-      <p v-if="errors.isSuccess" class="review-form__field-error">{{ errors.isSuccess }}</p>
-
-      <div class="review-form__row">
-        <label class="review-form__label" for="remaining-input">남은 시간(분)</label>
-        <input
-          id="remaining-input"
-          v-model.number="form.remainingMinutes"
-          class="review-form__input review-form__input--short"
-          type="number"
-          min="0"
-          max="120"
-          placeholder="선택"
-        />
-      </div>
-
-      <div class="review-form__row">
-        <label class="review-form__label" for="headcount-input">인원 수 *</label>
-        <input
-          id="headcount-input"
-          v-model.number="form.headcount"
-          class="review-form__input review-form__input--short"
-          type="number"
-          min="1"
-          max="10"
-        />
-      </div>
-      <p v-if="errors.headcount" class="review-form__field-error">{{ errors.headcount }}</p>
 
       <GenreTagSelector
         v-model="form.genreTags"
@@ -354,58 +470,58 @@ function navigateAfterSave(reviewId: string) {
         @update:custom-genre="form.customGenre = $event"
       />
 
-      <div class="review-form__row">
+      <div class="review-form__field">
         <label class="review-form__label">재방문 의사</label>
-        <div class="review-form__radio-group">
-          <label class="review-form__radio">
-            <input v-model="form.wouldRevisit" type="radio" :value="true" />
-            Yes
-          </label>
-          <label class="review-form__radio">
-            <input v-model="form.wouldRevisit" type="radio" :value="false" />
-            No
-          </label>
+        <div class="review-form__pill-group">
+          <button
+            type="button"
+            class="review-form__pill"
+            :class="{ 'review-form__pill--active': form.wouldRevisit === true }"
+            @click="form.wouldRevisit = true"
+          >Yes</button>
+          <button
+            type="button"
+            class="review-form__pill"
+            :class="{ 'review-form__pill--active': form.wouldRevisit === false }"
+            @click="form.wouldRevisit = false"
+          >No</button>
         </div>
       </div>
-    </fieldset>
+    </section>
 
-    <!-- 본문 Spec: §3.4 -->
-    <div class="review-form__field">
-      <label class="review-form__label" for="body-input">본문</label>
-      <textarea
-        id="body-input"
-        v-model="form.body"
-        class="review-form__textarea"
-        maxlength="3000"
-        rows="6"
-        placeholder="자유롭게 작성 (3000자 이내)"
-      />
-      <span class="review-form__counter">{{ form.body.length }}/3000</span>
-    </div>
+    <!-- 섹션 4: 기록 -->
+    <section v-if="mode === 'edit' || currentStep === 4" class="review-form__section">
+      <h3 class="review-form__section-title">기록</h3>
 
-    <!-- 사진 Spec: §3.4 -->
-    <div class="review-form__field">
-      <label class="review-form__label">사진 (1~3장)</label>
-      <PhotoUploader
-        v-model="selectedPhotos"
-        :existing-paths="existingPhotos"
-        :disabled="!!pendingReviewId"
-      />
-    </div>
-
-    <!-- 공개 범위 -->
-    <div class="review-form__field">
-      <label class="review-form__label" for="visibility-select">공개 범위</label>
-      <div class="review-form__select-wrapper">
-        <select id="visibility-select" v-model="form.visibility" class="review-form__select">
-          <option value="group">회원 공개</option>
-          <option value="private">나만 보기</option>
-        </select>
-        <ChevronDownIcon class="review-form__select-icon" />
+      <div class="review-form__field">
+        <label class="review-form__label" for="body-input">본문</label>
+        <textarea
+          id="body-input"
+          v-model="form.body"
+          class="review-form__textarea"
+          maxlength="3000"
+          rows="5"
+          placeholder="자유롭게 작성 (3000자 이내)"
+        />
+        <span class="review-form__counter">{{ form.body.length }}/3000</span>
       </div>
-    </div>
 
-    <p v-if="errors.general" class="review-form__field-error">{{ errors.general }}</p>
+      <div class="review-form__field">
+        <label class="review-form__label">사진 (최대 3장)</label>
+        <PhotoUploader
+          v-model="selectedPhotos"
+          :existing-paths="existingPhotos"
+          :disabled="!!pendingReviewId"
+        />
+      </div>
+
+      <div class="review-form__field">
+        <label class="review-form__label">공개 범위</label>
+        <BaseSelect v-model="form.visibility" :options="visibilityOptions" variant="input" />
+      </div>
+    </section>
+
+    <p v-if="(mode === 'edit' || currentStep === 4) && errors.general" class="review-form__field-error">{{ errors.general }}</p>
 
     <!-- 사진 업로드 실패 시 retry / skip 버튼 -->
     <div v-if="pendingReviewId && photoUploadState.some((s) => s === 'error')" class="review-form__photo-actions">
@@ -417,14 +533,20 @@ function navigateAfterSave(reviewId: string) {
       </button>
     </div>
 
-    <button
-      v-if="!pendingReviewId"
-      type="submit"
-      class="review-form__submit"
-      :disabled="submitting"
-    >
-      {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
-    </button>
+    <div v-if="!pendingReviewId" class="review-form__footer">
+      <!-- create 모드: 마지막 스텝 전까지 "다음", 마지막은 "리뷰 저장" -->
+      <button
+        v-if="mode === 'create' && currentStep < TOTAL_STEPS"
+        type="button"
+        class="review-form__submit"
+        @click="goNext"
+      >
+        다음
+      </button>
+      <button v-else type="submit" class="review-form__submit" :disabled="submitting">
+        {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
+      </button>
+    </div>
   </form>
 </template>
 
@@ -432,140 +554,227 @@ function navigateAfterSave(reviewId: string) {
 .review-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 560px;
+  gap: 12px;
+  padding-bottom: 80px; /* sticky footer 여백 */
 }
 
+/* 위자드 헤더 */
+.review-form__wizard-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 4px;
+}
+
+.review-form__wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 28px;
+}
+
+.review-form__back {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.review-form__back:hover {
+  color: var(--color-text-sub);
+}
+
+.review-form__progress-track {
+  width: 100%;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.review-form__progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.review-form__step-counter {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* 섹션 */
+.review-form__section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-form__section-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+/* 필드 */
 .review-form__field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.review-form__field--inline {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-form__row {
+  display: flex;
+  gap: 16px;
 }
 
 .review-form__label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-sub);
 }
 
-.review-form__select-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.review-form__select-icon {
-  position: absolute;
-  right: 8px;
-  width: 16px;
-  height: 16px;
-  color: #666;
-  pointer-events: none;
-}
-
+/* 입력 */
 .review-form__input,
 .review-form__select,
 .review-form__textarea {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-family: inherit;
-}
-
-.review-form__select {
-  appearance: none;
-  padding-right: 32px;
   width: 100%;
-  cursor: pointer;
+  padding: 11px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
+  min-height: 48px;
 }
 
-.review-form__input--short {
-  width: 100px;
+.review-form__input:focus,
+.review-form__select:focus,
+.review-form__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
+
 
 .review-form__textarea {
   resize: vertical;
+  min-height: 120px;
 }
 
 .review-form__counter {
   font-size: 0.75rem;
-  color: #999;
+  color: var(--color-text-muted);
   text-align: right;
 }
 
-.review-form__fieldset {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.review-form__legend {
-  font-weight: 600;
-  font-size: 0.9375rem;
-  padding: 0 4px;
-}
-
-.review-form__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.review-form__radio-group {
-  display: flex;
-  gap: 12px;
-}
-
-.review-form__radio {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.review-form__placeholder {
-  font-size: 0.8125rem;
-  color: #999;
-  padding: 16px;
-  border: 1px dashed #ddd;
-  border-radius: 6px;
-  text-align: center;
-}
-
+/* 에러 */
 .review-form__field-error {
   font-size: 0.8125rem;
-  color: #e53935;
-  margin-top: 2px;
+  color: var(--color-error);
 }
 
+/* 고정 방 표시 */
 .review-form__room-fixed {
-  font-size: 0.875rem;
-  color: #555;
-  padding: 8px 12px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  background: #f9f9f9;
+  font-size: 0.9375rem;
+  color: var(--color-text-sub);
+  padding: 11px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+/* Pill 버튼 (성공/실패, 재방문) */
+.review-form__pill-group {
+  display: flex;
+  gap: 8px;
+}
+
+.review-form__pill {
+  flex: 1;
+  padding: 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-sub);
+  background: var(--color-surface);
+  transition: all var(--transition-fast);
+  min-height: 44px;
+}
+
+.review-form__pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.review-form__pill--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.review-form__pill--active-success {
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.review-form__pill--active-fail {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+/* 제출 푸터 */
+.review-form__footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg);
+  padding: 12px 0;
+  margin: 0 -16px;
+  padding: 12px 16px;
 }
 
 .review-form__submit {
-  padding: 12px;
-  background: #4a90d9;
+  width: 100%;
+  padding: 14px;
+  background: var(--color-primary);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 1rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
+  min-height: 52px;
 }
 
 .review-form__submit:hover:not(:disabled) {
-  background: #357abd;
+  background: var(--color-primary-dark);
 }
 
 .review-form__submit:disabled {
@@ -573,6 +782,74 @@ function navigateAfterSave(reviewId: string) {
   cursor: not-allowed;
 }
 
+/* 인라인 방 등록 */
+.review-form__add-room-toggle {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--transition-fast);
+}
+
+.review-form__add-room-toggle:hover {
+  color: var(--color-primary-dark);
+}
+
+.review-form__room-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.review-form__room-submit {
+  padding: 10px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background var(--transition-fast);
+}
+
+.review-form__room-submit:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.review-form__room-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* expand 애니메이션 */
+.expand-enter-active,
+.expand-leave-active {
+  transition: max-height 0.28s ease, opacity 0.22s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 400px;
+  opacity: 1;
+}
+
+/* 사진 재시도 */
 .review-form__photo-actions {
   display: flex;
   gap: 8px;
@@ -580,33 +857,33 @@ function navigateAfterSave(reviewId: string) {
 
 .review-form__retry-btn {
   flex: 1;
-  padding: 10px;
-  background: #4a90d9;
+  padding: 12px;
+  background: var(--color-primary);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.9375rem;
   font-weight: 600;
-  cursor: pointer;
+  min-height: 48px;
 }
 
 .review-form__retry-btn:hover:not(:disabled) {
-  background: #357abd;
+  background: var(--color-primary-dark);
 }
 
 .review-form__skip-btn {
-  padding: 10px 16px;
-  background: #fff;
-  color: #999;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: 0.9375rem;
-  cursor: pointer;
+  min-height: 48px;
 }
 
 .review-form__skip-btn:hover:not(:disabled) {
-  border-color: #aaa;
-  color: #666;
+  border-color: var(--color-text-sub);
+  color: var(--color-text-sub);
 }
 
 .review-form__retry-btn:disabled,
