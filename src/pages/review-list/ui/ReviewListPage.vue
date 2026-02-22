@@ -6,6 +6,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
+import AppSpinner from '@/shared/ui/AppSpinner.vue'
 
 const reviews = ref<Review[]>([])
 const rooms = ref<Record<string, Room>>({})
@@ -59,7 +60,7 @@ onMounted(async () => {
   <div class="review-list">
     <h2 class="review-list__title">리뷰 목록</h2>
 
-    <div v-if="loading" class="review-list__status">불러오는 중...</div>
+    <AppSpinner v-if="loading" />
 
     <template v-else-if="error">
       <p class="review-list__status review-list__status--error">{{ error }}</p>

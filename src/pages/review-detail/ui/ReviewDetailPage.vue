@@ -8,6 +8,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import { ArrowLeftIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
+import AppSpinner from '@/shared/ui/AppSpinner.vue'
 
 const route = useRoute()
 
@@ -54,7 +55,7 @@ onMounted(async () => {
         <PencilSquareIcon class="review-detail-page__edit-icon" />
       </RouterLink>
     </div>
-    <div v-if="loading" class="review-detail-page__status">불러오는 중...</div>
+    <AppSpinner v-if="loading" />
     <p v-else-if="fetchError" class="review-detail-page__status review-detail-page__status--error">
       리뷰를 불러오는 데 실패했습니다.
     </p>

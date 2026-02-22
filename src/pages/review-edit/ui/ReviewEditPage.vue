@@ -5,6 +5,7 @@ import { fetchReviewById } from '@/entities/review/api'
 import type { Review } from '@/entities/review/types'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import ReviewCreateForm from '@/features/review-create/ui/ReviewCreateForm.vue'
+import AppSpinner from '@/shared/ui/AppSpinner.vue'
 
 const route = useRoute()
 const review = ref<Review | null>(null)
@@ -50,7 +51,7 @@ const initialData = computed(() => {
       <ArrowLeftIcon class="review-edit-page__back-icon" /> 돌아가기
     </RouterLink>
     <h2 class="review-edit-page__title">리뷰 수정</h2>
-    <div v-if="loading" class="review-edit-page__status">불러오는 중...</div>
+    <AppSpinner v-if="loading" />
     <p v-else-if="fetchError" class="review-edit-page__status review-edit-page__status--error">
       리뷰를 불러오는 데 실패했습니다.
     </p>

@@ -5,6 +5,7 @@ import { getSharedReview } from '@/entities/review/api'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
+import AppSpinner from '@/shared/ui/AppSpinner.vue'
 
 const props = defineProps<{ token: string }>()
 
@@ -31,7 +32,7 @@ onMounted(async () => {
 
 <template>
   <div class="shared-review">
-    <div v-if="loading" class="shared-review__status">불러오는 중...</div>
+    <AppSpinner v-if="loading" />
     <p v-else-if="fetchError" class="shared-review__status shared-review__status--error">
       리뷰를 불러오는 데 실패했습니다.
     </p>
