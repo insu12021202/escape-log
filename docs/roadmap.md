@@ -244,7 +244,7 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 ## 현재 상태 기록 (수동 업데이트)
 
 - 현재 Phase: **Phase 6 진행 중** (v1 마감)
-- 마지막 완료 PR: feat: 사진 업로드 기능 추가 (#14)
+- 마지막 완료 PR: fix(login): 모바일 iOS 자동 줌인 방지 (#16)
 
 ### 완료된 작업 요약
 
@@ -278,5 +278,13 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
   - 리뷰 저장 후 사진 업로드, 실패 시 재시도/건너뛰기 UI
   - 리뷰 상세에서 사진 그리드 표시 + 라이트박스(이전/다음 탐색)
 
+#### Phase 4 이월 — 이메일 인증 추가
+- 이메일/비밀번호 회원가입 및 로그인 — PR #15
+  - 로그인/회원가입 모드 토글
+  - Confirm email OFF 시 즉시 로그인
+  - Google OAuth 버튼 유지
+  - Supabase profiles FK DEFERRABLE 설정 (트리거 타이밍 이슈 해결)
+- 모바일 iOS 자동 줌인 방지 (input font-size 16px) — PR #16
+
 ### 미완료 항목
-- [ ] v1 마감 (환경 변수 점검, Vercel 배포, README) — Phase 6
+- [ ] v1 마감 (Vercel 배포 확인, README 정리) — Phase 6

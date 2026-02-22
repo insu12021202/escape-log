@@ -10,6 +10,7 @@
 - 리뷰 목록 조회 및 필터링 (지역, 평점)
 - 사진 업로드 (최대 3장, Supabase Storage) + 라이트박스 뷰어
 - 링크 공유 (`/share/:token`) — 로그인 사용자 열람 가능
+- 이메일/비밀번호 회원가입 및 로그인
 - Google OAuth 로그인 (Supabase Auth)
 
 ## 기술 스택
@@ -73,7 +74,8 @@ npm run lint         # ESLint
 |------|------|
 | Storage 버킷 | `review-photos` (Public) |
 | Storage 정책 | `authenticated` 사용자 INSERT 허용 |
-| Auth Provider | Google OAuth 활성화 |
+| Auth Provider | Google OAuth 활성화, 이메일 로그인 활성화 |
+| Email 설정 | Confirm email OFF 권장 (즉시 로그인) |
 
 ## 프로젝트 구조
 
@@ -98,7 +100,7 @@ src/
 | `/review/:id/edit` | 리뷰 수정 (작성자만) |
 | `/room/search` | 방 검색 / 등록 |
 | `/share/:token` | 링크 공유 열람 |
-| `/login` | Google OAuth 로그인 |
+| `/login` | 이메일/비밀번호 + Google OAuth 로그인 |
 
 ## 개발 문서
 
