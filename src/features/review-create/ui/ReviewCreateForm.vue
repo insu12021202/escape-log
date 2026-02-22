@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
 import { uploadPhoto } from '@/shared/api/storage'
-import { searchRooms } from '@/entities/room/api'
+import { searchRooms, createRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
@@ -41,6 +41,12 @@ const router = useRouter()
 const rooms = ref<Room[]>([])
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
+
+// 인라인 방 등록
+const showRoomForm = ref(false)
+const roomForm = reactive({ vendorName: '', themeName: '', region: '' })
+const roomFormError = ref('')
+const roomFormSubmitting = ref(false)
 
 // 위자드 스텝 (create 모드 전용)
 const TOTAL_STEPS = 4
@@ -100,6 +106,33 @@ onMounted(async () => {
   rooms.value = roomList
   genreTagOptions.value = tagList
 })
+
+async function handleCreateRoom() {
+  roomFormError.value = ''
+  if (!roomForm.vendorName.trim()) { roomFormError.value = '업체명을 입력해주세요.'; return }
+  if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해주세요.'; return }
+  if (!roomForm.region.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
+
+  roomFormSubmitting.value = true
+  try {
+    const newRoom = await createRoom({
+      vendorName: roomForm.vendorName.trim(),
+      themeName: roomForm.themeName.trim(),
+      region: roomForm.region.trim(),
+    })
+    rooms.value.unshift(newRoom)
+    form.roomId = newRoom.id
+    showRoomForm.value = false
+    roomForm.vendorName = ''
+    roomForm.themeName = ''
+    roomForm.region = ''
+  } catch (e) {
+    console.error(e)
+    roomFormError.value = '방 등록에 실패했습니다. 다시 시도해주세요.'
+  } finally {
+    roomFormSubmitting.value = false
+  }
+}
 
 function validateStep(step: number): boolean {
   switch (step) {
@@ -309,6 +342,34 @@ function navigateAfterSave(reviewId: string) {
         <template v-else>
           <BaseSelect v-model="form.roomId" :options="roomOptions" variant="input" />
           <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
+
+          <!-- 인라인 방 등록 -->
+          <button type="button" class="review-form__add-room-toggle" @click="showRoomForm = !showRoomForm">
+            {{ showRoomForm ? '− 등록 취소' : '+ 방이 없어요? 직접 등록' }}
+          </button>
+
+          <Transition name="expand">
+            <div v-if="showRoomForm" class="review-form__room-mini">
+              <div class="review-form__row">
+                <div class="review-form__field review-form__field--inline">
+                  <label class="review-form__label">업체명 *</label>
+                  <input v-model="roomForm.vendorName" class="review-form__input" type="text" placeholder="예: 키이스케이프" />
+                </div>
+                <div class="review-form__field review-form__field--inline">
+                  <label class="review-form__label">테마명 *</label>
+                  <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
+                </div>
+              </div>
+              <div class="review-form__field">
+                <label class="review-form__label">지역 *</label>
+                <input v-model="roomForm.region" class="review-form__input" type="text" placeholder="예: 홍대" />
+              </div>
+              <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
+              <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
+                {{ roomFormSubmitting ? '등록 중...' : '방 등록하기' }}
+              </button>
+            </div>
+          </Transition>
         </template>
       </div>
 
@@ -577,6 +638,7 @@ function navigateAfterSave(reviewId: string) {
 
 .review-form__field--inline {
   flex: 1;
+  min-width: 0;
 }
 
 .review-form__row {
@@ -594,6 +656,7 @@ function navigateAfterSave(reviewId: string) {
 .review-form__input,
 .review-form__select,
 .review-form__textarea {
+  width: 100%;
   padding: 11px 14px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -611,9 +674,6 @@ function navigateAfterSave(reviewId: string) {
   border-color: var(--color-primary);
 }
 
-.review-form__input--short {
-  width: 100%;
-}
 
 .review-form__textarea {
   resize: vertical;
@@ -720,6 +780,73 @@ function navigateAfterSave(reviewId: string) {
 .review-form__submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 인라인 방 등록 */
+.review-form__add-room-toggle {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--transition-fast);
+}
+
+.review-form__add-room-toggle:hover {
+  color: var(--color-primary-dark);
+}
+
+.review-form__room-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.review-form__room-submit {
+  padding: 10px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background var(--transition-fast);
+}
+
+.review-form__room-submit:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.review-form__room-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* expand 애니메이션 */
+.expand-enter-active,
+.expand-leave-active {
+  transition: max-height 0.28s ease, opacity 0.22s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 400px;
+  opacity: 1;
 }
 
 /* 사진 재시도 */
