@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 4 완료 → Phase 5 진입 예정**
-- 마지막 완료 PR: feat: 리뷰 수정 기능 및 작성자 이름 표시 (#10)
+- 현재 Phase: **Phase 5 진행 중**
+- 마지막 완료 PR: feat: 리뷰 작성 폼 유효성 검증 추가 (#12)
 
 ### 완료된 작업 요약
 
@@ -264,7 +264,12 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 리뷰 상세에서 본인 리뷰에만 수정 버튼 노출 (`review.userId === currentUserId`)
 - 리뷰 수정 페이지 (`/review/:id/edit`) + ReviewCreateForm 공용 재사용
 
+#### Phase 5 (UX 완성) — 진행 중
+- 리뷰 작성 폼 유효성 검증 (SSOT §3 기준) — PR #12
+  - 총평 별점 1점 이상 필수, 한줄평 필수/100자, 성공/실패 명시적 선택 필수, 인원 수 필수
+  - 필드별 에러 메시지 인라인 표시
+
 ### 미완료 항목
-- [ ] 사진 업로드 (Supabase Storage) — Phase 3 기획 범위, 추후 구현
-- [ ] 리뷰 작성 폼 유효성 검증 — Phase 5
 - [ ] 로딩/에러/빈 상태 UI 다듬기 — Phase 5
+- [ ] 사진 업로드 (Supabase Storage) — Phase 3 기획 범위, 추후 구현
+- [ ] v1 마감 (환경 변수 점검, Vercel 배포, README) — Phase 6
