@@ -22,7 +22,9 @@ async function submit() {
       router.push('/')
     } else {
       await session.signUpWithEmail(email.value, password.value)
-      signupDone.value = true
+      // 가입 직후 바로 로그인 시도 (자동 이메일 확인 트리거 사용 시)
+      await session.signInWithEmail(email.value, password.value)
+      router.push('/')
     }
   } catch (e) {
     error.value = (e as Error).message
