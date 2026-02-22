@@ -6,6 +6,7 @@
 
 - 방탈출 리뷰 작성 / 수정 (별점, 한줄평, 보조 지표 6개, 방문 메타)
 - 리뷰 목록 조회 및 필터링 (지역, 평점)
+- 사진 업로드 (최대 3장, Supabase Storage) + 라이트박스 뷰어
 - 링크 공유 (`/share/:token`) — 로그인 사용자 열람 가능
 - Google OAuth 로그인 (Supabase Auth)
 
@@ -17,7 +18,8 @@
 | 아키텍처 | Feature-Sliced Design (FSD) |
 | 상태 관리 | Pinia |
 | 라우터 | Vue Router 4 |
-| 백엔드 | Supabase (Postgres + RLS + RPC + Auth) |
+| 백엔드 | Supabase (Postgres + RLS + RPC + Auth + Storage) |
+| 배포 | Vercel |
 
 ## 시작하기
 
@@ -49,6 +51,27 @@ npm run build        # 타입 체크 + 프로덕션 빌드
 npm run typecheck    # 타입 체크만
 npm run lint         # ESLint
 ```
+
+## Vercel 배포
+
+1. Vercel 대시보드에서 GitHub 레포 연결
+2. 환경 변수 설정 (Settings → Environment Variables):
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_DEFAULT_GROUP_ID`
+3. Supabase 대시보드 → Authentication → URL Configuration에 배포 URL 추가:
+   - Site URL: `https://your-app.vercel.app`
+   - Redirect URLs: `https://your-app.vercel.app/**`
+
+> `vercel.json`에 SPA 라우팅 rewrite 설정이 포함되어 있습니다.
+
+## Supabase 사전 설정
+
+| 항목 | 내용 |
+|------|------|
+| Storage 버킷 | `review-photos` (Public) |
+| Storage 정책 | `authenticated` 사용자 INSERT 허용 |
+| Auth Provider | Google OAuth 활성화 |
 
 ## 프로젝트 구조
 
