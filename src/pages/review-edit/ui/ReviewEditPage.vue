@@ -41,6 +41,7 @@ const initialData = computed(() => {
     wouldRevisit: r.visitMeta.wouldRevisit,
     body: r.body,
     visibility: r.visibility,
+    photos: r.photos,
   }
 })
 </script>

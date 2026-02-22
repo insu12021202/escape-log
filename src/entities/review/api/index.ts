@@ -248,6 +248,18 @@ export async function getSharedReview(
   return { review, room }
 }
 
+/** 리뷰 사진 경로를 review_photos 테이블에 등록. Spec: §3.4 */
+export async function attachReviewPhoto(
+  reviewId: string,
+  path: string,
+  sortOrder: number,
+): Promise<void> {
+  const { error } = await supabase
+    .from('review_photos')
+    .insert({ review_id: reviewId, path, sort_order: sortOrder })
+  if (error) throw error
+}
+
 /** 시스템 태그(장르) 목록 조회 */
 export async function fetchGenreTags(): Promise<Array<{ id: string; name: string }>> {
   const { data, error } = await supabase
