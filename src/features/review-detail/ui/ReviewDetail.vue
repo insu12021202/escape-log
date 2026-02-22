@@ -2,6 +2,7 @@
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
+import { getPhotoPublicUrl } from '@/shared/api/storage'
 
 defineProps<{
   review: Review
@@ -101,6 +102,20 @@ function formatDate(iso: string): string {
     <section v-if="review.body" class="review-detail__section">
       <h3 class="review-detail__section-title">본문</h3>
       <p class="review-detail__body">{{ review.body }}</p>
+    </section>
+
+    <!-- 사진 Spec: §3.4 -->
+    <section v-if="review.photos.length" class="review-detail__section">
+      <h3 class="review-detail__section-title">사진</h3>
+      <div class="review-detail__photos">
+        <img
+          v-for="(path, i) in review.photos"
+          :key="i"
+          :src="getPhotoPublicUrl(path)"
+          :alt="`사진 ${i + 1}`"
+          class="review-detail__photo"
+        />
+      </div>
     </section>
 
     <!-- 메타 -->
@@ -241,6 +256,20 @@ function formatDate(iso: string): string {
   line-height: 1.6;
   color: #444;
   white-space: pre-wrap;
+}
+
+.review-detail__photos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-detail__photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
 }
 
 .review-detail__footer {

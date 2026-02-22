@@ -2,13 +2,15 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
-import { fetchGenreTags, createReview, updateReview } from '@/entities/review/api'
+import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
+import { uploadPhoto } from '@/shared/api/storage'
 import { searchRooms } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import { ChevronDownIcon } from '@heroicons/vue/24/outline'
 import StarRating from '@/shared/ui/StarRating.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
+import PhotoUploader from './PhotoUploader.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -28,6 +30,7 @@ const props = withDefaults(
       wouldRevisit: boolean
       body: string
       visibility: Visibility
+      photos: string[]
     }>
   }>(),
   { mode: 'create' },
@@ -38,6 +41,13 @@ const router = useRouter()
 const rooms = ref<Room[]>([])
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
+
+// 사진 업로드 상태. Spec: §3.4
+const selectedPhotos = ref<File[]>([])
+const existingPhotos = ref<string[]>(props.initialData?.photos ?? [])
+type PhotoState = 'idle' | 'uploading' | 'done' | 'error'
+const photoUploadState = ref<PhotoState[]>([])
+const pendingReviewId = ref<string | null>(null)
 
 const errors = reactive({
   room: '',
@@ -120,6 +130,11 @@ function validateForm(): boolean {
 
 async function handleSubmit() {
   if (!validateForm()) return
+  // 이미 리뷰가 생성된 상태라면 사진 재시도만 수행
+  if (pendingReviewId.value) {
+    await retryPhotoUpload()
+    return
+  }
 
   submitting.value = true
 
@@ -146,19 +161,82 @@ async function handleSubmit() {
       visibility: form.visibility,
     }
 
+    let reviewId: string
     if (props.mode === 'edit' && props.reviewId) {
       await updateReview(props.reviewId, payload)
-      router.push(`/review/${props.reviewId}`)
+      reviewId = props.reviewId
     } else {
       const defaultGroupId = import.meta.env.VITE_DEFAULT_GROUP_ID as string
-      await createReview({ roomId: form.roomId, groupId: defaultGroupId, ...payload })
-      router.push('/')
+      const created = await createReview({ roomId: form.roomId, groupId: defaultGroupId, ...payload })
+      reviewId = created.id
     }
+
+    if (selectedPhotos.value.length > 0) {
+      pendingReviewId.value = reviewId
+      const allDone = await uploadPhotos(reviewId)
+      if (!allDone) {
+        // 업로드 실패 — 리뷰는 저장됨, 사진 재시도 안내
+        errors.general = '리뷰가 저장됐지만 일부 사진 업로드에 실패했습니다. 재시도하거나 그대로 이동할 수 있습니다.'
+        return
+      }
+    }
+
+    navigateAfterSave(reviewId)
   } catch (e) {
     console.error(e)
     errors.general = '리뷰 저장 중 오류가 발생했습니다.'
   } finally {
     submitting.value = false
+  }
+}
+
+/** 사진 업로드 시도. 모두 성공하면 true 반환. */
+async function uploadPhotos(reviewId: string): Promise<boolean> {
+  photoUploadState.value = selectedPhotos.value.map(() => 'uploading' as PhotoState)
+
+  let anyError = false
+  for (let i = 0; i < selectedPhotos.value.length; i++) {
+    if (photoUploadState.value[i] === 'done') continue
+    try {
+      const path = await uploadPhoto(reviewId, selectedPhotos.value[i]!, i)
+      await attachReviewPhoto(reviewId, path, i)
+      photoUploadState.value[i] = 'done'
+    } catch (e) {
+      console.error(e)
+      photoUploadState.value[i] = 'error'
+      anyError = true
+    }
+  }
+  return !anyError
+}
+
+/** 실패한 사진만 재시도 */
+async function retryPhotoUpload() {
+  if (!pendingReviewId.value) return
+  submitting.value = true
+  errors.general = ''
+  try {
+    const allDone = await uploadPhotos(pendingReviewId.value)
+    if (allDone) {
+      navigateAfterSave(pendingReviewId.value)
+    } else {
+      errors.general = '일부 사진 업로드에 실패했습니다. 다시 시도해주세요.'
+    }
+  } finally {
+    submitting.value = false
+  }
+}
+
+/** 사진 없이 이동 (리뷰는 이미 저장된 상태) */
+function skipPhotosAndNavigate() {
+  if (pendingReviewId.value) navigateAfterSave(pendingReviewId.value)
+}
+
+function navigateAfterSave(reviewId: string) {
+  if (props.mode === 'edit') {
+    router.push(`/review/${reviewId}`)
+  } else {
+    router.push('/')
   }
 }
 </script>
@@ -305,10 +383,14 @@ async function handleSubmit() {
       <span class="review-form__counter">{{ form.body.length }}/3000</span>
     </div>
 
-    <!-- 사진 — Phase 3(Supabase Storage)에서 구현 예정 -->
+    <!-- 사진 Spec: §3.4 -->
     <div class="review-form__field">
       <label class="review-form__label">사진 (1~3장)</label>
-      <p class="review-form__placeholder">사진 업로드는 추후 지원 예정입니다.</p>
+      <PhotoUploader
+        v-model="selectedPhotos"
+        :existing-paths="existingPhotos"
+        :disabled="!!pendingReviewId"
+      />
     </div>
 
     <!-- 공개 범위 -->
@@ -325,7 +407,22 @@ async function handleSubmit() {
 
     <p v-if="errors.general" class="review-form__field-error">{{ errors.general }}</p>
 
-    <button type="submit" class="review-form__submit" :disabled="submitting">
+    <!-- 사진 업로드 실패 시 retry / skip 버튼 -->
+    <div v-if="pendingReviewId && photoUploadState.some((s) => s === 'error')" class="review-form__photo-actions">
+      <button type="button" class="review-form__retry-btn" :disabled="submitting" @click="retryPhotoUpload">
+        {{ submitting ? '재시도 중...' : '사진 재시도' }}
+      </button>
+      <button type="button" class="review-form__skip-btn" :disabled="submitting" @click="skipPhotosAndNavigate">
+        사진 없이 이동
+      </button>
+    </div>
+
+    <button
+      v-if="!pendingReviewId"
+      type="submit"
+      class="review-form__submit"
+      :disabled="submitting"
+    >
       {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
     </button>
   </form>
@@ -472,6 +569,48 @@ async function handleSubmit() {
 }
 
 .review-form__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.review-form__photo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.review-form__retry-btn {
+  flex: 1;
+  padding: 10px;
+  background: #4a90d9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.review-form__retry-btn:hover:not(:disabled) {
+  background: #357abd;
+}
+
+.review-form__skip-btn {
+  padding: 10px 16px;
+  background: #fff;
+  color: #999;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.review-form__skip-btn:hover:not(:disabled) {
+  border-color: #aaa;
+  color: #666;
+}
+
+.review-form__retry-btn:disabled,
+.review-form__skip-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
