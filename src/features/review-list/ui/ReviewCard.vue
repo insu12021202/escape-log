@@ -10,7 +10,13 @@ defineProps<{
   isSuccess: boolean
   genreTags: string[]
   authorName?: string | null
+  visitedAt?: string | null
+  remainingMinutes?: number | null
 }>()
+
+function formatVisitedAt(dateStr: string) {
+  return dateStr.slice(0, 7).replace('-', '.')
+}
 </script>
 
 <template>
@@ -39,7 +45,13 @@ defineProps<{
 
     <div class="review-card__footer">
       <span class="review-card__region">{{ region }}</span>
-      <span v-if="authorName" class="review-card__author">{{ authorName }}</span>
+      <div class="review-card__meta">
+        <span v-if="visitedAt" class="review-card__date">{{ formatVisitedAt(visitedAt) }}</span>
+        <span v-if="visitedAt && remainingMinutes != null" class="review-card__meta-sep">·</span>
+        <span v-if="remainingMinutes != null" class="review-card__escape-time">탈출 {{ remainingMinutes }}m</span>
+        <span v-if="authorName && (visitedAt || remainingMinutes != null)" class="review-card__meta-sep">·</span>
+        <span v-if="authorName" class="review-card__author">{{ authorName }}</span>
+      </div>
     </div>
   </RouterLink>
 </template>
@@ -157,8 +169,27 @@ defineProps<{
   color: var(--color-text-muted);
 }
 
+.review-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.review-card__date,
+.review-card__escape-time,
+.review-card__author {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
 .review-card__author {
   font-weight: 500;
   color: var(--color-text-sub);
+}
+
+.review-card__meta-sep {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0.6;
 }
 </style>
