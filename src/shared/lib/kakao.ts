@@ -42,7 +42,7 @@ export interface ShareReviewParams {
  * - share_token이 있는 리뷰에만 호출할 것
  * - Kakao SDK 미로드 시 링크 복사로 폴백
  */
-export async function shareReviewViaKakao(params: ShareReviewParams): Promise<'kakao' | 'copied' | 'failed'> {
+export async function shareReviewViaKakao(params: ShareReviewParams): Promise<'kakao' | 'shared' | 'copied' | 'failed'> {
   const shareUrl = `${window.location.origin}/share/${params.token}`
   const ogImage = `${window.location.origin}/logo.png`
 
@@ -68,10 +68,42 @@ export async function shareReviewViaKakao(params: ShareReviewParams): Promise<'k
     return 'kakao'
   }
 
-  // Kakao SDK 없을 때 URL 복사 폴백
+  // 폴백 1: Web Share API (모바일 네이티브 공유 시트)
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${params.vendorName} · ${params.themeName}`,
+        text: `${params.isSuccess ? '탈출 성공' : '탈출 실패'} ★${params.rating} | ${params.summary}`,
+        url: shareUrl,
+      })
+      return 'shared'
+    } catch {
+      // 사용자가 취소한 경우 — 다음 폴백으로
+    }
+  }
+
+  // 폴백 2: Clipboard API (HTTPS 전용)
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      return 'copied'
+    } catch {
+      // HTTPS여도 실패할 수 있음 — 다음 폴백으로
+    }
+  }
+
+  // 폴백 3: execCommand (HTTP에서도 동작)
   try {
-    await navigator.clipboard.writeText(shareUrl)
-    return 'copied'
+    const ta = document.createElement('textarea')
+    ta.value = shareUrl
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.focus()
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok ? 'copied' : 'failed'
   } catch {
     return 'failed'
   }

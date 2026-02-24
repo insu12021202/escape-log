@@ -2,6 +2,17 @@ import { supabase } from '@/shared/api/supabase'
 import type { Review, Visibility } from '../types'
 import type { Room } from '@/entities/room/types'
 
+/** HTTP 환경에서도 동작하는 UUID v4 생성 */
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
 const REVIEW_SELECT = `
   id, user_id, room_id, group_id,
   overall_rating, one_liner,
@@ -264,7 +275,7 @@ export async function enableSharing(id: string): Promise<string> {
   const row = existing as { share_token: string | null; visibility: string }
   if (row.share_token && row.visibility === 'link') return row.share_token
 
-  const token = row.share_token ?? crypto.randomUUID()
+  const token = row.share_token ?? generateUUID()
   const { error: updateErr } = await supabase
     .from('reviews')
     .update({ visibility: 'link', share_token: token })

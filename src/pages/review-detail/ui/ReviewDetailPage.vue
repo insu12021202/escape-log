@@ -33,7 +33,9 @@ async function handleShare() {
   if (!review.value || !room.value || sharing.value) return
   sharing.value = true
   try {
+    console.log('[share] enableSharing 호출...')
     const token = await enableSharing(review.value.id)
+    console.log('[share] token:', token)
     // 로컬 상태도 업데이트
     review.value = { ...review.value, shareToken: token, visibility: 'link' }
 
@@ -46,12 +48,13 @@ async function handleShare() {
       isSuccess: review.value.visitMeta.isSuccess,
     })
 
-    if (result === 'copied') showToast('링크가 복사되었습니다.')
-    if (result === 'failed') showToast('공유에 실패했습니다. 링크를 직접 복사해주세요.')
-    // 'kakao' 결과는 SDK가 다이얼로그를 열므로 별도 토스트 없음
+    const debugInfo = `[result=${result}, share=${!!navigator.share}, clip=${!!navigator.clipboard}, proto=${location.protocol}]`
+    if (result === 'kakao') showToast(`카카오톡 공유 열림 ${debugInfo}`)
+    else if (result === 'shared') showToast(`공유 시트 열림 ${debugInfo}`)
+    else if (result === 'copied') showToast(`링크 복사됨 ${debugInfo}`)
+    else showToast(`공유 실패 ${debugInfo}`)
   } catch (e) {
-    console.error(e)
-    showToast('공유 중 오류가 발생했습니다.')
+    showToast(`에러: ${e instanceof Error ? e.message : String(e)}`)
   } finally {
     sharing.value = false
   }

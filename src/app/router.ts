@@ -51,13 +51,17 @@ const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior() {
+    return { top: 0 }
+  },
 })
 
-// 비로그인 시 /login으로 리다이렉트  Spec: §5
+// 비로그인 시 /login으로 리다이렉트, 로그인 상태에서 /login 접근 시 홈으로  Spec: §5
 router.beforeEach(async (to) => {
-  if (to.meta.public) return true
-
   const session = useSessionStore()
   if (!session.ready) await session.init()
+
+  if (to.name === 'login' && session.user) return { name: 'review-list' }
+  if (to.meta.public) return true
   if (!session.user) return { name: 'login' }
 })
