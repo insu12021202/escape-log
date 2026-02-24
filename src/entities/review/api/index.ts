@@ -248,6 +248,31 @@ export async function getSharedReview(
   return { review, room }
 }
 
+/**
+ * 공유 링크 활성화. visibility='link', share_token 발급. Spec: §6
+ * 이미 token이 있으면 재사용.
+ */
+export async function enableSharing(id: string): Promise<string> {
+  // 기존 토큰 확인
+  const { data: existing, error: fetchErr } = await supabase
+    .from('reviews')
+    .select('share_token, visibility')
+    .eq('id', id)
+    .single()
+  if (fetchErr) throw fetchErr
+
+  const row = existing as { share_token: string | null; visibility: string }
+  if (row.share_token && row.visibility === 'link') return row.share_token
+
+  const token = row.share_token ?? crypto.randomUUID()
+  const { error: updateErr } = await supabase
+    .from('reviews')
+    .update({ visibility: 'link', share_token: token })
+    .eq('id', id)
+  if (updateErr) throw updateErr
+  return token
+}
+
 /** 리뷰 사진 경로를 review_photos 테이블에 등록. Spec: §3.4 */
 export async function attachReviewPhoto(
   reviewId: string,

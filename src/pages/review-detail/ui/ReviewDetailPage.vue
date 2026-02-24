@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchReviewById } from '@/entities/review/api'
+import { fetchReviewById, enableSharing } from '@/entities/review/api'
 import { searchRooms } from '@/entities/room/api'
 import { supabase } from '@/shared/api/supabase'
+import { shareReviewViaKakao } from '@/shared/lib/kakao'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
-import { ArrowLeftIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, PencilSquareIcon, ShareIcon } from '@heroicons/vue/24/outline'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
 
@@ -17,6 +18,44 @@ const room = ref<Room | null>(null)
 const loading = ref(true)
 const fetchError = ref(false)
 const currentUserId = ref<string | null>(null)
+
+const sharing = ref(false)
+const toastMsg = ref<string | null>(null)
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function showToast(msg: string) {
+  toastMsg.value = msg
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toastMsg.value = null }, 2500)
+}
+
+async function handleShare() {
+  if (!review.value || !room.value || sharing.value) return
+  sharing.value = true
+  try {
+    const token = await enableSharing(review.value.id)
+    // 로컬 상태도 업데이트
+    review.value = { ...review.value, shareToken: token, visibility: 'link' }
+
+    const result = await shareReviewViaKakao({
+      token,
+      vendorName: room.value.vendorName,
+      themeName: room.value.themeName,
+      rating: review.value.rating,
+      summary: review.value.summary,
+      isSuccess: review.value.visitMeta.isSuccess,
+    })
+
+    if (result === 'copied') showToast('링크가 복사되었습니다.')
+    if (result === 'failed') showToast('공유에 실패했습니다. 링크를 직접 복사해주세요.')
+    // 'kakao' 결과는 SDK가 다이얼로그를 열므로 별도 토스트 없음
+  } catch (e) {
+    console.error(e)
+    showToast('공유 중 오류가 발생했습니다.')
+  } finally {
+    sharing.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -46,14 +85,25 @@ onMounted(async () => {
       <RouterLink to="/" class="review-detail-page__back">
         <ArrowLeftIcon class="review-detail-page__back-icon" /> 목록으로
       </RouterLink>
-      <RouterLink
-        v-if="review && currentUserId && review.userId === currentUserId"
-        :to="`/review/${review.id}/edit`"
-        class="review-detail-page__edit-btn"
-        title="수정"
-      >
-        <PencilSquareIcon class="review-detail-page__edit-icon" />
-      </RouterLink>
+      <div class="review-detail-page__actions">
+        <button
+          v-if="review && currentUserId && review.userId === currentUserId"
+          class="review-detail-page__action-btn"
+          :disabled="sharing"
+          title="공유"
+          @click="handleShare"
+        >
+          <ShareIcon class="review-detail-page__action-icon" />
+        </button>
+        <RouterLink
+          v-if="review && currentUserId && review.userId === currentUserId"
+          :to="`/review/${review.id}/edit`"
+          class="review-detail-page__action-btn"
+          title="수정"
+        >
+          <PencilSquareIcon class="review-detail-page__action-icon" />
+        </RouterLink>
+      </div>
     </div>
     <AppSpinner v-if="loading" />
     <p v-else-if="fetchError" class="review-detail-page__status review-detail-page__status--error">
@@ -61,6 +111,11 @@ onMounted(async () => {
     </p>
     <ReviewDetail v-else-if="review && room" :review="review" :room="room" />
     <p v-else class="review-detail-page__status">리뷰를 찾을 수 없습니다.</p>
+
+    <!-- 토스트 -->
+    <Transition name="toast">
+      <div v-if="toastMsg" class="review-detail-page__toast">{{ toastMsg }}</div>
+    </Transition>
   </div>
 </template>
 
@@ -91,7 +146,13 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.review-detail-page__edit-btn {
+.review-detail-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-detail-page__action-btn {
   color: #4a90d9;
   text-decoration: none;
   padding: 6px;
@@ -100,14 +161,21 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   transition: background 0.15s, color 0.15s;
+  background: none;
+  cursor: pointer;
 }
 
-.review-detail-page__edit-btn:hover {
+.review-detail-page__action-btn:hover {
   background: #4a90d9;
   color: #fff;
 }
 
-.review-detail-page__edit-icon {
+.review-detail-page__action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-detail-page__action-icon {
   width: 18px;
   height: 18px;
 }
@@ -120,5 +188,32 @@ onMounted(async () => {
 
 .review-detail-page__status--error {
   color: #e53935;
+}
+
+/* 토스트 */
+.review-detail-page__toast {
+  position: fixed;
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 0.875rem;
+  padding: 10px 20px;
+  border-radius: 99px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 200;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
 }
 </style>
