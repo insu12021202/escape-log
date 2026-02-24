@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
@@ -37,6 +37,32 @@ const props = withDefaults(
 )
 
 const router = useRouter()
+
+// ── 임시 저장 (create 모드 전용) ──────────────────────
+const DRAFT_KEY = 'escape-log:review-draft'
+const showRestoreDialog = ref(false)
+
+function saveDraft() {
+  if (props.mode !== 'create') return
+  localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, currentStep: currentStep.value }))
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY)
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return
+    const saved = JSON.parse(raw) as { form: typeof form; currentStep: number }
+    Object.assign(form, saved.form)
+    currentStep.value = saved.currentStep ?? 1
+  } catch {
+    clearDraft()
+  }
+}
+// ────────────────────────────────────────────────────
 
 const rooms = ref<Room[]>([])
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
@@ -105,7 +131,13 @@ onMounted(async () => {
   const [roomList, tagList] = await Promise.all([searchRooms(''), fetchGenreTags()])
   rooms.value = roomList
   genreTagOptions.value = tagList
+
+  if (props.mode === 'create' && localStorage.getItem(DRAFT_KEY)) {
+    showRestoreDialog.value = true
+  }
 })
+
+watch([() => ({ ...form }), currentStep], saveDraft, { deep: true })
 
 async function handleCreateRoom() {
   roomFormError.value = ''
@@ -305,6 +337,7 @@ function skipPhotosAndNavigate() {
 }
 
 function navigateAfterSave(reviewId: string) {
+  clearDraft()
   if (props.mode === 'edit') {
     router.push(`/review/${reviewId}`)
   } else {
@@ -314,6 +347,28 @@ function navigateAfterSave(reviewId: string) {
 </script>
 
 <template>
+  <!-- 임시 저장 복원 다이얼로그 -->
+  <Teleport to="body">
+    <div v-if="showRestoreDialog" class="draft-overlay">
+      <div class="draft-dialog">
+        <p class="draft-dialog__title">이전에 작성하던 리뷰가 있어요</p>
+        <p class="draft-dialog__desc">이어서 작성하시겠어요?</p>
+        <div class="draft-dialog__actions">
+          <button
+            type="button"
+            class="draft-dialog__btn draft-dialog__btn--secondary"
+            @click="clearDraft(); showRestoreDialog = false"
+          >새로 작성</button>
+          <button
+            type="button"
+            class="draft-dialog__btn draft-dialog__btn--primary"
+            @click="loadDraft(); showRestoreDialog = false"
+          >이어서 쓰기</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
   <form class="review-form" @submit.prevent="handleSubmit">
 
     <!-- 위자드 헤더: create 모드만 표시 -->
@@ -890,5 +945,70 @@ function navigateAfterSave(reviewId: string) {
 .review-form__skip-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 임시 저장 복원 다이얼로그 */
+.draft-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.draft-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 24px 20px 20px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.draft-dialog__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.draft-dialog__desc {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+
+.draft-dialog__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.draft-dialog__btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  min-height: 48px;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.draft-dialog__btn--secondary {
+  background: var(--color-bg);
+  color: var(--color-text-sub);
+  border: 1.5px solid var(--color-border);
+}
+
+.draft-dialog__btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.draft-dialog__btn:hover {
+  opacity: 0.85;
 }
 </style>
