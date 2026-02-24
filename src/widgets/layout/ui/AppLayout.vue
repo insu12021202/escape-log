@@ -3,8 +3,8 @@ import { RouterView, useRouter } from 'vue-router'
 import {
   ArrowRightOnRectangleIcon,
   ListBulletIcon,
-  PencilSquareIcon,
-  MagnifyingGlassIcon,
+  PlusIcon,
+  UserCircleIcon,
 } from '@heroicons/vue/24/outline'
 import logoUrl from '@/app/assets/logo.png'
 import { useSessionStore } from '@/app/stores/session'
@@ -28,6 +28,7 @@ async function handleSignOut() {
         <RouterLink to="/">목록</RouterLink>
         <RouterLink to="/review/new">리뷰 작성</RouterLink>
         <RouterLink to="/room/search">방 검색</RouterLink>
+        <RouterLink to="/profile">프로필</RouterLink>
       </nav>
       <button class="app-header__signout" @click="handleSignOut" title="로그아웃">
         <ArrowRightOnRectangleIcon class="app-header__signout-icon" />
@@ -43,13 +44,14 @@ async function handleSignOut() {
         <ListBulletIcon class="app-tab__icon" />
         <span class="app-tab__label">목록</span>
       </RouterLink>
-      <RouterLink to="/review/new" class="app-tab" active-class="app-tab--active">
-        <PencilSquareIcon class="app-tab__icon" />
-        <span class="app-tab__label">리뷰 작성</span>
+      <RouterLink to="/review/new" class="app-tab app-tab--fab" active-class="app-tab--fab-active">
+        <div class="app-tab__fab">
+          <PlusIcon class="app-tab__fab-icon" />
+        </div>
       </RouterLink>
-      <RouterLink to="/room/search" class="app-tab" active-class="app-tab--active">
-        <MagnifyingGlassIcon class="app-tab__icon" />
-        <span class="app-tab__label">방 검색</span>
+      <RouterLink to="/profile" class="app-tab" active-class="app-tab--active">
+        <UserCircleIcon class="app-tab__icon" />
+        <span class="app-tab__label">프로필</span>
       </RouterLink>
     </nav>
   </div>
@@ -170,6 +172,43 @@ async function handleSignOut() {
   font-size: 0.6875rem;
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* FAB (중앙 + 버튼) */
+.app-tab--fab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-tab__fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.app-tab--fab:hover .app-tab__fab,
+.app-tab--fab-active .app-tab__fab {
+  background: var(--color-primary-dark);
+}
+
+.app-tab--fab:active .app-tab__fab {
+  transform: scale(0.93);
+}
+
+.app-tab__fab-icon {
+  width: 24px;
+  height: 24px;
+  color: #fff;
+  stroke-width: 2.5;
 }
 
 /* 데스크톱: 탭바 숨기고 헤더 nav 표시 */
