@@ -143,6 +143,8 @@
 - [x] 리뷰 목록 통계 헤더 + CTA (PR #17)
 - [x] RLS `reviews_group_select` → 로그인 사용자 전체 허용 (Supabase Dashboard 직접 수정)
 - [x] 모바일 하단 탭바 전환 및 OG 메타태그 추가 (PR #18)
+- [x] 리뷰 목록 내 기록/전체 탭 분리 (PR #19)
+- [x] 리뷰 작성 폼 임시 저장 및 복원 (PR #19)
 
 ---
 
