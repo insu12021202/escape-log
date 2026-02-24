@@ -48,13 +48,15 @@ export async function shareReviewViaKakao(params: ShareReviewParams): Promise<'k
 
   initKakao()
 
+  const title = `${params.vendorName} · ${params.themeName}`
+  const desc = `★${params.rating} | ${params.summary}`
+
   if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
-    const outcomeLabel = params.isSuccess ? '탈출 성공' : '탈출 실패'
     Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
-        title: `${params.vendorName} · ${params.themeName}`,
-        description: `${outcomeLabel} ★${params.rating} | ${params.summary}`,
+        title,
+        description: desc,
         imageUrl: ogImage,
         link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
       },
@@ -72,8 +74,8 @@ export async function shareReviewViaKakao(params: ShareReviewParams): Promise<'k
   if (navigator.share) {
     try {
       await navigator.share({
-        title: `${params.vendorName} · ${params.themeName}`,
-        text: `${params.isSuccess ? '탈출 성공' : '탈출 실패'} ★${params.rating} | ${params.summary}`,
+        title,
+        text: desc,
         url: shareUrl,
       })
       return 'shared'
