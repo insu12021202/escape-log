@@ -712,6 +712,7 @@ function navigateAfterSave(reviewId: string) {
 .review-form__select,
 .review-form__textarea {
   width: 100%;
+  box-sizing: border-box;
   padding: 11px 14px;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -720,6 +721,7 @@ function navigateAfterSave(reviewId: string) {
   background: var(--color-surface);
   transition: border-color var(--transition-fast);
   min-height: 48px;
+  max-width: 100%;
 }
 
 .review-form__input:focus,
