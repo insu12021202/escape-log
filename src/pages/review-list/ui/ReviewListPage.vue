@@ -19,6 +19,7 @@ const error = ref<string | null>(null)
 type Tab = 'mine' | 'all'
 const activeTab = ref<Tab>('mine')
 
+const searchQuery = ref('')
 const regionFilter = ref('')
 const ratingFilter = ref(0)
 
@@ -61,9 +62,11 @@ const successRate = computed(() => {
 })
 
 const filteredReviews = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
   return baseReviews.value.filter((review) => {
     const room = rooms.value[review.roomId]
     if (!room) return false
+    if (q && !`${room.vendorName} ${room.themeName}`.toLowerCase().includes(q)) return false
     if (regionFilter.value && room.region !== regionFilter.value) return false
     if (ratingFilter.value && review.rating < ratingFilter.value) return false
     return true
@@ -72,6 +75,7 @@ const filteredReviews = computed(() => {
 
 function switchTab(tab: Tab) {
   activeTab.value = tab
+  searchQuery.value = ''
   regionFilter.value = ''
   ratingFilter.value = 0
 }
@@ -125,7 +129,15 @@ onMounted(async () => {
         <RouterLink to="/review/new" class="review-list__cta">+ 리뷰 등록</RouterLink>
       </div>
 
-      <!-- 필터 -->
+      <!-- 검색 + 필터 -->
+      <div class="review-list__search-bar">
+        <input
+          v-model="searchQuery"
+          class="review-list__search-input"
+          type="search"
+          placeholder="업체명 · 테마명 검색"
+        />
+      </div>
       <div class="review-list__filters">
         <BaseSelect v-model="regionFilter" :options="regionOptions" />
         <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
@@ -145,6 +157,8 @@ onMounted(async () => {
           :is-success="review.visitMeta.isSuccess"
           :genre-tags="review.visitMeta.genreTags"
           :author-name="review.authorName"
+          :visited-at="review.visitedAt"
+          :remaining-minutes="review.visitMeta.remainingMinutes"
         />
       </div>
       <div v-else class="review-list__empty">
@@ -242,6 +256,36 @@ onMounted(async () => {
   color: var(--color-error);
 }
 
+/* 검색 */
+.review-list__search-bar {
+  margin-bottom: 8px;
+  position: sticky;
+  top: 52px;
+  background: var(--color-bg);
+  padding-top: 12px;
+  z-index: 10;
+}
+
+.review-list__search-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
+}
+
+.review-list__search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.review-list__search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
 /* 필터 */
 .review-list__filters {
   display: flex;
@@ -249,9 +293,9 @@ onMounted(async () => {
   margin-bottom: 16px;
   flex-wrap: wrap;
   position: sticky;
-  top: 52px;
+  top: 104px; /* 헤더 52px + 검색바 ~52px */
   background: var(--color-bg);
-  padding: 12px 0;
+  padding: 0 0 12px;
   z-index: 10;
 }
 
