@@ -147,6 +147,8 @@
 - [x] 리뷰 작성 폼 임시 저장 및 복원 (PR #19)
 - [x] 리뷰 카드 방문일·탈출시간 표시 + 키워드 검색 (PR #20)
 - [x] 탭바 FAB + 프로필 탭 구조 개편, ProfilePage 신설 (PR #20)
+- [x] 카카오톡 공유 기능 (Kakao JS SDK + enableSharing API) (PR #21)
+- [x] favicon/apple-touch-icon/OG image를 logo.png로 통합 (PR #21)
 
 ---
 

@@ -244,7 +244,7 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 ## 현재 상태 기록 (수동 업데이트)
 
 - 현재 Phase: **Phase 6 진행 중** (v1 마감)
-- 마지막 완료 PR: feat: 카드 날짜·검색·FAB·프로필 탭 UX 개선 (#20)
+- 마지막 완료 PR: feat: 카카오톡 공유 기능 및 로고 통합 (#21)
 
 ### 완료된 작업 요약
 
@@ -316,7 +316,13 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 리뷰 목록 업체명·테마명 키워드 검색 추가 (클라이언트 필터링) — PR #20
 - 하단 탭바 FAB 전환: 목록 | +(FAB) | 프로필 구조로 개편 — PR #20
 - ProfilePage 신설(/profile): 아바타·이름, 방 검색 링크, 로그아웃 — PR #20
-- 마지막 완료 PR: feat: 카드 날짜·검색·FAB·프로필 탭 UX 개선 (#20)
+- 마지막 완료 PR: feat: 카카오톡 공유 기능 및 로고 통합 (#21)
+
+#### Phase 6 — 카카오톡 공유 + 로고 통합 완료
+- Kakao JavaScript SDK 연동 (shared/lib/kakao.ts) — PR #21
+- 리뷰 상세 페이지 공유 버튼 추가 (본인 리뷰만, enableSharing API) — PR #21
+- Kakao SDK 미지원 환경 클립보드 복사 폴백 — PR #21
+- favicon/apple-touch-icon/OG image를 logo.png로 통합 — PR #21
 
 ### 미완료 항목
 - [ ] Vercel 배포 확인
