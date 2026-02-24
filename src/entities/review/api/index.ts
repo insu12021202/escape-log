@@ -4,10 +4,10 @@ import type { Room } from '@/entities/room/types'
 
 /** HTTP 환경에서도 동작하는 UUID v4 생성 */
 function generateUUID(): string {
-  const c = globalThis.crypto
-  if (c && c.randomUUID) return c.randomUUID()
+  const c = globalThis.crypto as Crypto | undefined
+  if (c?.randomUUID) return c.randomUUID()
   const bytes = new Uint8Array(16)
-  c.getRandomValues(bytes)
+  ;(c ?? crypto).getRandomValues(bytes)
   bytes[6] = (bytes[6] & 0x0f) | 0x40
   bytes[8] = (bytes[8] & 0x3f) | 0x80
   const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
