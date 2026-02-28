@@ -4,8 +4,10 @@ import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
 import { uploadPhoto } from '@/shared/api/storage'
-import { searchRooms, createRoom } from '@/entities/room/api'
+import { searchRooms, createRoom, fetchRoomsByVendor } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
+import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
+import type { Vendor } from '@/entities/vendor/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
@@ -67,13 +69,19 @@ function loadDraft() {
 }
 // ────────────────────────────────────────────────────
 
-const rooms = ref<Room[]>([])
+const vendors = ref<Vendor[]>([])
+const selectedVendorId = ref('')
+const isNewVendor = ref(false)
+const newVendorName = ref('')
+const newVendorRegion = ref('')
+const vendorRooms = ref<Room[]>([])
+const rooms = ref<Room[]>([]) // edit 모드에서 현재 방 표시용
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
 
-// 인라인 방 등록
+// 인라인 테마 추가
 const showRoomForm = ref(false)
-const roomForm = reactive({ vendorName: '', themeName: '', region: '' })
+const roomForm = reactive({ themeName: '' })
 const roomFormError = ref('')
 const roomFormSubmitting = ref(false)
 
@@ -121,9 +129,14 @@ const form = reactive({
   visibility: (props.initialData?.visibility ?? 'group') as Visibility,
 })
 
+const vendorOptions = computed(() => [
+  { value: '', label: '업체를 선택하세요' },
+  ...vendors.value.map((v) => ({ value: v.id, label: `${v.name} (${v.region})` })),
+])
+
 const roomOptions = computed(() => [
   { value: '', label: '테마를 선택하세요' },
-  ...rooms.value.map((r) => ({ value: r.id, label: `${r.vendorName} · ${r.themeName} (${r.region})` })),
+  ...vendorRooms.value.map((r) => ({ value: r.id, label: r.themeName })),
 ])
 
 const visibilityOptions = [
@@ -132,39 +145,78 @@ const visibilityOptions = [
 ]
 
 onMounted(async () => {
-  const [roomList, tagList] = await Promise.all([searchRooms(''), fetchGenreTags()])
-  rooms.value = roomList
+  const [vendorList, tagList] = await Promise.all([fetchVendors(), fetchGenreTags()])
+  vendors.value = vendorList
   genreTagOptions.value = tagList
+
+  // edit 모드: 현재 방 정보 로드하여 표시
+  if (props.mode === 'edit' && props.initialData?.roomId) {
+    const roomList = await searchRooms('')
+    rooms.value = roomList
+    const currentRoom = roomList.find((r) => r.id === props.initialData!.roomId)
+    if (currentRoom) {
+      selectedVendorId.value = currentRoom.vendorId
+    }
+  }
 
   if (props.mode === 'create' && localStorage.getItem(DRAFT_KEY)) {
     showRestoreDialog.value = true
   }
 })
 
+// 업체 선택 시 해당 업체의 테마 목록 로드
+watch(selectedVendorId, async (vendorId) => {
+  if (props.mode === 'edit') return
+  form.roomId = ''
+  if (!vendorId) {
+    vendorRooms.value = []
+    return
+  }
+  vendorRooms.value = await fetchRoomsByVendor(vendorId)
+})
+
 watch([() => ({ ...form }), currentStep], saveDraft, { deep: true })
 
 async function handleCreateRoom() {
   roomFormError.value = ''
-  if (!roomForm.vendorName.trim()) { roomFormError.value = '업체명을 입력해주세요.'; return }
+
+  // 새 업체 모드: 업체 생성 후 테마 추가
+  if (isNewVendor.value) {
+    if (!newVendorName.value.trim()) { roomFormError.value = '업체명을 입력해주세요.'; return }
+    if (!newVendorRegion.value.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
+  } else {
+    if (!selectedVendorId.value) { roomFormError.value = '업체를 선택해주세요.'; return }
+  }
   if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해주세요.'; return }
-  if (!roomForm.region.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
 
   roomFormSubmitting.value = true
   try {
+    let vendorId = selectedVendorId.value
+
+    if (isNewVendor.value) {
+      const vendor = await findOrCreateVendor(newVendorName.value.trim(), newVendorRegion.value.trim())
+      vendorId = vendor.id
+      if (!vendors.value.find((v) => v.id === vendor.id)) {
+        vendors.value.push(vendor)
+      }
+      selectedVendorId.value = vendor.id
+      isNewVendor.value = false
+      newVendorName.value = ''
+      newVendorRegion.value = ''
+    }
+
     const newRoom = await createRoom({
-      vendorName: roomForm.vendorName.trim(),
+      vendorId,
       themeName: roomForm.themeName.trim(),
-      region: roomForm.region.trim(),
     })
-    rooms.value.unshift(newRoom)
+
+    vendorRooms.value.push(newRoom)
     form.roomId = newRoom.id
     showRoomForm.value = false
-    roomForm.vendorName = ''
     roomForm.themeName = ''
-    roomForm.region = ''
   } catch (e) {
     console.error(e)
-    roomFormError.value = '방 등록에 실패했습니다. 다시 시도해주세요.'
+    roomFormError.value = '등록에 실패했습니다. 다시 시도해주세요.'
   } finally {
     roomFormSubmitting.value = false
   }
@@ -394,45 +446,59 @@ function navigateAfterSave(reviewId: string) {
       <h3 class="review-form__section-title">기본 정보</h3>
 
       <div class="review-form__field">
-        <label class="review-form__label" for="room-select">방 선택 *</label>
+        <label class="review-form__label">업체 선택 *</label>
         <template v-if="mode === 'edit'">
           <p class="review-form__room-fixed">
             {{ rooms.find((r) => r.id === form.roomId)?.vendorName }} ·
             {{ rooms.find((r) => r.id === form.roomId)?.themeName }}
           </p>
         </template>
+        <template v-else-if="!isNewVendor">
+          <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
+          <button type="button" class="review-form__add-room-toggle" @click="isNewVendor = true; showRoomForm = true">
+            + 업체가 없나요? 직접 등록
+          </button>
+        </template>
         <template v-else>
-          <BaseSelect v-model="form.roomId" :options="roomOptions" variant="input" />
-          <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
+          <div class="review-form__row">
+            <div class="review-form__field review-form__field--inline">
+              <input v-model="newVendorName" class="review-form__input" type="text" placeholder="업체명 (예: 키이스케이프)" />
+            </div>
+            <div class="review-form__field review-form__field--inline">
+              <input v-model="newVendorRegion" class="review-form__input review-form__input--short" type="text" placeholder="지역 (예: 홍대)" />
+            </div>
+          </div>
+          <button type="button" class="review-form__add-room-toggle" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''; showRoomForm = false">
+            기존 업체에서 선택
+          </button>
+        </template>
+      </div>
 
-          <!-- 인라인 방 등록 -->
-          <button type="button" class="review-form__add-room-toggle" @click="showRoomForm = !showRoomForm">
-            {{ showRoomForm ? '− 등록 취소' : '+ 방이 없어요? 직접 등록' }}
+      <div v-if="mode !== 'edit'" class="review-form__field">
+        <label class="review-form__label">테마 선택 *</label>
+        <BaseSelect v-if="!isNewVendor" v-model="form.roomId" :options="roomOptions" variant="input" :disabled="!selectedVendorId" />
+        <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
+
+          <!-- 인라인 테마 추가 -->
+          <button v-if="!showRoomForm && (selectedVendorId || isNewVendor)" type="button" class="review-form__add-room-toggle" @click="showRoomForm = true">
+            + 테마가 없나요? 직접 추가
+          </button>
+          <button v-if="showRoomForm && !isNewVendor" type="button" class="review-form__add-room-toggle" @click="showRoomForm = false">
+            − 취소
           </button>
 
           <Transition name="expand">
             <div v-if="showRoomForm" class="review-form__room-mini">
-              <div class="review-form__row">
-                <div class="review-form__field review-form__field--inline">
-                  <label class="review-form__label">업체명 *</label>
-                  <input v-model="roomForm.vendorName" class="review-form__input" type="text" placeholder="예: 키이스케이프" />
-                </div>
-                <div class="review-form__field review-form__field--inline">
-                  <label class="review-form__label">테마명 *</label>
-                  <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
-                </div>
-              </div>
               <div class="review-form__field">
-                <label class="review-form__label">지역 *</label>
-                <input v-model="roomForm.region" class="review-form__input" type="text" placeholder="예: 홍대" />
+                <label class="review-form__label">테마명 *</label>
+                <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
               </div>
               <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
               <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
-                {{ roomFormSubmitting ? '등록 중...' : '방 등록하기' }}
+                {{ roomFormSubmitting ? '등록 중...' : isNewVendor ? '업체 + 테마 등록' : '테마 추가' }}
               </button>
             </div>
           </Transition>
-        </template>
       </div>
 
       <div class="review-form__field">
@@ -740,6 +806,10 @@ function navigateAfterSave(reviewId: string) {
   transition: border-color var(--transition-fast);
   min-height: 48px;
   max-width: 100%;
+}
+
+.review-form__input--short {
+  max-width: 120px;
 }
 
 .review-form__input:focus,

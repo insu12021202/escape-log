@@ -242,6 +242,7 @@ export async function getSharedReview(
   const row = data[0] as Record<string, unknown>;
   const room: Room = {
     id: row.room_id as string,
+    vendorId: (row.vendor_id as string) ?? '',
     vendorName: row.vendor_name as string,
     themeName: row.theme_name as string,
     region: row.region as string,
