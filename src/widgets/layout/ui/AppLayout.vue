@@ -10,6 +10,7 @@ import {
 import logoUrl from '@/app/assets/logo.png'
 import { useSessionStore } from '@/app/stores/session'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
+import AppToast from '@/shared/ui/AppToast.vue'
 
 const session = useSessionStore()
 const router = useRouter()
@@ -74,6 +75,9 @@ async function handleSignOut() {
       @confirm="handleSignOut"
       @cancel="showLogoutDialog = false"
     />
+
+    <!-- 전역 토스트 -->
+    <AppToast />
   </div>
 </template>
 

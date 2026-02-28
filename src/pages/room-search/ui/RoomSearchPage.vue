@@ -5,6 +5,9 @@ import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { searchRooms, createRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
+import { useToastStore } from '@/shared/model/toast'
+
+const toast = useToastStore()
 
 const keyword = ref('')
 const rooms = ref<Room[]>([])
@@ -51,6 +54,7 @@ async function submitNewRoom() {
     rooms.value = [created, ...rooms.value]
     newRoom.value = { vendorName: '', themeName: '', region: '' }
     showForm.value = false
+    toast.success('방이 등록되었습니다.')
   } catch (e) {
     console.error(e)
     registerError.value = '방 등록 중 오류가 발생했습니다.'

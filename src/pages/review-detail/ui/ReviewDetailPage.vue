@@ -11,9 +11,11 @@ import { ArrowLeftIcon, PencilSquareIcon, ShareIcon, TrashIcon } from '@heroicon
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
+import { useToastStore } from '@/shared/model/toast'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToastStore()
 
 const review = ref<Review | null>(null)
 const room = ref<Room | null>(null)
@@ -22,17 +24,9 @@ const fetchError = ref(false)
 const currentUserId = ref<string | null>(null)
 
 const sharing = ref(false)
-const toastMsg = ref<string | null>(null)
-let toastTimer: ReturnType<typeof setTimeout> | null = null
 
 const showDeleteDialog = ref(false)
 const deleting = ref(false)
-
-function showToast(msg: string) {
-  toastMsg.value = msg
-  if (toastTimer) clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => { toastMsg.value = null }, 2500)
-}
 
 async function handleShare() {
   if (!review.value || !room.value || sharing.value) return
@@ -50,10 +44,10 @@ async function handleShare() {
       isSuccess: review.value.visitMeta.isSuccess,
     })
 
-    if (result === 'copied') showToast('링크가 복사되었습니다.')
-    else if (result === 'failed') showToast('공유에 실패했습니다.')
+    if (result === 'copied') toast.info('링크가 복사되었습니다.')
+    else if (result === 'failed') toast.error('공유에 실패했습니다.')
   } catch {
-    showToast('공유에 실패했습니다.')
+    toast.error('공유에 실패했습니다.')
   } finally {
     sharing.value = false
   }
@@ -67,7 +61,7 @@ async function handleDelete() {
     showDeleteDialog.value = false
     router.push('/')
   } catch {
-    showToast('삭제에 실패했습니다.')
+    toast.error('삭제에 실패했습니다.')
     deleting.value = false
   }
 }
@@ -161,11 +155,6 @@ onMounted(async () => {
     </p>
     <ReviewDetail v-else-if="review && room" :review="review" :room="room" />
     <p v-else class="review-detail-page__status">리뷰를 찾을 수 없습니다.</p>
-
-    <!-- 토스트 -->
-    <Transition name="toast">
-      <div v-if="toastMsg" class="review-detail-page__toast">{{ toastMsg }}</div>
-    </Transition>
 
     <!-- 삭제 확인 다이얼로그 -->
     <ConfirmDialog
@@ -292,30 +281,4 @@ onMounted(async () => {
   gap: 10px;
 }
 
-/* 토스트 */
-.review-detail-page__toast {
-  position: fixed;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 16px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  font-size: 0.875rem;
-  padding: 10px 20px;
-  border-radius: 99px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 200;
-}
-
-.toast-enter-active,
-.toast-leave-active {
-  transition: opacity 0.25s, transform 0.25s;
-}
-
-.toast-enter-from,
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(8px);
-}
 </style>
