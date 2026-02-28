@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 7 진행 중** (UX 품질 향상)
-- 마지막 완료 PR: feat: UX 품질 향상 — 삭제·스켈레톤·빈 상태·트랜지션·로그아웃 확인 (#22)
+- 현재 Phase: **Phase 8 진행 중** (전역 토스트 + PWA)
+- 마지막 완료 PR: feat(shared): 전역 토스트 알림 시스템 구현 (#23)
 
 ### 완료된 작업 요약
 
@@ -334,6 +334,13 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 빈 상태 CTA: "첫 리뷰 작성하기" + 검색 결과 없음 → 필터 초기화 — PR #22
 - 페이지 트랜지션 (fade + translateY 150ms) — PR #22
 - 로그아웃 확인 다이얼로그 (AppLayout + ProfilePage) — PR #22
+
+#### Phase 8 — 전역 토스트 시스템 완료
+- Pinia 토스트 스토어 (shared/model/toast.ts) — 큐, 자동 해제, 3종 타입 — PR #23
+- AppToast.vue 전역 토스트 컴포넌트 (Teleport + 타입별 아이콘) — PR #23
+- ReviewDetailPage 인라인 토스트 → 전역 토스트 마이그레이션 — PR #23
+- ReviewCreateForm 저장/수정 성공 토스트 추가 — PR #23
+- RoomSearchPage 방 등록 성공 토스트 추가 — PR #23
 
 ### 미완료 항목
 - [ ] Vercel 배포 확인

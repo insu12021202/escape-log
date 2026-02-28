@@ -155,6 +155,9 @@
 - [x] 빈 상태 CTA + 필터 초기화 버튼 (PR #22)
 - [x] 페이지 트랜지션 (RouterView + Transition) (PR #22)
 - [x] 로그아웃 확인 다이얼로그 (AppLayout + ProfilePage) (PR #22)
+- [x] 전역 토스트 알림 시스템 (Pinia 스토어 + AppToast 컴포넌트) (PR #23)
+- [x] ReviewDetailPage 인라인 토스트 → 전역 토스트 마이그레이션 (PR #23)
+- [x] 리뷰 저장/수정/방 등록 성공 토스트 추가 (PR #23)
 
 ---
 
