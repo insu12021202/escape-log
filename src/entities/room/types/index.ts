@@ -5,5 +5,6 @@ export interface Room {
   vendorName: string
   themeName: string
   region: string
+  posterPath: string | null
   createdAt: string
 }

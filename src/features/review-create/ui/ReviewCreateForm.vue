@@ -4,15 +4,17 @@ import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
 import { uploadPhoto } from '@/shared/api/storage'
-import { searchRooms, createRoom, fetchRoomsByVendor } from '@/entities/room/api'
+import { searchRooms, createRoom, fetchRoomsByVendor, updateRoomPosterPath } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
 import type { Vendor } from '@/entities/vendor/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
+import PosterPicker from '@/shared/ui/PosterPicker.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
 import PhotoUploader from './PhotoUploader.vue'
+import { uploadRoomPoster } from '@/shared/api/storage'
 import { useToastStore } from '@/shared/model/toast'
 
 const props = withDefaults(
@@ -84,6 +86,7 @@ const showRoomForm = ref(false)
 const roomForm = reactive({ themeName: '' })
 const roomFormError = ref('')
 const roomFormSubmitting = ref(false)
+const roomPosterFile = ref<File | null>(null)
 
 // 위자드 스텝 (create 모드 전용)
 const TOTAL_STEPS = 4
@@ -210,10 +213,22 @@ async function handleCreateRoom() {
       themeName: roomForm.themeName.trim(),
     })
 
+    if (roomPosterFile.value) {
+      try {
+        const posterPath = await uploadRoomPoster(newRoom.id, roomPosterFile.value)
+        await updateRoomPosterPath(newRoom.id, posterPath)
+        newRoom.posterPath = posterPath
+      } catch (err) {
+        console.error('포스터 업로드 실패:', err)
+        toast.error('포스터 업로드에 실패했습니다.')
+      }
+    }
+
     vendorRooms.value.push(newRoom)
     form.roomId = newRoom.id
     showRoomForm.value = false
     roomForm.themeName = ''
+    roomPosterFile.value = null
   } catch (e) {
     console.error(e)
     roomFormError.value = '등록에 실패했습니다. 다시 시도해주세요.'
@@ -492,6 +507,10 @@ function navigateAfterSave(reviewId: string) {
               <div class="review-form__field">
                 <label class="review-form__label">테마명 *</label>
                 <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
+              </div>
+              <div class="review-form__field">
+                <label class="review-form__label">포스터 (선택)</label>
+                <PosterPicker v-model="roomPosterFile" :disabled="roomFormSubmitting" />
               </div>
               <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
               <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">

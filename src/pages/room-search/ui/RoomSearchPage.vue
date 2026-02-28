@@ -2,12 +2,14 @@
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
 import { ref, computed, watch, onMounted } from 'vue'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { searchRooms, createRoom } from '@/entities/room/api'
+import { searchRooms, createRoom, updateRoomPosterPath } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
 import type { Vendor } from '@/entities/vendor/types'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
+import PosterPicker from '@/shared/ui/PosterPicker.vue'
+import { uploadRoomPoster, getRoomPosterUrl } from '@/shared/api/storage'
 import { useToastStore } from '@/shared/model/toast'
 
 const toast = useToastStore()
@@ -24,6 +26,7 @@ const isNewVendor = ref(false)
 const newVendorName = ref('')
 const newVendorRegion = ref('')
 const newThemeName = ref('')
+const posterFile = ref<File | null>(null)
 const showForm = ref(false)
 const registering = ref(false)
 const registerError = ref<string | null>(null)
@@ -89,8 +92,21 @@ async function submitNewRoom() {
       vendorId,
       themeName: newThemeName.value.trim(),
     })
+
+    if (posterFile.value) {
+      try {
+        const posterPath = await uploadRoomPoster(created.id, posterFile.value)
+        await updateRoomPosterPath(created.id, posterPath)
+        created.posterPath = posterPath
+      } catch (err) {
+        console.error('포스터 업로드 실패:', err)
+        toast.error('포스터 업로드에 실패했습니다.')
+      }
+    }
+
     rooms.value = [created, ...rooms.value]
     newThemeName.value = ''
+    posterFile.value = null
     selectedVendorId.value = ''
     newVendorName.value = ''
     newVendorRegion.value = ''
@@ -164,6 +180,10 @@ async function submitNewRoom() {
           placeholder="예) 셜록홈즈: 마지막 사건"
         />
       </div>
+      <div class="room-search__field">
+        <label class="room-search__label">포스터 (선택)</label>
+        <PosterPicker v-model="posterFile" :disabled="registering" />
+      </div>
       <p v-if="registerError" class="room-search__error">{{ registerError }}</p>
       <button type="submit" class="room-search__submit-btn" :disabled="registering">
         {{ registering ? '등록 중...' : '등록' }}
@@ -177,8 +197,16 @@ async function submitNewRoom() {
     </p>
     <ul v-else-if="rooms.length" class="room-search__list">
       <li v-for="room in rooms" :key="room.id" class="room-search__item">
-        <span class="room-search__vendor">{{ room.vendorName }}</span>
-        <span class="room-search__theme">{{ room.themeName }}</span>
+        <img
+          v-if="room.posterPath"
+          :src="getRoomPosterUrl(room.posterPath)"
+          :alt="`${room.themeName} 포스터`"
+          class="room-search__poster"
+        />
+        <div class="room-search__info">
+          <span class="room-search__vendor">{{ room.vendorName }}</span>
+          <span class="room-search__theme">{{ room.themeName }}</span>
+        </div>
         <span class="room-search__region">{{ room.region }}</span>
       </li>
     </ul>
@@ -225,12 +253,28 @@ async function submitNewRoom() {
 
 .room-search__item {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
   padding: 12px 16px;
   border: 1px solid #eee;
   border-radius: 8px;
   background: #fff;
+}
+
+.room-search__poster {
+  width: 48px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.room-search__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .room-search__vendor {
@@ -242,7 +286,6 @@ async function submitNewRoom() {
 .room-search__theme {
   font-size: 0.9375rem;
   color: #555;
-  flex: 1;
 }
 
 .room-search__region {

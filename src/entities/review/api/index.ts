@@ -246,6 +246,7 @@ export async function getSharedReview(
     vendorName: row.vendor_name as string,
     themeName: row.theme_name as string,
     region: row.region as string,
+    posterPath: (row.poster_path as string | null) ?? null,
     createdAt: "",
   };
   const review: Review = {

@@ -14,6 +14,7 @@ defineProps<{
   visitedAt?: string | null
   remainingMinutes?: number | null
   hasSpoiler?: boolean
+  posterUrl?: string | null
 }>()
 
 const revealed = ref(false)
@@ -26,13 +27,21 @@ function formatVisitedAt(dateStr: string) {
 <template>
   <RouterLink :to="`/review/${$attrs['data-id']}`" class="review-card">
     <div class="review-card__top">
-      <div class="review-card__title-row">
-        <span class="review-card__vendor">{{ vendorName }}</span>
-        <span class="review-card__theme">{{ themeName }}</span>
+      <img
+        v-if="posterUrl"
+        :src="posterUrl"
+        :alt="`${themeName} 포스터`"
+        class="review-card__poster"
+      />
+      <div class="review-card__top-content">
+        <div class="review-card__title-row">
+          <span class="review-card__vendor">{{ vendorName }}</span>
+          <span class="review-card__theme">{{ themeName }}</span>
+        </div>
+        <span class="review-card__result" :class="{ 'review-card__result--fail': !isSuccess }">
+          {{ isSuccess ? '성공' : '실패' }}
+        </span>
       </div>
-      <span class="review-card__result" :class="{ 'review-card__result--fail': !isSuccess }">
-        {{ isSuccess ? '성공' : '실패' }}
-      </span>
     </div>
 
     <div class="review-card__rating-row">
@@ -87,10 +96,26 @@ function formatVisitedAt(dateStr: string) {
 
 .review-card__top {
   display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.review-card__poster {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.review-card__top-content {
+  display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
-  margin-bottom: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .review-card__title-row {

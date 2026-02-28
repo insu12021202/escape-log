@@ -7,6 +7,7 @@ import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
 import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
+import { getRoomPosterUrl } from '@/shared/api/storage'
 import { useSessionStore } from '@/app/stores/session'
 
 const session = useSessionStore()
@@ -173,6 +174,7 @@ onMounted(async () => {
           :visited-at="review.visitedAt"
           :remaining-minutes="review.visitMeta.remainingMinutes"
           :has-spoiler="review.hasSpoiler"
+          :poster-url="rooms[review.roomId]?.posterPath ? getRoomPosterUrl(rooms[review.roomId]!.posterPath!) : null"
         />
       </div>
       <div v-else class="review-list__empty">

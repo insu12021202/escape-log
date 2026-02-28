@@ -1,7 +1,7 @@
 import { supabase } from '@/shared/api/supabase'
 import type { Room } from '../types'
 
-const ROOM_SELECT = 'id, vendor_id, theme_name, created_at, vendors(id, name, region)'
+const ROOM_SELECT = 'id, vendor_id, theme_name, poster_path, created_at, vendors(id, name, region)'
 
 /** DB 행 → Room 엔티티 변환 (vendors JOIN 포함) */
 function toRoom(row: Record<string, unknown>): Room {
@@ -12,6 +12,7 @@ function toRoom(row: Record<string, unknown>): Room {
     vendorName: vendor?.name ?? '',
     themeName: row.theme_name as string,
     region: vendor?.region ?? '',
+    posterPath: (row.poster_path as string | null) ?? null,
     createdAt: row.created_at as string,
   }
 }
@@ -69,4 +70,13 @@ export async function createRoom(params: {
     .single()
   if (error) throw error
   return toRoom(data)
+}
+
+/** 방 포스터 경로 업데이트 */
+export async function updateRoomPosterPath(roomId: string, posterPath: string): Promise<void> {
+  const { error } = await supabase
+    .from('rooms')
+    .update({ poster_path: posterPath })
+    .eq('id', roomId)
+  if (error) throw error
 }
