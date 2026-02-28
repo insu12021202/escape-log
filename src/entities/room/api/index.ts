@@ -72,6 +72,15 @@ export async function createRoom(params: {
   return toRoom(data)
 }
 
+/** 방 삭제 */
+export async function deleteRoom(roomId: string): Promise<void> {
+  const { error } = await supabase
+    .from('rooms')
+    .delete()
+    .eq('id', roomId)
+  if (error) throw error
+}
+
 /** 방 포스터 경로 업데이트 */
 export async function updateRoomPosterPath(roomId: string, posterPath: string): Promise<void> {
   const { error } = await supabase

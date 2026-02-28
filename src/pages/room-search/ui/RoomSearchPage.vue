@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
 import { ref, computed, watch, onMounted } from 'vue'
-import { PlusIcon, XMarkIcon, CameraIcon } from '@heroicons/vue/24/outline'
-import { searchRooms, createRoom, updateRoomPosterPath } from '@/entities/room/api'
+import { PlusIcon, XMarkIcon, CameraIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { searchRooms, createRoom, updateRoomPosterPath, deleteRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
 import type { Vendor } from '@/entities/vendor/types'
@@ -60,6 +60,18 @@ function togglePosterEdit(roomId: string) {
   } else {
     editingRoomId.value = roomId
     editingPosterFile.value = null
+  }
+}
+
+async function handleDeleteRoom(room: Room) {
+  if (!confirm(`"${room.themeName}" 방을 삭제하시겠습니까?`)) return
+  try {
+    await deleteRoom(room.id)
+    rooms.value = rooms.value.filter((r) => r.id !== room.id)
+    if (editingRoomId.value === room.id) editingRoomId.value = null
+    toast.success('방이 삭제되었습니다.')
+  } catch {
+    toast.error('방 삭제에 실패했습니다.')
   }
 }
 
@@ -241,8 +253,11 @@ async function submitNewRoom() {
             <span class="room-search__theme">{{ room.themeName }}</span>
           </div>
           <span class="room-search__region">{{ room.region }}</span>
-          <button class="room-search__poster-btn" @click="togglePosterEdit(room.id)">
-            <CameraIcon class="room-search__poster-btn-icon" />
+          <button class="room-search__action-btn" @click="togglePosterEdit(room.id)">
+            <CameraIcon class="room-search__action-btn-icon" />
+          </button>
+          <button class="room-search__action-btn room-search__action-btn--danger" @click="handleDeleteRoom(room)">
+            <TrashIcon class="room-search__action-btn-icon" />
           </button>
         </div>
         <div v-if="editingRoomId === room.id" class="room-search__poster-edit">
@@ -470,7 +485,7 @@ async function submitNewRoom() {
   color: #3a7bc8;
 }
 
-.room-search__poster-btn {
+.room-search__action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -484,12 +499,17 @@ async function submitNewRoom() {
   border-radius: 6px;
 }
 
-.room-search__poster-btn:hover {
+.room-search__action-btn:hover {
   color: #4a90d9;
   background: #f0f4ff;
 }
 
-.room-search__poster-btn-icon {
+.room-search__action-btn--danger:hover {
+  color: #e53935;
+  background: #fef2f2;
+}
+
+.room-search__action-btn-icon {
   width: 18px;
   height: 18px;
 }
