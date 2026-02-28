@@ -4,6 +4,7 @@ import { ref, watch } from 'vue'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { searchRooms, createRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
+import { findOrCreateVendor } from '@/entities/vendor/api'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
 import { useToastStore } from '@/shared/model/toast'
 
@@ -50,7 +51,12 @@ async function submitNewRoom() {
   registering.value = true
   registerError.value = null
   try {
-    const created = await createRoom(newRoom.value)
+    const vendor = await findOrCreateVendor(newRoom.value.vendorName)
+    const created = await createRoom({
+      vendorId: vendor.id,
+      themeName: newRoom.value.themeName,
+      region: newRoom.value.region,
+    })
     rooms.value = [created, ...rooms.value]
     newRoom.value = { vendorName: '', themeName: '', region: '' }
     showForm.value = false

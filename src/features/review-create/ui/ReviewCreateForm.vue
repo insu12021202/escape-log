@@ -4,8 +4,10 @@ import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
 import { uploadPhoto } from '@/shared/api/storage'
-import { searchRooms, createRoom } from '@/entities/room/api'
+import { searchRooms, createRoom, fetchRoomsByVendor } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
+import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
+import type { Vendor } from '@/entities/vendor/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
@@ -67,7 +69,10 @@ function loadDraft() {
 }
 // ────────────────────────────────────────────────────
 
-const rooms = ref<Room[]>([])
+const vendors = ref<Vendor[]>([])
+const selectedVendorId = ref('')
+const vendorRooms = ref<Room[]>([])
+const rooms = ref<Room[]>([]) // edit 모드에서 현재 방 표시용
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
 
@@ -121,9 +126,14 @@ const form = reactive({
   visibility: (props.initialData?.visibility ?? 'group') as Visibility,
 })
 
+const vendorOptions = computed(() => [
+  { value: '', label: '업체를 선택하세요' },
+  ...vendors.value.map((v) => ({ value: v.id, label: v.name })),
+])
+
 const roomOptions = computed(() => [
   { value: '', label: '테마를 선택하세요' },
-  ...rooms.value.map((r) => ({ value: r.id, label: `${r.vendorName} · ${r.themeName} (${r.region})` })),
+  ...vendorRooms.value.map((r) => ({ value: r.id, label: `${r.themeName} (${r.region})` })),
 ])
 
 const visibilityOptions = [
@@ -132,13 +142,34 @@ const visibilityOptions = [
 ]
 
 onMounted(async () => {
-  const [roomList, tagList] = await Promise.all([searchRooms(''), fetchGenreTags()])
-  rooms.value = roomList
+  const [vendorList, tagList] = await Promise.all([fetchVendors(), fetchGenreTags()])
+  vendors.value = vendorList
   genreTagOptions.value = tagList
+
+  // edit 모드: 현재 방 정보 로드하여 표시
+  if (props.mode === 'edit' && props.initialData?.roomId) {
+    const roomList = await searchRooms('')
+    rooms.value = roomList
+    const currentRoom = roomList.find((r) => r.id === props.initialData!.roomId)
+    if (currentRoom) {
+      selectedVendorId.value = currentRoom.vendorId
+    }
+  }
 
   if (props.mode === 'create' && localStorage.getItem(DRAFT_KEY)) {
     showRestoreDialog.value = true
   }
+})
+
+// 업체 선택 시 해당 업체의 테마 목록 로드
+watch(selectedVendorId, async (vendorId) => {
+  if (props.mode === 'edit') return
+  form.roomId = ''
+  if (!vendorId) {
+    vendorRooms.value = []
+    return
+  }
+  vendorRooms.value = await fetchRoomsByVendor(vendorId)
 })
 
 watch([() => ({ ...form }), currentStep], saveDraft, { deep: true })
@@ -151,12 +182,20 @@ async function handleCreateRoom() {
 
   roomFormSubmitting.value = true
   try {
+    const vendor = await findOrCreateVendor(roomForm.vendorName.trim())
     const newRoom = await createRoom({
-      vendorName: roomForm.vendorName.trim(),
+      vendorId: vendor.id,
       themeName: roomForm.themeName.trim(),
       region: roomForm.region.trim(),
     })
-    rooms.value.unshift(newRoom)
+
+    // vendors 목록에 없으면 추가
+    if (!vendors.value.find((v) => v.id === vendor.id)) {
+      vendors.value.push(vendor)
+    }
+
+    selectedVendorId.value = vendor.id
+    vendorRooms.value.push(newRoom)
     form.roomId = newRoom.id
     showRoomForm.value = false
     roomForm.vendorName = ''
@@ -394,7 +433,7 @@ function navigateAfterSave(reviewId: string) {
       <h3 class="review-form__section-title">기본 정보</h3>
 
       <div class="review-form__field">
-        <label class="review-form__label" for="room-select">방 선택 *</label>
+        <label class="review-form__label">업체 선택 *</label>
         <template v-if="mode === 'edit'">
           <p class="review-form__room-fixed">
             {{ rooms.find((r) => r.id === form.roomId)?.vendorName }} ·
@@ -402,8 +441,14 @@ function navigateAfterSave(reviewId: string) {
           </p>
         </template>
         <template v-else>
-          <BaseSelect v-model="form.roomId" :options="roomOptions" variant="input" />
-          <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
+          <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
+        </template>
+      </div>
+
+      <div v-if="mode !== 'edit'" class="review-form__field">
+        <label class="review-form__label">테마 선택 *</label>
+        <BaseSelect v-model="form.roomId" :options="roomOptions" variant="input" :disabled="!selectedVendorId" />
+        <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
 
           <!-- 인라인 방 등록 -->
           <button type="button" class="review-form__add-room-toggle" @click="showRoomForm = !showRoomForm">
@@ -432,7 +477,6 @@ function navigateAfterSave(reviewId: string) {
               </button>
             </div>
           </Transition>
-        </template>
       </div>
 
       <div class="review-form__field">
