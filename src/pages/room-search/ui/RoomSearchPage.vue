@@ -85,6 +85,13 @@ interface VendorGroup {
 
 const groupedRooms = computed<VendorGroup[]>(() => {
   const map = new Map<string, VendorGroup>()
+
+  // 모든 업체를 빈 그룹으로 먼저 등록
+  for (const v of vendors.value) {
+    map.set(v.id, { vendorId: v.id, vendorName: v.name, region: v.region, rooms: [] })
+  }
+
+  // 방을 해당 업체 그룹에 추가
   for (const room of rooms.value) {
     let group = map.get(room.vendorId)
     if (!group) {
@@ -93,6 +100,12 @@ const groupedRooms = computed<VendorGroup[]>(() => {
     }
     group.rooms.push(room)
   }
+
+  // 검색 중이면 매칭 결과가 있는 그룹만 표시
+  if (keyword.value.trim()) {
+    return [...map.values()].filter((g) => g.rooms.length > 0)
+  }
+
   return [...map.values()]
 })
 
