@@ -72,7 +72,27 @@ export async function createRoom(params: {
   return toRoom(data)
 }
 
-/** 방 삭제 */
+/** 해당 방에 연결된 리뷰 수 조회 */
+export async function countReviewsByRoom(roomId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true })
+    .eq('room_id', roomId)
+  if (error) throw error
+  return count ?? 0
+}
+
+/** 해당 업체의 방에 연결된 리뷰 수 조회 */
+export async function countReviewsByVendor(vendorId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('reviews')
+    .select('id, rooms!inner(vendor_id)', { count: 'exact', head: true })
+    .eq('rooms.vendor_id', vendorId)
+  if (error) throw error
+  return count ?? 0
+}
+
+/** 방 삭제 (리뷰가 있으면 호출 전에 체크할 것) */
 export async function deleteRoom(roomId: string): Promise<void> {
   const { error } = await supabase
     .from('rooms')

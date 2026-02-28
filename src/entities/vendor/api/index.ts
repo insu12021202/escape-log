@@ -21,6 +21,15 @@ export async function fetchVendors(): Promise<Vendor[]> {
   return (data ?? []).map(toVendor)
 }
 
+/** 업체 삭제 (하위 방도 함께 삭제됨 — FK CASCADE) */
+export async function deleteVendor(vendorId: string): Promise<void> {
+  const { error } = await supabase
+    .from('vendors')
+    .delete()
+    .eq('id', vendorId)
+  if (error) throw error
+}
+
 /** 업체 조회 또는 생성 (이름+지역 기준) */
 export async function findOrCreateVendor(name: string, region: string): Promise<Vendor> {
   const trimmedName = name.trim()

@@ -2,9 +2,9 @@
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
 import { ref, computed, watch, onMounted } from 'vue'
 import { PlusIcon, XMarkIcon, CameraIcon, TrashIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
-import { searchRooms, createRoom, updateRoomPosterPath, deleteRoom } from '@/entities/room/api'
+import { searchRooms, createRoom, updateRoomPosterPath, deleteRoom, countReviewsByRoom, countReviewsByVendor } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
-import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
+import { fetchVendors, findOrCreateVendor, deleteVendor } from '@/entities/vendor/api'
 import type { Vendor } from '@/entities/vendor/types'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
@@ -66,12 +66,37 @@ function togglePosterEdit(roomId: string) {
 async function handleDeleteRoom(room: Room) {
   if (!confirm(`"${room.themeName}" 방을 삭제하시겠습니까?`)) return
   try {
+    const reviewCount = await countReviewsByRoom(room.id)
+    if (reviewCount > 0) {
+      toast.error(`이 방에 연결된 리뷰가 ${reviewCount}개 있어 삭제할 수 없습니다.`)
+      return
+    }
     await deleteRoom(room.id)
     rooms.value = rooms.value.filter((r) => r.id !== room.id)
     if (editingRoomId.value === room.id) editingRoomId.value = null
     toast.success('방이 삭제되었습니다.')
   } catch {
     toast.error('방 삭제에 실패했습니다.')
+  }
+}
+
+async function handleDeleteVendor(group: VendorGroup) {
+  const msg = group.rooms.length
+    ? `"${group.vendorName}" 업체와 하위 ${group.rooms.length}개 테마를 모두 삭제하시겠습니까?`
+    : `"${group.vendorName}" 업체를 삭제하시겠습니까?`
+  if (!confirm(msg)) return
+  try {
+    const reviewCount = await countReviewsByVendor(group.vendorId)
+    if (reviewCount > 0) {
+      toast.error(`이 업체에 연결된 리뷰가 ${reviewCount}개 있어 삭제할 수 없습니다.`)
+      return
+    }
+    await deleteVendor(group.vendorId)
+    rooms.value = rooms.value.filter((r) => r.vendorId !== group.vendorId)
+    vendors.value = vendors.value.filter((v) => v.id !== group.vendorId)
+    toast.success('업체가 삭제되었습니다.')
+  } catch {
+    toast.error('업체 삭제에 실패했습니다.')
   }
 }
 
@@ -285,15 +310,23 @@ async function submitNewRoom() {
     <div v-else-if="groupedRooms.length" class="room-search__groups">
       <section v-for="group in groupedRooms" :key="group.vendorId" class="room-search__group">
         <!-- 업체 헤더 -->
-        <button class="room-search__group-header" @click="toggleVendor(group.vendorId)">
-          <span class="room-search__group-name">{{ group.vendorName }}</span>
-          <span class="room-search__group-region">{{ group.region }}</span>
-          <span class="room-search__group-count">{{ group.rooms.length }}</span>
-          <ChevronDownIcon
-            class="room-search__group-chevron"
-            :class="{ 'room-search__group-chevron--collapsed': collapsedVendors.has(group.vendorId) }"
-          />
-        </button>
+        <div class="room-search__group-header">
+          <button class="room-search__group-toggle" @click="toggleVendor(group.vendorId)">
+            <span class="room-search__group-name">{{ group.vendorName }}</span>
+            <span class="room-search__group-region">{{ group.region }}</span>
+            <span class="room-search__group-count">{{ group.rooms.length }}</span>
+            <ChevronDownIcon
+              class="room-search__group-chevron"
+              :class="{ 'room-search__group-chevron--collapsed': collapsedVendors.has(group.vendorId) }"
+            />
+          </button>
+          <button
+            class="room-search__action-btn room-search__action-btn--danger"
+            @click="handleDeleteVendor(group)"
+          >
+            <TrashIcon class="room-search__action-btn-icon" />
+          </button>
+        </div>
 
         <!-- 테마 목록 -->
         <ul v-if="!collapsedVendors.has(group.vendorId)" class="room-search__themes">
@@ -381,16 +414,23 @@ async function submitNewRoom() {
 .room-search__group-header {
   display: flex;
   align-items: center;
+  padding-right: 8px;
+}
+
+.room-search__group-toggle {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 12px 16px;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 8px 12px 16px;
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
 }
 
-.room-search__group-header:hover {
+.room-search__group-toggle:hover {
   background: #fafafa;
 }
 
