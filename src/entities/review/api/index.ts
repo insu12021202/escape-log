@@ -216,6 +216,14 @@ export async function updateReview(
   return updated;
 }
 
+/** 리뷰 삭제 (사진 Storage 포함) */
+export async function deleteReview(id: string, photoPaths: string[]): Promise<void> {
+  const { deletePhotos } = await import("@/shared/api/storage");
+  await deletePhotos(photoPaths);
+  const { error } = await supabase.from("reviews").delete().eq("id", id);
+  if (error) throw error;
+}
+
 /** RPC를 통한 공유 리뷰 조회. Spec: §6 */
 export async function getSharedReview(
   shareToken: string,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import {
   ArrowRightOnRectangleIcon,
@@ -8,11 +9,15 @@ import {
 } from '@heroicons/vue/24/outline'
 import logoUrl from '@/app/assets/logo.png'
 import { useSessionStore } from '@/app/stores/session'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
 
 const session = useSessionStore()
 const router = useRouter()
 
+const showLogoutDialog = ref(false)
+
 async function handleSignOut() {
+  showLogoutDialog.value = false
   await session.signOut()
   router.push({ name: 'login' })
 }
@@ -30,13 +35,17 @@ async function handleSignOut() {
         <RouterLink to="/room/search">방 검색</RouterLink>
         <RouterLink to="/profile">프로필</RouterLink>
       </nav>
-      <button class="app-header__signout" @click="handleSignOut" title="로그아웃">
+      <button class="app-header__signout" @click="showLogoutDialog = true" title="로그아웃">
         <ArrowRightOnRectangleIcon class="app-header__signout-icon" />
       </button>
     </header>
 
     <main class="app-main">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
 
     <nav class="app-tab-bar">
@@ -54,6 +63,17 @@ async function handleSignOut() {
         <span class="app-tab__label">프로필</span>
       </RouterLink>
     </nav>
+
+    <!-- 로그아웃 확인 -->
+    <ConfirmDialog
+      :visible="showLogoutDialog"
+      title="로그아웃"
+      message="정말 로그아웃할까요?"
+      confirm-label="로그아웃"
+      cancel-label="취소"
+      @confirm="handleSignOut"
+      @cancel="showLogoutDialog = false"
+    />
   </div>
 </template>
 
@@ -209,6 +229,22 @@ async function handleSignOut() {
   height: 24px;
   color: #fff;
   stroke-width: 2.5;
+}
+
+/* ── 페이지 트랜지션 ── */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 /* 데스크톱: 탭바 숨기고 헤더 nav 표시 */

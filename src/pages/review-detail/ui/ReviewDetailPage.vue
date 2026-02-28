@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { fetchReviewById, enableSharing } from '@/entities/review/api'
+import { useRoute, useRouter } from 'vue-router'
+import { fetchReviewById, enableSharing, deleteReview } from '@/entities/review/api'
 import { searchRooms } from '@/entities/room/api'
 import { supabase } from '@/shared/api/supabase'
 import { shareReviewViaKakao } from '@/shared/lib/kakao'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
-import { ArrowLeftIcon, PencilSquareIcon, ShareIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, PencilSquareIcon, ShareIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
-import AppSpinner from '@/shared/ui/AppSpinner.vue'
+import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
 
 const route = useRoute()
+const router = useRouter()
 
 const review = ref<Review | null>(null)
 const room = ref<Room | null>(null)
@@ -22,6 +24,9 @@ const currentUserId = ref<string | null>(null)
 const sharing = ref(false)
 const toastMsg = ref<string | null>(null)
 let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+const showDeleteDialog = ref(false)
+const deleting = ref(false)
 
 function showToast(msg: string) {
   toastMsg.value = msg
@@ -54,6 +59,22 @@ async function handleShare() {
   }
 }
 
+async function handleDelete() {
+  if (!review.value || deleting.value) return
+  deleting.value = true
+  try {
+    await deleteReview(review.value.id, review.value.photos)
+    showDeleteDialog.value = false
+    router.push('/')
+  } catch {
+    showToast('삭제에 실패했습니다.')
+    deleting.value = false
+  }
+}
+
+const isOwner = () =>
+  review.value && currentUserId.value && review.value.userId === currentUserId.value
+
 onMounted(async () => {
   try {
     const id = route.params.id as string
@@ -84,7 +105,7 @@ onMounted(async () => {
       </RouterLink>
       <div class="review-detail-page__actions">
         <button
-          v-if="review && currentUserId && review.userId === currentUserId"
+          v-if="isOwner()"
           class="review-detail-page__action-btn"
           :disabled="sharing"
           title="공유"
@@ -93,16 +114,48 @@ onMounted(async () => {
           <ShareIcon class="review-detail-page__action-icon" />
         </button>
         <RouterLink
-          v-if="review && currentUserId && review.userId === currentUserId"
-          :to="`/review/${review.id}/edit`"
+          v-if="isOwner()"
+          :to="`/review/${review!.id}/edit`"
           class="review-detail-page__action-btn"
           title="수정"
         >
           <PencilSquareIcon class="review-detail-page__action-icon" />
         </RouterLink>
+        <button
+          v-if="isOwner()"
+          class="review-detail-page__action-btn review-detail-page__action-btn--danger"
+          title="삭제"
+          @click="showDeleteDialog = true"
+        >
+          <TrashIcon class="review-detail-page__action-icon" />
+        </button>
       </div>
     </div>
-    <AppSpinner v-if="loading" />
+
+    <!-- 스켈레톤 로딩 -->
+    <div v-if="loading" class="review-detail-page__skeleton">
+      <div class="review-detail-page__skeleton-room">
+        <SkeletonBlock width="140px" height="18px" />
+        <SkeletonBlock width="100px" height="16px" />
+      </div>
+      <div class="review-detail-page__skeleton-rating">
+        <SkeletonBlock width="120px" height="20px" />
+        <SkeletonBlock width="48px" height="24px" border-radius="99px" />
+      </div>
+      <SkeletonBlock width="90%" height="16px" />
+      <div class="review-detail-page__skeleton-section">
+        <SkeletonBlock width="80px" height="12px" />
+        <SkeletonBlock height="14px" />
+        <SkeletonBlock height="14px" />
+        <SkeletonBlock height="14px" />
+      </div>
+      <div class="review-detail-page__skeleton-section">
+        <SkeletonBlock width="80px" height="12px" />
+        <SkeletonBlock height="14px" />
+        <SkeletonBlock height="14px" />
+      </div>
+    </div>
+
     <p v-else-if="fetchError" class="review-detail-page__status review-detail-page__status--error">
       리뷰를 불러오는 데 실패했습니다.
     </p>
@@ -113,6 +166,18 @@ onMounted(async () => {
     <Transition name="toast">
       <div v-if="toastMsg" class="review-detail-page__toast">{{ toastMsg }}</div>
     </Transition>
+
+    <!-- 삭제 확인 다이얼로그 -->
+    <ConfirmDialog
+      :visible="showDeleteDialog"
+      title="리뷰를 삭제할까요?"
+      message="삭제된 리뷰는 복구할 수 없습니다."
+      confirm-label="삭제"
+      cancel-label="취소"
+      variant="danger"
+      @confirm="handleDelete"
+      @cancel="showDeleteDialog = false"
+    />
   </div>
 </template>
 
@@ -129,7 +194,7 @@ onMounted(async () => {
   align-items: center;
   gap: 4px;
   font-size: 0.875rem;
-  color: #4a90d9;
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -150,20 +215,20 @@ onMounted(async () => {
 }
 
 .review-detail-page__action-btn {
-  color: #4a90d9;
+  color: var(--color-primary);
   text-decoration: none;
   padding: 6px;
-  border: 1px solid #4a90d9;
-  border-radius: 6px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--transition-fast), color var(--transition-fast);
   background: none;
   cursor: pointer;
 }
 
 .review-detail-page__action-btn:hover {
-  background: #4a90d9;
+  background: var(--color-primary);
   color: #fff;
 }
 
@@ -172,19 +237,59 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 
+.review-detail-page__action-btn--danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.review-detail-page__action-btn--danger:hover {
+  background: var(--color-error);
+  color: #fff;
+}
+
 .review-detail-page__action-icon {
   width: 18px;
   height: 18px;
 }
 
 .review-detail-page__status {
-  color: #999;
+  color: var(--color-text-muted);
   text-align: center;
   padding: 40px 0;
 }
 
 .review-detail-page__status--error {
-  color: #e53935;
+  color: var(--color-error);
+}
+
+/* 스켈레톤 */
+.review-detail-page__skeleton {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-detail-page__skeleton-room {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-detail-page__skeleton-rating {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.review-detail-page__skeleton-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* 토스트 */
