@@ -40,27 +40,19 @@ async function crawlBranch(
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
-  const data = await res.json()
+  const json = await res.json()
   const rooms: CrawledRoom[] = []
 
-  if (Array.isArray(data)) {
-    for (const item of data) {
+  // API 응답: { status: true, data: [...] }
+  const list = Array.isArray(json) ? json : json.data
+  if (Array.isArray(list)) {
+    for (const item of list) {
       const themeName = (item.info_name ?? item.theme_name ?? "").trim()
       if (themeName) {
-        // 포스터 이미지 URL 추출 (API 필드: info_image, image_url 등)
-        const rawImage = item.info_image ?? item.image_url ?? item.poster ?? ""
-        let posterUrl: string | undefined
-        if (rawImage) {
-          posterUrl = rawImage.startsWith("http")
-            ? rawImage
-            : `https://www.keyescape.com${rawImage.startsWith("/") ? "" : "/"}${rawImage}`
-        }
-
         rooms.push({
           vendor_name: "키이스케이프",
           theme_name: themeName,
           region: normalizeRegion(branch.region),
-          poster_url: posterUrl,
         })
       }
     }
