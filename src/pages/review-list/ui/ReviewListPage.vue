@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { fetchReviews } from '@/entities/review/api'
-import { searchRooms } from '@/entities/room/api'
+import { fetchAllRooms } from '@/entities/room/api'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
@@ -92,7 +92,7 @@ function switchTab(tab: Tab) {
 
 onMounted(async () => {
   try {
-    const [data, allRooms] = await Promise.all([fetchReviews(), searchRooms('')])
+    const [data, allRooms] = await Promise.all([fetchReviews(), fetchAllRooms()])
     reviews.value = data
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]))
   } catch (e) {

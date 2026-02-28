@@ -16,28 +16,29 @@ function toRoom(row: Record<string, unknown>): Room {
   }
 }
 
-/** 키워드로 방 검색 (업체명·테마명·지역). Spec: §4.2 */
-export async function searchRooms(keyword: string): Promise<Room[]> {
-  const q = keyword.trim()
-
+/** 전체 방 목록 조회 (리뷰 목록 등에서 room map 구축용) */
+export async function fetchAllRooms(): Promise<Room[]> {
   const { data, error } = await supabase
     .from('rooms')
     .select(ROOM_SELECT)
     .order('created_at', { ascending: false })
   if (error) throw error
+  return (data ?? []).map(toRoom)
+}
 
-  const allRooms = (data ?? []).map(toRoom)
-  if (!q) return allRooms.slice(0, 50)
+/** 키워드로 방 검색 (업체명·테마명·지역). Spec: §4.2 */
+export async function searchRooms(keyword: string): Promise<Room[]> {
+  const q = keyword.trim()
+  if (!q) return fetchAllRooms()
 
+  const allRooms = await fetchAllRooms()
   const lowerQ = q.toLowerCase()
-  return allRooms
-    .filter(
-      (r) =>
-        r.vendorName.toLowerCase().includes(lowerQ) ||
-        r.themeName.toLowerCase().includes(lowerQ) ||
-        r.region.toLowerCase().includes(lowerQ),
-    )
-    .slice(0, 50)
+  return allRooms.filter(
+    (r) =>
+      r.vendorName.toLowerCase().includes(lowerQ) ||
+      r.themeName.toLowerCase().includes(lowerQ) ||
+      r.region.toLowerCase().includes(lowerQ),
+  )
 }
 
 /** 업체별 방 목록 조회 (캐스케이딩 선택용) */
