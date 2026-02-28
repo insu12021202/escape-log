@@ -20,21 +20,38 @@ function openPicker() {
   fileInput.value?.click()
 }
 
+function acceptFile(file: File): boolean {
+  sizeError.value = ''
+  if (!file.type.startsWith('image/')) return false
+  if (file.size > MAX_BYTES) {
+    sizeError.value = '파일 크기가 5MB를 초과합니다.'
+    return false
+  }
+  emit('update:modelValue', file)
+  return true
+}
+
 function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files?.[0]) return
-
-  sizeError.value = ''
-  const file = input.files[0]
-
-  if (file.size > MAX_BYTES) {
-    sizeError.value = '파일 크기가 5MB를 초과합니다.'
-    input.value = ''
-    return
-  }
-
-  emit('update:modelValue', file)
+  acceptFile(input.files[0])
   input.value = ''
+}
+
+function onPaste(e: ClipboardEvent) {
+  if (props.disabled) return
+  const items = e.clipboardData?.items
+  if (!items) return
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) {
+        e.preventDefault()
+        acceptFile(file)
+      }
+      return
+    }
+  }
 }
 
 function remove() {
@@ -48,7 +65,7 @@ function getPreviewUrl(file: File): string {
 </script>
 
 <template>
-  <div class="poster-picker">
+  <div class="poster-picker" tabindex="0" @paste="onPaste">
     <!-- 기존 포스터 (편집 모드) -->
     <div v-if="existingPath && !modelValue" class="poster-picker__thumb poster-picker__thumb--existing">
       <img :src="getRoomPosterUrl(existingPath)" alt="현재 포스터" class="poster-picker__img" />
@@ -77,6 +94,7 @@ function getPreviewUrl(file: File): string {
     >
       <PhotoIcon class="poster-picker__add-icon" />
       <span>포스터</span>
+      <span class="poster-picker__hint">Ctrl+V</span>
     </button>
 
     <p v-if="sizeError" class="poster-picker__error">{{ sizeError }}</p>
@@ -164,9 +182,18 @@ function getPreviewUrl(file: File): string {
   cursor: not-allowed;
 }
 
+.poster-picker:focus {
+  outline: none;
+}
+
 .poster-picker__add-icon {
   width: 20px;
   height: 20px;
+}
+
+.poster-picker__hint {
+  font-size: 0.625rem;
+  color: #bbb;
 }
 
 .poster-picker__hidden {
