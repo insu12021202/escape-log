@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
 import { ref, computed, watch, onMounted } from 'vue'
-import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, XMarkIcon, CameraIcon } from '@heroicons/vue/24/outline'
 import { searchRooms, createRoom, updateRoomPosterPath } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
@@ -30,6 +30,38 @@ const posterFile = ref<File | null>(null)
 const showForm = ref(false)
 const registering = ref(false)
 const registerError = ref<string | null>(null)
+
+// 포스터 수정
+const editingRoomId = ref<string | null>(null)
+const editingPosterFile = ref<File | null>(null)
+const uploadingPoster = ref(false)
+
+async function handlePosterUpload(room: Room) {
+  if (!editingPosterFile.value) return
+  uploadingPoster.value = true
+  try {
+    const posterPath = await uploadRoomPoster(room.id, editingPosterFile.value)
+    await updateRoomPosterPath(room.id, posterPath)
+    room.posterPath = posterPath
+    editingRoomId.value = null
+    editingPosterFile.value = null
+    toast.success('포스터가 등록되었습니다.')
+  } catch {
+    toast.error('포스터 업로드에 실패했습니다.')
+  } finally {
+    uploadingPoster.value = false
+  }
+}
+
+function togglePosterEdit(roomId: string) {
+  if (editingRoomId.value === roomId) {
+    editingRoomId.value = null
+    editingPosterFile.value = null
+  } else {
+    editingRoomId.value = roomId
+    editingPosterFile.value = null
+  }
+}
 
 const vendorOptions = computed(() => [
   { value: '', label: '업체를 선택하세요' },
@@ -196,18 +228,38 @@ async function submitNewRoom() {
       방 목록을 불러오는 데 실패했습니다.
     </p>
     <ul v-else-if="rooms.length" class="room-search__list">
-      <li v-for="room in rooms" :key="room.id" class="room-search__item">
-        <img
-          v-if="room.posterPath"
-          :src="getRoomPosterUrl(room.posterPath)"
-          :alt="`${room.themeName} 포스터`"
-          class="room-search__poster"
-        />
-        <div class="room-search__info">
-          <span class="room-search__vendor">{{ room.vendorName }}</span>
-          <span class="room-search__theme">{{ room.themeName }}</span>
+      <li v-for="room in rooms" :key="room.id" class="room-search__item-wrap">
+        <div class="room-search__item">
+          <img
+            v-if="room.posterPath"
+            :src="getRoomPosterUrl(room.posterPath)"
+            :alt="`${room.themeName} 포스터`"
+            class="room-search__poster"
+          />
+          <div class="room-search__info">
+            <span class="room-search__vendor">{{ room.vendorName }}</span>
+            <span class="room-search__theme">{{ room.themeName }}</span>
+          </div>
+          <span class="room-search__region">{{ room.region }}</span>
+          <button class="room-search__poster-btn" @click="togglePosterEdit(room.id)">
+            <CameraIcon class="room-search__poster-btn-icon" />
+          </button>
         </div>
-        <span class="room-search__region">{{ room.region }}</span>
+        <div v-if="editingRoomId === room.id" class="room-search__poster-edit">
+          <PosterPicker
+            v-model="editingPosterFile"
+            :existing-path="room.posterPath ? getRoomPosterUrl(room.posterPath) : null"
+            :disabled="uploadingPoster"
+          />
+          <button
+            v-if="editingPosterFile"
+            class="room-search__submit-btn"
+            :disabled="uploadingPoster"
+            @click="handlePosterUpload(room)"
+          >
+            {{ uploadingPoster ? '업로드 중...' : '포스터 저장' }}
+          </button>
+        </div>
       </li>
     </ul>
     <p v-else class="room-search__empty">검색 결과가 없습니다.</p>
@@ -251,14 +303,18 @@ async function submitNewRoom() {
   gap: 8px;
 }
 
+.room-search__item-wrap {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
 .room-search__item {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background: #fff;
 }
 
 .room-search__poster {
@@ -412,5 +468,38 @@ async function submitNewRoom() {
 
 .room-search__link-btn:hover {
   color: #3a7bc8;
+}
+
+.room-search__poster-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: #bbb;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+
+.room-search__poster-btn:hover {
+  color: #4a90d9;
+  background: #f0f4ff;
+}
+
+.room-search__poster-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.room-search__poster-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #eee;
+  background: #f9fafb;
 }
 </style>
