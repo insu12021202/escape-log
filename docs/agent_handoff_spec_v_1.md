@@ -149,6 +149,12 @@
 - [x] 탭바 FAB + 프로필 탭 구조 개편, ProfilePage 신설 (PR #20)
 - [x] 카카오톡 공유 기능 (Kakao JS SDK + enableSharing API) (PR #21)
 - [x] favicon/apple-touch-icon/OG image를 logo.png로 통합 (PR #21)
+- [x] ConfirmDialog 공통 컴포넌트 (PR #22)
+- [x] SkeletonBlock + ReviewCardSkeleton 스켈레톤 로딩 (PR #22)
+- [x] 리뷰 삭제 기능 — deleteReview + deletePhotos + ConfirmDialog (PR #22)
+- [x] 빈 상태 CTA + 필터 초기화 버튼 (PR #22)
+- [x] 페이지 트랜지션 (RouterView + Transition) (PR #22)
+- [x] 로그아웃 확인 다이얼로그 (AppLayout + ProfilePage) (PR #22)
 
 ---
 

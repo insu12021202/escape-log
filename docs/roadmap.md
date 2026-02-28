@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 6 진행 중** (v1 마감)
-- 마지막 완료 PR: feat: 카카오톡 공유 기능 및 로고 통합 (#21)
+- 현재 Phase: **Phase 7 진행 중** (UX 품질 향상)
+- 마지막 완료 PR: feat: UX 품질 향상 — 삭제·스켈레톤·빈 상태·트랜지션·로그아웃 확인 (#22)
 
 ### 완료된 작업 요약
 
@@ -323,6 +323,17 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 리뷰 상세 페이지 공유 버튼 추가 (본인 리뷰만, enableSharing API) — PR #21
 - Kakao SDK 미지원 환경 클립보드 복사 폴백 — PR #21
 - favicon/apple-touch-icon/OG image를 logo.png로 통합 — PR #21
+
+#### Phase 7 — UX 품질 향상 완료
+- ConfirmDialog 공통 컴포넌트 신설 (Teleport + 오버레이 + ESC 닫기) — PR #22
+- SkeletonBlock shimmer 블록 컴포넌트 신설 — PR #22
+- ReviewCardSkeleton 리뷰 카드 형태 스켈레톤 신설 — PR #22
+- 리뷰 삭제 기능 (deleteReview + deletePhotos, 본인 리뷰만) — PR #22
+- 리뷰 목록 스켈레톤 로딩 (AppSpinner → ReviewCardSkeleton 3개) — PR #22
+- 리뷰 상세 인라인 스켈레톤 로딩 — PR #22
+- 빈 상태 CTA: "첫 리뷰 작성하기" + 검색 결과 없음 → 필터 초기화 — PR #22
+- 페이지 트랜지션 (fade + translateY 150ms) — PR #22
+- 로그아웃 확인 다이얼로그 (AppLayout + ProfilePage) — PR #22
 
 ### 미완료 항목
 - [ ] Vercel 배포 확인
