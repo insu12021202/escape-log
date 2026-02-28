@@ -47,10 +47,20 @@ async function crawlBranch(
     for (const item of data) {
       const themeName = (item.info_name ?? item.theme_name ?? "").trim()
       if (themeName) {
+        // 포스터 이미지 URL 추출 (API 필드: info_image, image_url 등)
+        const rawImage = item.info_image ?? item.image_url ?? item.poster ?? ""
+        let posterUrl: string | undefined
+        if (rawImage) {
+          posterUrl = rawImage.startsWith("http")
+            ? rawImage
+            : `https://www.keyescape.com${rawImage.startsWith("/") ? "" : "/"}${rawImage}`
+        }
+
         rooms.push({
           vendor_name: "키이스케이프",
           theme_name: themeName,
           region: normalizeRegion(branch.region),
+          poster_url: posterUrl,
         })
       }
     }
@@ -80,6 +90,7 @@ Deno.serve(async (_req) => {
     total_crawled: allRooms.length,
     inserted: result.inserted,
     skipped: result.skipped,
+    posters_uploaded: result.posters_uploaded,
     errors: [...errors, ...result.errors],
     crawled_at: new Date().toISOString(),
   }
