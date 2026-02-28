@@ -22,14 +22,15 @@ const vendors = ref<Vendor[]>([])
 const selectedVendorId = ref('')
 const isNewVendor = ref(false)
 const newVendorName = ref('')
-const newRoom = ref({ themeName: '', region: '' })
+const newVendorRegion = ref('')
+const newThemeName = ref('')
 const showForm = ref(false)
 const registering = ref(false)
 const registerError = ref<string | null>(null)
 
 const vendorOptions = computed(() => [
   { value: '', label: '업체를 선택하세요' },
-  ...vendors.value.map((v) => ({ value: v.id, label: v.name })),
+  ...vendors.value.map((v) => ({ value: v.id, label: `${v.name} (${v.region})` })),
 ])
 
 onMounted(async () => {
@@ -61,10 +62,13 @@ doSearch()
 
 async function submitNewRoom() {
   const vendorName = isNewVendor.value ? newVendorName.value.trim() : ''
-  const hasVendor = isNewVendor.value ? !!vendorName : !!selectedVendorId.value
+  const vendorRegion = isNewVendor.value ? newVendorRegion.value.trim() : ''
+  const hasVendor = isNewVendor.value ? (!!vendorName && !!vendorRegion) : !!selectedVendorId.value
 
-  if (!hasVendor || !newRoom.value.themeName || !newRoom.value.region) {
-    registerError.value = '업체, 테마명, 지역을 모두 입력해주세요.'
+  if (!hasVendor || !newThemeName.value.trim()) {
+    registerError.value = isNewVendor.value
+      ? '업체명, 지역, 테마명을 모두 입력해주세요.'
+      : '업체를 선택하고 테마명을 입력해주세요.'
     return
   }
   registering.value = true
@@ -72,9 +76,8 @@ async function submitNewRoom() {
   try {
     let vendorId: string
     if (isNewVendor.value) {
-      const vendor = await findOrCreateVendor(vendorName)
+      const vendor = await findOrCreateVendor(vendorName, vendorRegion)
       vendorId = vendor.id
-      // 새 업체를 목록에 추가
       if (!vendors.value.find((v) => v.id === vendor.id)) {
         vendors.value.push(vendor)
       }
@@ -84,13 +87,13 @@ async function submitNewRoom() {
 
     const created = await createRoom({
       vendorId,
-      themeName: newRoom.value.themeName,
-      region: newRoom.value.region,
+      themeName: newThemeName.value.trim(),
     })
     rooms.value = [created, ...rooms.value]
-    newRoom.value = { themeName: '', region: '' }
+    newThemeName.value = ''
     selectedVendorId.value = ''
     newVendorName.value = ''
+    newVendorRegion.value = ''
     isNewVendor.value = false
     showForm.value = false
     toast.success('방이 등록되었습니다.')
@@ -139,7 +142,7 @@ async function submitNewRoom() {
 
       <form v-if="showForm" class="room-search__form" @submit.prevent="submitNewRoom">
         <div class="room-search__field">
-          <label class="room-search__label">업체</label>
+          <label class="room-search__label">업체 (지역)</label>
           <template v-if="!isNewVendor">
             <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
             <button type="button" class="room-search__link-btn" @click="isNewVendor = true">
@@ -147,13 +150,21 @@ async function submitNewRoom() {
             </button>
           </template>
           <template v-else>
-            <input
-              v-model="newVendorName"
-              class="room-search__input"
-              type="text"
-              placeholder="예) 넥스트에디션"
-            />
-            <button type="button" class="room-search__link-btn" @click="isNewVendor = false; newVendorName = ''">
+            <div class="room-search__row">
+              <input
+                v-model="newVendorName"
+                class="room-search__input"
+                type="text"
+                placeholder="업체명 (예: 키이스케이프)"
+              />
+              <input
+                v-model="newVendorRegion"
+                class="room-search__input room-search__input--short"
+                type="text"
+                placeholder="지역 (예: 홍대)"
+              />
+            </div>
+            <button type="button" class="room-search__link-btn" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''">
               기존 업체에서 선택
             </button>
           </template>
@@ -161,19 +172,10 @@ async function submitNewRoom() {
         <div class="room-search__field">
           <label class="room-search__label">테마명</label>
           <input
-            v-model="newRoom.themeName"
+            v-model="newThemeName"
             class="room-search__input"
             type="text"
             placeholder="예) 셜록홈즈: 마지막 사건"
-          />
-        </div>
-        <div class="room-search__field">
-          <label class="room-search__label">지역</label>
-          <input
-            v-model="newRoom.region"
-            class="room-search__input"
-            type="text"
-            placeholder="예) 강남"
           />
         </div>
         <p v-if="registerError" class="room-search__error">{{ registerError }}</p>
@@ -337,6 +339,15 @@ async function submitNewRoom() {
 .room-search__submit-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.room-search__row {
+  display: flex;
+  gap: 8px;
+}
+
+.room-search__input--short {
+  max-width: 120px;
 }
 
 .room-search__link-btn {

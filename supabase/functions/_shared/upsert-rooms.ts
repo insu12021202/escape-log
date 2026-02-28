@@ -8,35 +8,49 @@ function getSupabaseAdmin() {
   )
 }
 
-/** vendor_name 목록 → vendor_id Map 구축 (없으면 생성) */
+/** (vendor_name, region) 조합 → vendor_id Map 구축 (없으면 생성) */
 async function resolveVendorIds(
   supabase: ReturnType<typeof getSupabaseAdmin>,
-  vendorNames: string[],
+  rooms: CrawledRoom[],
 ): Promise<Map<string, string>> {
-  const unique = [...new Set(vendorNames)]
-  const map = new Map<string, string>()
-
-  const { data: existing } = await supabase
-    .from("vendors")
-    .select("id, name")
-    .in("name", unique)
-
-  for (const v of existing ?? []) {
-    map.set(v.name, v.id)
+  // key = "name||region"
+  const combos = new Map<string, { name: string; region: string }>()
+  for (const r of rooms) {
+    const key = `${r.vendor_name}||${r.region}`
+    if (!combos.has(key)) combos.set(key, { name: r.vendor_name, region: r.region })
   }
 
-  const missing = unique.filter((n) => !map.has(n))
+  const map = new Map<string, string>() // key → vendor_id
+
+  // 기존 vendors 조회
+  const uniqueNames = [...new Set(rooms.map((r) => r.vendor_name))]
+  const { data: existing } = await supabase
+    .from("vendors")
+    .select("id, name, region")
+    .in("name", uniqueNames)
+
+  for (const v of existing ?? []) {
+    const key = `${v.name}||${v.region}`
+    map.set(key, v.id)
+  }
+
+  // 없는 (name, region) 조합 생성
+  const missing = [...combos.entries()]
+    .filter(([key]) => !map.has(key))
+    .map(([, val]) => val)
+
   if (missing.length > 0) {
     const { data: created } = await supabase
       .from("vendors")
       .upsert(
-        missing.map((name) => ({ name })),
-        { onConflict: "name", ignoreDuplicates: true },
+        missing.map(({ name, region }) => ({ name, region })),
+        { onConflict: "name,region", ignoreDuplicates: true },
       )
-      .select("id, name")
+      .select("id, name, region")
 
     for (const v of created ?? []) {
-      map.set(v.name, v.id)
+      const key = `${v.name}||${v.region}`
+      map.set(key, v.id)
     }
   }
 
@@ -48,8 +62,7 @@ export async function upsertRooms(
 ): Promise<{ inserted: number; skipped: number; errors: string[] }> {
   const supabase = getSupabaseAdmin()
 
-  const vendorNames = rooms.map((r) => r.vendor_name)
-  const vendorMap = await resolveVendorIds(supabase, vendorNames)
+  const vendorMap = await resolveVendorIds(supabase, rooms)
 
   const BATCH_SIZE = 100
   let inserted = 0
@@ -60,12 +73,12 @@ export async function upsertRooms(
     const batch = rooms.slice(i, i + BATCH_SIZE)
     const rows = batch
       .map((r) => {
-        const vendorId = vendorMap.get(r.vendor_name)
+        const key = `${r.vendor_name}||${r.region}`
+        const vendorId = vendorMap.get(key)
         if (!vendorId) return null
         return {
           vendor_id: vendorId,
           theme_name: r.theme_name,
-          region: r.region,
         }
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
@@ -75,7 +88,7 @@ export async function upsertRooms(
     const { data, error } = await supabase
       .from("rooms")
       .upsert(rows, {
-        onConflict: "vendor_id,theme_name,region",
+        onConflict: "vendor_id,theme_name",
         ignoreDuplicates: true,
       })
       .select("id")

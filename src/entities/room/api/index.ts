@@ -1,17 +1,17 @@
 import { supabase } from '@/shared/api/supabase'
 import type { Room } from '../types'
 
-const ROOM_SELECT = 'id, vendor_id, theme_name, region, created_at, vendors(id, name)'
+const ROOM_SELECT = 'id, vendor_id, theme_name, created_at, vendors(id, name, region)'
 
 /** DB 행 → Room 엔티티 변환 (vendors JOIN 포함) */
 function toRoom(row: Record<string, unknown>): Room {
-  const vendor = row.vendors as { id: string; name: string } | null
+  const vendor = row.vendors as { id: string; name: string; region: string } | null
   return {
     id: row.id as string,
     vendorId: row.vendor_id as string,
     vendorName: vendor?.name ?? '',
     themeName: row.theme_name as string,
-    region: row.region as string,
+    region: vendor?.region ?? '',
     createdAt: row.created_at as string,
   }
 }
@@ -51,11 +51,10 @@ export async function fetchRoomsByVendor(vendorId: string): Promise<Room[]> {
   return (data ?? []).map(toRoom)
 }
 
-/** 새 방 등록. Spec: §4.2 */
+/** 새 방 등록 (지역은 vendor에 포함). Spec: §4.2 */
 export async function createRoom(params: {
   vendorId: string
   themeName: string
-  region: string
 }): Promise<Room> {
   const { data: { user } } = await supabase.auth.getUser()
   const { data, error } = await supabase
@@ -63,7 +62,6 @@ export async function createRoom(params: {
     .insert({
       vendor_id: params.vendorId,
       theme_name: params.themeName,
-      region: params.region,
       created_by: user?.id,
     })
     .select(ROOM_SELECT)

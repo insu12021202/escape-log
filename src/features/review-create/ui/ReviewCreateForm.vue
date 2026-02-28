@@ -78,7 +78,7 @@ const submitting = ref(false)
 
 // 인라인 테마 추가
 const showRoomForm = ref(false)
-const roomForm = reactive({ themeName: '', region: '' })
+const roomForm = reactive({ themeName: '' })
 const roomFormError = ref('')
 const roomFormSubmitting = ref(false)
 
@@ -128,12 +128,12 @@ const form = reactive({
 
 const vendorOptions = computed(() => [
   { value: '', label: '업체를 선택하세요' },
-  ...vendors.value.map((v) => ({ value: v.id, label: v.name })),
+  ...vendors.value.map((v) => ({ value: v.id, label: `${v.name} (${v.region})` })),
 ])
 
 const roomOptions = computed(() => [
   { value: '', label: '테마를 선택하세요' },
-  ...vendorRooms.value.map((r) => ({ value: r.id, label: `${r.themeName} (${r.region})` })),
+  ...vendorRooms.value.map((r) => ({ value: r.id, label: r.themeName })),
 ])
 
 const visibilityOptions = [
@@ -178,21 +178,18 @@ async function handleCreateRoom() {
   roomFormError.value = ''
   if (!selectedVendorId.value) { roomFormError.value = '업체를 먼저 선택해주세요.'; return }
   if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해주세요.'; return }
-  if (!roomForm.region.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
 
   roomFormSubmitting.value = true
   try {
     const newRoom = await createRoom({
       vendorId: selectedVendorId.value,
       themeName: roomForm.themeName.trim(),
-      region: roomForm.region.trim(),
     })
 
     vendorRooms.value.push(newRoom)
     form.roomId = newRoom.id
     showRoomForm.value = false
     roomForm.themeName = ''
-    roomForm.region = ''
   } catch (e) {
     console.error(e)
     roomFormError.value = '테마 추가에 실패했습니다. 다시 시도해주세요.'
@@ -449,15 +446,9 @@ function navigateAfterSave(reviewId: string) {
 
           <Transition name="expand">
             <div v-if="showRoomForm && selectedVendorId" class="review-form__room-mini">
-              <div class="review-form__row">
-                <div class="review-form__field review-form__field--inline">
-                  <label class="review-form__label">테마명 *</label>
-                  <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
-                </div>
-                <div class="review-form__field review-form__field--inline">
-                  <label class="review-form__label">지역 *</label>
-                  <input v-model="roomForm.region" class="review-form__input" type="text" placeholder="예: 홍대" />
-                </div>
+              <div class="review-form__field">
+                <label class="review-form__label">테마명 *</label>
+                <input v-model="roomForm.themeName" class="review-form__input" type="text" placeholder="예: 탈옥" />
               </div>
               <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
               <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
