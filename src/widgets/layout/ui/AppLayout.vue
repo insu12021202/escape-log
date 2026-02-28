@@ -11,6 +11,7 @@ import logoUrl from '@/app/assets/logo.png'
 import { useSessionStore } from '@/app/stores/session'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
 import AppToast from '@/shared/ui/AppToast.vue'
+import PwaUpdatePrompt from '@/shared/ui/PwaUpdatePrompt.vue'
 
 const session = useSessionStore()
 const router = useRouter()
@@ -78,6 +79,9 @@ async function handleSignOut() {
 
     <!-- 전역 토스트 -->
     <AppToast />
+
+    <!-- PWA 업데이트 안내 -->
+    <PwaUpdatePrompt />
   </div>
 </template>
 
