@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // RoomSearchPage — /room/search  Spec: §2.1, §4.1
 import { ref, computed, watch, onMounted } from 'vue'
-import { PlusIcon, XMarkIcon, CameraIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, XMarkIcon, CameraIcon, TrashIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { searchRooms, createRoom, updateRoomPosterPath, deleteRoom } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
 import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
@@ -73,6 +73,36 @@ async function handleDeleteRoom(room: Room) {
   } catch {
     toast.error('방 삭제에 실패했습니다.')
   }
+}
+
+// 업체별 그룹핑
+interface VendorGroup {
+  vendorId: string
+  vendorName: string
+  region: string
+  rooms: Room[]
+}
+
+const groupedRooms = computed<VendorGroup[]>(() => {
+  const map = new Map<string, VendorGroup>()
+  for (const room of rooms.value) {
+    let group = map.get(room.vendorId)
+    if (!group) {
+      group = { vendorId: room.vendorId, vendorName: room.vendorName, region: room.region, rooms: [] }
+      map.set(room.vendorId, group)
+    }
+    group.rooms.push(room)
+  }
+  return [...map.values()]
+})
+
+const collapsedVendors = ref(new Set<string>())
+
+function toggleVendor(vendorId: string) {
+  const next = new Set(collapsedVendors.value)
+  if (next.has(vendorId)) next.delete(vendorId)
+  else next.add(vendorId)
+  collapsedVendors.value = next
 }
 
 const vendorOptions = computed(() => [
@@ -239,44 +269,56 @@ async function submitNewRoom() {
     <p v-else-if="searchError" class="room-search__empty room-search__empty--error">
       방 목록을 불러오는 데 실패했습니다.
     </p>
-    <ul v-else-if="rooms.length" class="room-search__list">
-      <li v-for="room in rooms" :key="room.id" class="room-search__item-wrap">
-        <div class="room-search__item">
-          <img
-            v-if="room.posterPath"
-            :src="getRoomPosterUrl(room.posterPath)"
-            :alt="`${room.themeName} 포스터`"
-            class="room-search__poster"
+    <div v-else-if="groupedRooms.length" class="room-search__groups">
+      <section v-for="group in groupedRooms" :key="group.vendorId" class="room-search__group">
+        <!-- 업체 헤더 -->
+        <button class="room-search__group-header" @click="toggleVendor(group.vendorId)">
+          <span class="room-search__group-name">{{ group.vendorName }}</span>
+          <span class="room-search__group-region">{{ group.region }}</span>
+          <span class="room-search__group-count">{{ group.rooms.length }}</span>
+          <ChevronDownIcon
+            class="room-search__group-chevron"
+            :class="{ 'room-search__group-chevron--collapsed': collapsedVendors.has(group.vendorId) }"
           />
-          <div class="room-search__info">
-            <span class="room-search__vendor">{{ room.vendorName }}</span>
-            <span class="room-search__theme">{{ room.themeName }}</span>
-          </div>
-          <span class="room-search__region">{{ room.region }}</span>
-          <button class="room-search__action-btn" @click="togglePosterEdit(room.id)">
-            <CameraIcon class="room-search__action-btn-icon" />
-          </button>
-          <button class="room-search__action-btn room-search__action-btn--danger" @click="handleDeleteRoom(room)">
-            <TrashIcon class="room-search__action-btn-icon" />
-          </button>
-        </div>
-        <div v-if="editingRoomId === room.id" class="room-search__poster-edit">
-          <PosterPicker
-            v-model="editingPosterFile"
-            :existing-path="room.posterPath ? getRoomPosterUrl(room.posterPath) : null"
-            :disabled="uploadingPoster"
-          />
-          <button
-            v-if="editingPosterFile"
-            class="room-search__submit-btn"
-            :disabled="uploadingPoster"
-            @click="handlePosterUpload(room)"
-          >
-            {{ uploadingPoster ? '업로드 중...' : '포스터 저장' }}
-          </button>
-        </div>
-      </li>
-    </ul>
+        </button>
+
+        <!-- 테마 목록 -->
+        <ul v-if="!collapsedVendors.has(group.vendorId)" class="room-search__themes">
+          <li v-for="room in group.rooms" :key="room.id" class="room-search__theme-item">
+            <div class="room-search__theme-row">
+              <img
+                v-if="room.posterPath"
+                :src="getRoomPosterUrl(room.posterPath)"
+                :alt="`${room.themeName} 포스터`"
+                class="room-search__poster"
+              />
+              <span class="room-search__theme-name">{{ room.themeName }}</span>
+              <button class="room-search__action-btn" @click="togglePosterEdit(room.id)">
+                <CameraIcon class="room-search__action-btn-icon" />
+              </button>
+              <button class="room-search__action-btn room-search__action-btn--danger" @click="handleDeleteRoom(room)">
+                <TrashIcon class="room-search__action-btn-icon" />
+              </button>
+            </div>
+            <div v-if="editingRoomId === room.id" class="room-search__poster-edit">
+              <PosterPicker
+                v-model="editingPosterFile"
+                :existing-path="room.posterPath ? getRoomPosterUrl(room.posterPath) : null"
+                :disabled="uploadingPoster"
+              />
+              <button
+                v-if="editingPosterFile"
+                class="room-search__submit-btn"
+                :disabled="uploadingPoster"
+                @click="handlePosterUpload(room)"
+              >
+                {{ uploadingPoster ? '업로드 중...' : '포스터 저장' }}
+              </button>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
     <p v-else class="room-search__empty">검색 결과가 없습니다.</p>
   </div>
 </template>
@@ -309,63 +351,101 @@ async function submitNewRoom() {
   border-color: #4a90d9;
 }
 
-.room-search__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* 그룹 리스트 */
+.room-search__groups {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.room-search__item-wrap {
+.room-search__group {
   border: 1px solid #eee;
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
 }
 
-.room-search__item {
+.room-search__group-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
   padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
 }
 
-.room-search__poster {
-  width: 48px;
-  height: 72px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
+.room-search__group-header:hover {
+  background: #fafafa;
 }
 
-.room-search__info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.room-search__vendor {
+.room-search__group-name {
   font-weight: 700;
   font-size: 0.9375rem;
   color: #222;
 }
 
-.room-search__theme {
-  font-size: 0.9375rem;
-  color: #555;
-}
-
-.room-search__region {
-  font-size: 0.8125rem;
+.room-search__group-region {
+  font-size: 0.75rem;
   color: #999;
   background: #f5f5f5;
   padding: 2px 8px;
   border-radius: 4px;
   white-space: nowrap;
+}
+
+.room-search__group-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #999;
+}
+
+.room-search__group-chevron {
+  width: 16px;
+  height: 16px;
+  color: #bbb;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.room-search__group-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 테마 목록 */
+.room-search__themes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.room-search__theme-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.room-search__theme-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 24px;
+}
+
+.room-search__poster {
+  width: 36px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.room-search__theme-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  color: #444;
 }
 
 .room-search__empty {
