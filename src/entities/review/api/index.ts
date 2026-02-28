@@ -321,6 +321,21 @@ export async function attachReviewPhoto(
   if (error) throw error;
 }
 
+/** 개별 사진 삭제 (Storage + DB) */
+export async function detachReviewPhoto(
+  reviewId: string,
+  path: string,
+): Promise<void> {
+  const { deletePhotos } = await import("@/shared/api/storage");
+  await deletePhotos([path]);
+  const { error } = await supabase
+    .from("review_photos")
+    .delete()
+    .eq("review_id", reviewId)
+    .eq("path", path);
+  if (error) throw error;
+}
+
 /** 시스템 태그(장르) 목록 조회 */
 export async function fetchGenreTags(): Promise<
   Array<{ id: string; name: string }>

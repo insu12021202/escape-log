@@ -2,7 +2,7 @@
 import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
-import { fetchGenreTags, createReview, updateReview, attachReviewPhoto } from '@/entities/review/api'
+import { fetchGenreTags, createReview, updateReview, attachReviewPhoto, detachReviewPhoto } from '@/entities/review/api'
 import { uploadPhoto } from '@/shared/api/storage'
 import { searchRooms, createRoom, fetchRoomsByVendor, updateRoomPosterPath } from '@/entities/room/api'
 import type { Room } from '@/entities/room/types'
@@ -408,6 +408,19 @@ function skipPhotosAndNavigate() {
   if (pendingReviewId.value) navigateAfterSave(pendingReviewId.value)
 }
 
+/** 기존 사진 삭제 (Storage + DB 즉시 반영) */
+async function handleRemoveExistingPhoto(path: string) {
+  if (!props.reviewId) return
+  try {
+    await detachReviewPhoto(props.reviewId, path)
+    existingPhotos.value = existingPhotos.value.filter((p) => p !== path)
+    toast.success('사진이 삭제되었습니다.')
+  } catch (e) {
+    console.error(e)
+    toast.error('사진 삭제에 실패했습니다.')
+  }
+}
+
 function navigateAfterSave(reviewId: string) {
   clearDraft()
   if (props.mode === 'edit') {
@@ -670,6 +683,7 @@ function navigateAfterSave(reviewId: string) {
           v-model="selectedPhotos"
           :existing-paths="existingPhotos"
           :disabled="!!pendingReviewId"
+          @remove-existing="handleRemoveExistingPhoto"
         />
       </div>
 
