@@ -11,6 +11,7 @@ import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
 import PhotoUploader from './PhotoUploader.vue'
+import { useToastStore } from '@/shared/model/toast'
 
 const props = withDefaults(
   defineProps<{
@@ -37,6 +38,7 @@ const props = withDefaults(
 )
 
 const router = useRouter()
+const toast = useToastStore()
 
 // ── 임시 저장 (create 모드 전용) ──────────────────────
 const DRAFT_KEY = 'escape-log:review-draft'
@@ -339,8 +341,10 @@ function skipPhotosAndNavigate() {
 function navigateAfterSave(reviewId: string) {
   clearDraft()
   if (props.mode === 'edit') {
+    toast.success('리뷰가 수정되었습니다.')
     router.push(`/review/${reviewId}`)
   } else {
+    toast.success('리뷰가 저장되었습니다.')
     router.push('/')
   }
 }
