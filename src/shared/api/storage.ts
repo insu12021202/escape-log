@@ -18,6 +18,13 @@ export async function uploadPhoto(reviewId: string, file: File, sortOrder: numbe
   return path
 }
 
+/** Storage에서 사진 파일 삭제 */
+export async function deletePhotos(paths: string[]): Promise<void> {
+  if (!paths.length) return
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove(paths)
+  if (error) throw error
+}
+
 /** Storage 경로 → 공개 URL */
 export function getPhotoPublicUrl(path: string): string {
   const { data } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path)

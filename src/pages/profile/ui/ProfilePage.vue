@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { useSessionStore } from '@/app/stores/session'
+import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
 
 const session = useSessionStore()
 const router = useRouter()
+
+const showLogoutDialog = ref(false)
 
 const displayName = computed(() => {
   const user = session.user
@@ -16,6 +19,7 @@ const displayName = computed(() => {
 const avatarLetter = computed(() => displayName.value.charAt(0).toUpperCase() || '?')
 
 async function handleSignOut() {
+  showLogoutDialog.value = false
   await session.signOut()
   router.push({ name: 'login' })
 }
@@ -39,10 +43,21 @@ async function handleSignOut() {
 
     <!-- 로그아웃 -->
     <div class="profile-page__section">
-      <button class="profile-page__item profile-page__item--danger" @click="handleSignOut">
+      <button class="profile-page__item profile-page__item--danger" @click="showLogoutDialog = true">
         로그아웃
       </button>
     </div>
+
+    <!-- 로그아웃 확인 -->
+    <ConfirmDialog
+      :visible="showLogoutDialog"
+      title="로그아웃"
+      message="정말 로그아웃할까요?"
+      confirm-label="로그아웃"
+      cancel-label="취소"
+      @confirm="handleSignOut"
+      @cancel="showLogoutDialog = false"
+    />
   </div>
 </template>
 

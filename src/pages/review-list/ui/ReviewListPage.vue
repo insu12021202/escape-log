@@ -5,8 +5,8 @@ import { searchRooms } from '@/entities/room/api'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
+import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
-import AppSpinner from '@/shared/ui/AppSpinner.vue'
 import { useSessionStore } from '@/app/stores/session'
 
 const session = useSessionStore()
@@ -61,6 +61,10 @@ const successRate = computed(() => {
   return Math.round((succeeded / totalCount.value) * 100)
 })
 
+const hasActiveFilter = computed(() =>
+  !!searchQuery.value.trim() || !!regionFilter.value || ratingFilter.value > 0,
+)
+
 const filteredReviews = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   return baseReviews.value.filter((review) => {
@@ -72,6 +76,12 @@ const filteredReviews = computed(() => {
     return true
   })
 })
+
+function clearFilters() {
+  searchQuery.value = ''
+  regionFilter.value = ''
+  ratingFilter.value = 0
+}
 
 function switchTab(tab: Tab) {
   activeTab.value = tab
@@ -96,7 +106,10 @@ onMounted(async () => {
 
 <template>
   <div class="review-list">
-    <AppSpinner v-if="loading" />
+    <!-- 스켈레톤 로딩 -->
+    <div v-if="loading" class="review-list__grid">
+      <ReviewCardSkeleton v-for="i in 3" :key="i" />
+    </div>
 
     <template v-else-if="error">
       <p class="review-list__status review-list__status--error">{{ error }}</p>
@@ -162,13 +175,22 @@ onMounted(async () => {
         />
       </div>
       <div v-else class="review-list__empty">
-        <template v-if="activeTab === 'mine'">
+        <!-- 필터/검색 적용 중인데 결과 없음 -->
+        <template v-if="hasActiveFilter">
+          <p class="review-list__empty-title">검색 결과가 없어요</p>
+          <p class="review-list__empty-desc">다른 조건으로 검색해보세요.</p>
+          <button class="review-list__empty-btn" @click="clearFilters">필터 초기화</button>
+        </template>
+        <!-- 내 기록 탭 비어있음 -->
+        <template v-else-if="activeTab === 'mine'">
           <p class="review-list__empty-title">아직 기록이 없어요</p>
           <p class="review-list__empty-desc">방탈출 다녀오셨나요? 첫 리뷰를 남겨보세요.</p>
+          <RouterLink to="/review/new" class="review-list__empty-cta">+ 첫 리뷰 작성하기</RouterLink>
         </template>
+        <!-- 전체 탭 비어있음 -->
         <template v-else>
           <p class="review-list__empty-title">리뷰가 없어요</p>
-          <p class="review-list__empty-desc">조건을 바꾸거나 새 리뷰를 작성해보세요.</p>
+          <p class="review-list__empty-desc">아직 작성된 리뷰가 없습니다.</p>
         </template>
       </div>
     </template>
@@ -322,5 +344,39 @@ onMounted(async () => {
 .review-list__empty-desc {
   font-size: 0.875rem;
   color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.review-list__empty-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.review-list__empty-cta:hover {
+  background: var(--color-primary-dark);
+}
+
+.review-list__empty-btn {
+  padding: 8px 16px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-sub);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.review-list__empty-btn:hover {
+  background: var(--color-border);
 }
 </style>
