@@ -172,6 +172,7 @@ onMounted(async () => {
           :author-name="review.authorName"
           :visited-at="review.visitedAt"
           :remaining-minutes="review.visitMeta.remainingMinutes"
+          :has-spoiler="review.hasSpoiler"
         />
       </div>
       <div v-else class="review-list__empty">

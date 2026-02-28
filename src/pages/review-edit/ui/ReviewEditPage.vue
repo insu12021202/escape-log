@@ -29,7 +29,7 @@ const initialData = computed(() => {
   const r = review.value
   return {
     roomId: r.roomId,
-    visitedAt: r.visitedAt ?? new Date().toISOString().slice(0, 10),
+    visitedAt: r.visitedAt,
     rating: r.rating,
     summary: r.summary,
     subMetrics: r.subMetrics,
@@ -40,6 +40,7 @@ const initialData = computed(() => {
     customGenre: r.visitMeta.customGenre,
     wouldRevisit: r.visitMeta.wouldRevisit,
     body: r.body,
+    hasSpoiler: r.hasSpoiler,
     visibility: r.visibility,
     photos: r.photos,
   }

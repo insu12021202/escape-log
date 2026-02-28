@@ -14,7 +14,7 @@ function generateUUID(): string {
 
 const REVIEW_SELECT = `
   id, user_id, room_id, group_id,
-  overall_rating, one_liner,
+  overall_rating, one_liner, has_spoiler,
   puzzle_quality, story_direction, set_device_quality, fear, puzzle_difficulty, clear_difficulty,
   visited_at, success, time_left_min, party_size, revisit_intent, custom_genre,
   content, visibility, share_token,
@@ -59,8 +59,9 @@ function toReview(row: Record<string, unknown>): Review {
       customGenre: row.custom_genre as string | null,
       wouldRevisit: row.revisit_intent as boolean,
     },
-    visitedAt: row.visited_at as string,
+    visitedAt: (row.visited_at as string | null) ?? null,
     body: (row.content as string) ?? "",
+    hasSpoiler: (row.has_spoiler as boolean) ?? false,
     photos,
     visibility: row.visibility as Visibility,
     shareToken: row.share_token as string | null,
@@ -95,7 +96,7 @@ export async function fetchReviewById(id: string): Promise<Review | null> {
 export async function createReview(params: {
   roomId: string;
   groupId: string;
-  visitedAt: string;
+  visitedAt: string | null;
   rating: number;
   summary: string;
   subMetrics: Review["subMetrics"];
@@ -103,6 +104,7 @@ export async function createReview(params: {
   genreTagIds: string[];
   customGenre: string | null;
   body: string;
+  hasSpoiler: boolean;
   visibility: Visibility;
 }): Promise<Review> {
   const {
@@ -114,9 +116,10 @@ export async function createReview(params: {
       user_id: user?.id,
       room_id: params.roomId,
       group_id: params.groupId,
-      visited_at: params.visitedAt,
+      visited_at: params.visitedAt || null,
       overall_rating: params.rating,
       one_liner: params.summary,
+      has_spoiler: params.hasSpoiler,
       puzzle_quality: params.subMetrics.puzzleQuality,
       story_direction: params.subMetrics.storyDirection,
       set_device_quality: params.subMetrics.setQuality,
@@ -124,7 +127,7 @@ export async function createReview(params: {
       puzzle_difficulty: params.subMetrics.puzzleDifficulty,
       clear_difficulty: params.subMetrics.clearDifficulty,
       success: params.visitMeta.isSuccess,
-      time_left_min: params.visitMeta.remainingMinutes,
+      time_left_min: params.visitMeta.remainingMinutes || null,
       party_size: params.visitMeta.headcount,
       revisit_intent: params.visitMeta.wouldRevisit,
       custom_genre: params.customGenre,
@@ -160,7 +163,7 @@ export async function createReview(params: {
 export async function updateReview(
   id: string,
   params: {
-    visitedAt: string;
+    visitedAt: string | null;
     rating: number;
     summary: string;
     subMetrics: Review["subMetrics"];
@@ -168,15 +171,17 @@ export async function updateReview(
     genreTagIds: string[];
     customGenre: string | null;
     body: string;
+    hasSpoiler: boolean;
     visibility: Visibility;
   },
 ): Promise<Review> {
   const { error: updateError } = await supabase
     .from("reviews")
     .update({
-      visited_at: params.visitedAt,
+      visited_at: params.visitedAt || null,
       overall_rating: params.rating,
       one_liner: params.summary,
+      has_spoiler: params.hasSpoiler,
       puzzle_quality: params.subMetrics.puzzleQuality,
       story_direction: params.subMetrics.storyDirection,
       set_device_quality: params.subMetrics.setQuality,
@@ -184,7 +189,7 @@ export async function updateReview(
       puzzle_difficulty: params.subMetrics.puzzleDifficulty,
       clear_difficulty: params.subMetrics.clearDifficulty,
       success: params.visitMeta.isSuccess,
-      time_left_min: params.visitMeta.remainingMinutes,
+      time_left_min: params.visitMeta.remainingMinutes || null,
       party_size: params.visitMeta.headcount,
       revisit_intent: params.visitMeta.wouldRevisit,
       custom_genre: params.customGenre,
@@ -265,8 +270,9 @@ export async function getSharedReview(
       customGenre: row.custom_genre as string | null,
       wouldRevisit: row.revisit_intent as boolean,
     },
-    visitedAt: row.visited_at as string,
+    visitedAt: (row.visited_at as string | null) ?? null,
     body: (row.content as string) ?? "",
+    hasSpoiler: (row.has_spoiler as boolean) ?? false,
     photos: (row.photo_paths as string[]) ?? [],
     visibility: "link",
     shareToken,

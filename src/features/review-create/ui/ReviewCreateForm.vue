@@ -19,7 +19,7 @@ const props = withDefaults(
     reviewId?: string
     initialData?: Partial<{
       roomId: string
-      visitedAt: string
+      visitedAt: string | null
       rating: number
       summary: string
       subMetrics: SubMetrics
@@ -30,6 +30,7 @@ const props = withDefaults(
       customGenre: string | null
       wouldRevisit: boolean
       body: string
+      hasSpoiler: boolean
       visibility: Visibility
       photos: string[]
     }>
@@ -116,6 +117,7 @@ const form = reactive({
   customGenre: (props.initialData?.customGenre ?? null) as string | null,
   wouldRevisit: props.initialData?.wouldRevisit ?? true,
   body: props.initialData?.body ?? '',
+  hasSpoiler: props.initialData?.hasSpoiler ?? false,
   visibility: (props.initialData?.visibility ?? 'group') as Visibility,
 })
 
@@ -251,7 +253,7 @@ async function handleSubmit() {
       .filter((id): id is string => !!id)
 
     const payload = {
-      visitedAt: form.visitedAt,
+      visitedAt: form.visitedAt || null,
       rating: form.rating,
       summary: form.summary,
       subMetrics: form.subMetrics as Review['subMetrics'],
@@ -264,6 +266,7 @@ async function handleSubmit() {
       genreTagIds,
       customGenre: form.customGenre,
       body: form.body,
+      hasSpoiler: form.hasSpoiler,
       visibility: form.visibility,
     }
 
@@ -433,13 +436,12 @@ function navigateAfterSave(reviewId: string) {
       </div>
 
       <div class="review-form__field">
-        <label class="review-form__label" for="visited-at-input">방문일 *</label>
+        <label class="review-form__label" for="visited-at-input">방문일</label>
         <input
           id="visited-at-input"
           v-model="form.visitedAt"
           class="review-form__input"
           type="date"
-          required
         />
       </div>
     </section>
@@ -563,6 +565,18 @@ function navigateAfterSave(reviewId: string) {
           placeholder="자유롭게 작성 (3000자 이내)"
         />
         <span class="review-form__counter">{{ form.body.length }}/3000</span>
+      </div>
+
+      <div class="review-form__field">
+        <label class="review-form__checkbox-label">
+          <input
+            type="checkbox"
+            v-model="form.hasSpoiler"
+            class="review-form__checkbox"
+          />
+          <span>스포일러 포함</span>
+        </label>
+        <p class="review-form__field-hint">체크하면 다른 사용자에게 한줄평과 본문이 블러 처리됩니다.</p>
       </div>
 
       <div class="review-form__field">
@@ -745,6 +759,28 @@ function navigateAfterSave(reviewId: string) {
   font-size: 0.75rem;
   color: var(--color-text-muted);
   text-align: right;
+}
+
+/* 체크박스 */
+.review-form__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.review-form__checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
+.review-form__field-hint {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
 }
 
 /* 에러 */

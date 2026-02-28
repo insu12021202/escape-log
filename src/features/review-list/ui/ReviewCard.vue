@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import StarRating from '@/shared/ui/StarRating.vue'
 
 defineProps<{
@@ -12,7 +13,10 @@ defineProps<{
   authorName?: string | null
   visitedAt?: string | null
   remainingMinutes?: number | null
+  hasSpoiler?: boolean
 }>()
+
+const revealed = ref(false)
 
 function formatVisitedAt(dateStr: string) {
   return dateStr.slice(0, 7).replace('-', '.')
@@ -36,7 +40,15 @@ function formatVisitedAt(dateStr: string) {
       <span class="review-card__rating-num">{{ rating }}</span>
     </div>
 
-    <p class="review-card__summary">{{ summary }}</p>
+    <p
+      class="review-card__summary"
+      :class="{ 'review-card__summary--blurred': hasSpoiler && !revealed }"
+    >{{ summary }}</p>
+    <span
+      v-if="hasSpoiler && !revealed"
+      class="review-card__spoiler-badge"
+      @click.prevent.stop="revealed = true"
+    >스포일러 포함 — 탭하여 보기</span>
 
     <div v-if="genreTags.length" class="review-card__tags">
       <span v-for="tag in genreTags.slice(0, 3)" :key="tag" class="review-card__tag">{{ tag }}</span>
@@ -137,6 +149,23 @@ function formatVisitedAt(dateStr: string) {
   font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.review-card__summary--blurred {
+  filter: blur(6px);
+  user-select: none;
+  transition: filter 0.2s ease;
+}
+
+.review-card__spoiler-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   margin-bottom: 12px;
 }
 

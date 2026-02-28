@@ -33,6 +33,9 @@ function formatDate(iso: string): string {
   })
 }
 
+// 스포일러
+const spoilerRevealed = ref(false)
+
 // 라이트박스
 const lightboxIndex = ref<number | null>(null)
 let lightboxPhotos: string[] = []
@@ -93,7 +96,16 @@ onUnmounted(() => {
       </span>
     </div>
 
-    <p class="review-detail__summary">{{ review.summary }}</p>
+    <!-- 스포일러 경고 -->
+    <div v-if="review.hasSpoiler && !spoilerRevealed" class="review-detail__spoiler-warning">
+      <p class="review-detail__spoiler-text">이 리뷰에는 스포일러가 포함되어 있습니다.</p>
+      <button class="review-detail__spoiler-reveal" @click="spoilerRevealed = true">내용 보기</button>
+    </div>
+
+    <p
+      class="review-detail__summary"
+      :class="{ 'review-detail__summary--blurred': review.hasSpoiler && !spoilerRevealed }"
+    >{{ review.summary }}</p>
 
     <!-- 보조 지표 -->
     <section class="review-detail__section">
@@ -141,7 +153,10 @@ onUnmounted(() => {
     <!-- 본문 -->
     <section v-if="review.body" class="review-detail__section">
       <h3 class="review-detail__section-title">본문</h3>
-      <p class="review-detail__body">{{ review.body }}</p>
+      <p
+        class="review-detail__body"
+        :class="{ 'review-detail__body--blurred': review.hasSpoiler && !spoilerRevealed }"
+      >{{ review.body }}</p>
     </section>
 
     <!-- 사진 Spec: §3.4 -->
@@ -253,6 +268,38 @@ onUnmounted(() => {
   line-height: 1.6;
   color: var(--color-text);
   padding: 4px 0;
+}
+
+.review-detail__summary--blurred,
+.review-detail__body--blurred {
+  filter: blur(8px);
+  user-select: none;
+}
+
+.review-detail__spoiler-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.review-detail__spoiler-text {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.review-detail__spoiler-reveal {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  flex-shrink: 0;
 }
 
 .review-detail__section {

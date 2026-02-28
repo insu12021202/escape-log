@@ -31,8 +31,9 @@ export interface Review {
   summary: string
   subMetrics: SubMetrics
   visitMeta: VisitMeta
-  visitedAt: string
+  visitedAt: string | null
   body: string
+  hasSpoiler: boolean
   photos: string[]
   visibility: Visibility
   shareToken: string | null
