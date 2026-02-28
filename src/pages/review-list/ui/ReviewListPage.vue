@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { fetchReviews } from '@/entities/review/api'
-import { searchRooms } from '@/entities/room/api'
+import { fetchAllRooms } from '@/entities/room/api'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
 import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
+import { getRoomPosterUrl } from '@/shared/api/storage'
 import { useSessionStore } from '@/app/stores/session'
 
 const session = useSessionStore()
@@ -92,7 +93,7 @@ function switchTab(tab: Tab) {
 
 onMounted(async () => {
   try {
-    const [data, allRooms] = await Promise.all([fetchReviews(), searchRooms('')])
+    const [data, allRooms] = await Promise.all([fetchReviews(), fetchAllRooms()])
     reviews.value = data
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]))
   } catch (e) {
@@ -173,6 +174,7 @@ onMounted(async () => {
           :visited-at="review.visitedAt"
           :remaining-minutes="review.visitMeta.remainingMinutes"
           :has-spoiler="review.hasSpoiler"
+          :poster-url="rooms[review.roomId]?.posterPath ? getRoomPosterUrl(rooms[review.roomId]!.posterPath!) : null"
         />
       </div>
       <div v-else class="review-list__empty">

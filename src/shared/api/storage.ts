@@ -30,3 +30,26 @@ export function getPhotoPublicUrl(path: string): string {
   const { data } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path)
   return data.publicUrl
 }
+
+// ── 방 포스터 ──
+
+export const POSTER_BUCKET = 'room-posters'
+
+/** 방 포스터 이미지 업로드 (1장) */
+export async function uploadRoomPoster(roomId: string, file: File): Promise<string> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+  const path = `${roomId}/${Date.now()}.${ext}`
+
+  const { error } = await supabase.storage
+    .from(POSTER_BUCKET)
+    .upload(path, file, { contentType: file.type })
+  if (error) throw error
+
+  return path
+}
+
+/** Storage 경로 → 포스터 공개 URL */
+export function getRoomPosterUrl(path: string): string {
+  const { data } = supabase.storage.from(POSTER_BUCKET).getPublicUrl(path)
+  return data.publicUrl
+}

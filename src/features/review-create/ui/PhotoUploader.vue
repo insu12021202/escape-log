@@ -12,7 +12,10 @@ const props = defineProps<{
   disabled?: boolean
 }>()
 
-const emit = defineEmits<{ 'update:modelValue': [files: File[]] }>()
+const emit = defineEmits<{
+  'update:modelValue': [files: File[]]
+  'remove-existing': [path: string]
+}>()
 
 const MAX_PHOTOS = 3
 const MAX_BYTES = 5 * 1024 * 1024 // 5MB
@@ -50,6 +53,11 @@ function removeNewFile(index: number) {
   emit('update:modelValue', props.modelValue.filter((_, i) => i !== index))
 }
 
+function removeExisting(path: string) {
+  if (props.disabled) return
+  emit('remove-existing', path)
+}
+
 function getPreviewUrl(file: File): string {
   return URL.createObjectURL(file)
 }
@@ -66,9 +74,17 @@ const canAddMore = () => !props.disabled && totalCount() < MAX_PHOTOS
       <div
         v-for="(path, i) in existingPaths"
         :key="`existing-${i}`"
-        class="photo-uploader__thumb photo-uploader__thumb--existing"
+        class="photo-uploader__thumb"
       >
         <img :src="getPhotoPublicUrl(path)" :alt="`기존 사진 ${i + 1}`" class="photo-uploader__img" />
+        <button
+          type="button"
+          class="photo-uploader__remove"
+          :disabled="disabled"
+          @click="removeExisting(path)"
+        >
+          <XMarkIcon class="photo-uploader__remove-icon" />
+        </button>
       </div>
 
       <!-- 새로 선택한 사진 -->

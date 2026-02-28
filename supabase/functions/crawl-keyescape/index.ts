@@ -40,11 +40,13 @@ async function crawlBranch(
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
-  const data = await res.json()
+  const json = await res.json()
   const rooms: CrawledRoom[] = []
 
-  if (Array.isArray(data)) {
-    for (const item of data) {
+  // API 응답: { status: true, data: [...] }
+  const list = Array.isArray(json) ? json : json.data
+  if (Array.isArray(list)) {
+    for (const item of list) {
       const themeName = (item.info_name ?? item.theme_name ?? "").trim()
       if (themeName) {
         rooms.push({
@@ -80,6 +82,7 @@ Deno.serve(async (_req) => {
     total_crawled: allRooms.length,
     inserted: result.inserted,
     skipped: result.skipped,
+    posters_uploaded: result.posters_uploaded,
     errors: [...errors, ...result.errors],
     crawled_at: new Date().toISOString(),
   }

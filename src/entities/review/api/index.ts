@@ -246,6 +246,7 @@ export async function getSharedReview(
     vendorName: row.vendor_name as string,
     themeName: row.theme_name as string,
     region: row.region as string,
+    posterPath: (row.poster_path as string | null) ?? null,
     createdAt: "",
   };
   const review: Review = {
@@ -317,6 +318,21 @@ export async function attachReviewPhoto(
   const { error } = await supabase
     .from("review_photos")
     .insert({ review_id: reviewId, path, sort_order: sortOrder });
+  if (error) throw error;
+}
+
+/** 개별 사진 삭제 (Storage + DB) */
+export async function detachReviewPhoto(
+  reviewId: string,
+  path: string,
+): Promise<void> {
+  const { deletePhotos } = await import("@/shared/api/storage");
+  await deletePhotos([path]);
+  const { error } = await supabase
+    .from("review_photos")
+    .delete()
+    .eq("review_id", reviewId)
+    .eq("path", path);
   if (error) throw error;
 }
 

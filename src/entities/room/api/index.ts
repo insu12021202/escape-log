@@ -1,7 +1,7 @@
 import { supabase } from '@/shared/api/supabase'
 import type { Room } from '../types'
 
-const ROOM_SELECT = 'id, vendor_id, theme_name, created_at, vendors(id, name, region)'
+const ROOM_SELECT = 'id, vendor_id, theme_name, poster_path, created_at, vendors(id, name, region)'
 
 /** DB 행 → Room 엔티티 변환 (vendors JOIN 포함) */
 function toRoom(row: Record<string, unknown>): Room {
@@ -12,32 +12,34 @@ function toRoom(row: Record<string, unknown>): Room {
     vendorName: vendor?.name ?? '',
     themeName: row.theme_name as string,
     region: vendor?.region ?? '',
+    posterPath: (row.poster_path as string | null) ?? null,
     createdAt: row.created_at as string,
   }
 }
 
-/** 키워드로 방 검색 (업체명·테마명·지역). Spec: §4.2 */
-export async function searchRooms(keyword: string): Promise<Room[]> {
-  const q = keyword.trim()
-
+/** 전체 방 목록 조회 (리뷰 목록 등에서 room map 구축용) */
+export async function fetchAllRooms(): Promise<Room[]> {
   const { data, error } = await supabase
     .from('rooms')
     .select(ROOM_SELECT)
     .order('created_at', { ascending: false })
   if (error) throw error
+  return (data ?? []).map(toRoom)
+}
 
-  const allRooms = (data ?? []).map(toRoom)
-  if (!q) return allRooms.slice(0, 50)
+/** 키워드로 방 검색 (업체명·테마명·지역). Spec: §4.2 */
+export async function searchRooms(keyword: string): Promise<Room[]> {
+  const q = keyword.trim()
+  if (!q) return fetchAllRooms()
 
+  const allRooms = await fetchAllRooms()
   const lowerQ = q.toLowerCase()
-  return allRooms
-    .filter(
-      (r) =>
-        r.vendorName.toLowerCase().includes(lowerQ) ||
-        r.themeName.toLowerCase().includes(lowerQ) ||
-        r.region.toLowerCase().includes(lowerQ),
-    )
-    .slice(0, 50)
+  return allRooms.filter(
+    (r) =>
+      r.vendorName.toLowerCase().includes(lowerQ) ||
+      r.themeName.toLowerCase().includes(lowerQ) ||
+      r.region.toLowerCase().includes(lowerQ),
+  )
 }
 
 /** 업체별 방 목록 조회 (캐스케이딩 선택용) */
@@ -68,4 +70,42 @@ export async function createRoom(params: {
     .single()
   if (error) throw error
   return toRoom(data)
+}
+
+/** 해당 방에 연결된 리뷰 수 조회 */
+export async function countReviewsByRoom(roomId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true })
+    .eq('room_id', roomId)
+  if (error) throw error
+  return count ?? 0
+}
+
+/** 해당 업체의 방에 연결된 리뷰 수 조회 */
+export async function countReviewsByVendor(vendorId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('reviews')
+    .select('id, rooms!inner(vendor_id)', { count: 'exact', head: true })
+    .eq('rooms.vendor_id', vendorId)
+  if (error) throw error
+  return count ?? 0
+}
+
+/** 방 삭제 (리뷰가 있으면 호출 전에 체크할 것) */
+export async function deleteRoom(roomId: string): Promise<void> {
+  const { error } = await supabase
+    .from('rooms')
+    .delete()
+    .eq('id', roomId)
+  if (error) throw error
+}
+
+/** 방 포스터 경로 업데이트 */
+export async function updateRoomPosterPath(roomId: string, posterPath: string): Promise<void> {
+  const { error } = await supabase
+    .from('rooms')
+    .update({ poster_path: posterPath })
+    .eq('id', roomId)
+  if (error) throw error
 }

@@ -57,9 +57,41 @@ async function resolveVendorIds(
   return map
 }
 
+/** 외부 이미지 URL → Supabase Storage 업로드 → poster_path 반환 */
+async function uploadPosterFromUrl(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  roomId: string,
+  posterUrl: string,
+): Promise<string | null> {
+  try {
+    const res = await fetch(posterUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; EscapeLog-Crawler/1.0)" },
+    })
+    if (!res.ok) return null
+
+    const contentType = res.headers.get("content-type") ?? "image/jpeg"
+    const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg"
+    const blob = await res.blob()
+
+    const path = `${roomId}/${Date.now()}.${ext}`
+    const { error } = await supabase.storage
+      .from("room-posters")
+      .upload(path, blob, { contentType })
+
+    if (error) {
+      console.error(`포스터 업로드 실패 (${roomId}):`, error.message)
+      return null
+    }
+    return path
+  } catch (e) {
+    console.error(`포스터 다운로드 실패 (${posterUrl}):`, (e as Error).message)
+    return null
+  }
+}
+
 export async function upsertRooms(
   rooms: CrawledRoom[],
-): Promise<{ inserted: number; skipped: number; errors: string[] }> {
+): Promise<{ inserted: number; skipped: number; posters_uploaded: number; errors: string[] }> {
   const supabase = getSupabaseAdmin()
 
   const vendorMap = await resolveVendorIds(supabase, rooms)
@@ -67,7 +99,11 @@ export async function upsertRooms(
   const BATCH_SIZE = 100
   let inserted = 0
   let skipped = 0
+  let postersUploaded = 0
   const errors: string[] = []
+
+  // poster_url이 있는 방 목록 (upsert 후 처리)
+  const roomsWithPoster: Array<{ vendor_id: string; theme_name: string; poster_url: string }> = []
 
   for (let i = 0; i < rooms.length; i += BATCH_SIZE) {
     const batch = rooms.slice(i, i + BATCH_SIZE)
@@ -76,6 +112,11 @@ export async function upsertRooms(
         const key = `${r.vendor_name}||${r.region}`
         const vendorId = vendorMap.get(key)
         if (!vendorId) return null
+
+        if (r.poster_url) {
+          roomsWithPoster.push({ vendor_id: vendorId, theme_name: r.theme_name, poster_url: r.poster_url })
+        }
+
         return {
           vendor_id: vendorId,
           theme_name: r.theme_name,
@@ -101,5 +142,29 @@ export async function upsertRooms(
     }
   }
 
-  return { inserted, skipped, errors }
+  // 포스터가 없는 방에 포스터 업로드
+  for (const rp of roomsWithPoster) {
+    // 해당 방 조회 (poster_path 없는 경우만 업로드)
+    const { data: roomRow } = await supabase
+      .from("rooms")
+      .select("id, poster_path")
+      .eq("vendor_id", rp.vendor_id)
+      .eq("theme_name", rp.theme_name)
+      .maybeSingle()
+
+    if (!roomRow || roomRow.poster_path) continue
+
+    const posterPath = await uploadPosterFromUrl(supabase, roomRow.id, rp.poster_url)
+    if (posterPath) {
+      const { error: updateErr } = await supabase
+        .from("rooms")
+        .update({ poster_path: posterPath })
+        .eq("id", roomRow.id)
+
+      if (!updateErr) postersUploaded++
+      else errors.push(`포스터 DB 업데이트 실패 (${rp.theme_name}): ${updateErr.message}`)
+    }
+  }
+
+  return { inserted, skipped, posters_uploaded: postersUploaded, errors }
 }
