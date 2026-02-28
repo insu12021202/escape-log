@@ -110,13 +110,65 @@ async function submitNewRoom() {
   <div class="room-search">
     <h2 class="room-search__title">방 검색</h2>
 
-    <!-- 검색 입력 -->
-    <input
-      v-model="keyword"
-      class="room-search__input"
-      type="text"
-      placeholder="업체명, 테마명, 지역으로 검색"
-    />
+    <!-- 검색 입력 + 등록 버튼 -->
+    <div class="room-search__toolbar">
+      <input
+        v-model="keyword"
+        class="room-search__input"
+        type="text"
+        placeholder="업체명, 테마명, 지역으로 검색"
+      />
+      <button class="room-search__toggle-btn" @click="showForm = !showForm">
+        <XMarkIcon v-if="showForm" class="room-search__toggle-icon" />
+        <PlusIcon v-else class="room-search__toggle-icon" />
+        {{ showForm ? '닫기' : '등록' }}
+      </button>
+    </div>
+
+    <!-- 방 등록 폼 -->
+    <form v-if="showForm" class="room-search__form" @submit.prevent="submitNewRoom">
+      <div class="room-search__field">
+        <label class="room-search__label">업체 (지역)</label>
+        <template v-if="!isNewVendor">
+          <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
+          <button type="button" class="room-search__link-btn" @click="isNewVendor = true">
+            + 새 업체 직접 입력
+          </button>
+        </template>
+        <template v-else>
+          <div class="room-search__row">
+            <input
+              v-model="newVendorName"
+              class="room-search__input"
+              type="text"
+              placeholder="업체명 (예: 키이스케이프)"
+            />
+            <input
+              v-model="newVendorRegion"
+              class="room-search__input room-search__input--short"
+              type="text"
+              placeholder="지역 (예: 홍대)"
+            />
+          </div>
+          <button type="button" class="room-search__link-btn" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''">
+            기존 업체에서 선택
+          </button>
+        </template>
+      </div>
+      <div class="room-search__field">
+        <label class="room-search__label">테마명</label>
+        <input
+          v-model="newThemeName"
+          class="room-search__input"
+          type="text"
+          placeholder="예) 셜록홈즈: 마지막 사건"
+        />
+      </div>
+      <p v-if="registerError" class="room-search__error">{{ registerError }}</p>
+      <button type="submit" class="room-search__submit-btn" :disabled="registering">
+        {{ registering ? '등록 중...' : '등록' }}
+      </button>
+    </form>
 
     <!-- 검색 결과 -->
     <AppSpinner v-if="loading" />
@@ -131,59 +183,6 @@ async function submitNewRoom() {
       </li>
     </ul>
     <p v-else class="room-search__empty">검색 결과가 없습니다.</p>
-
-    <!-- 방 등록 -->
-    <div class="room-search__register">
-      <button class="room-search__toggle-btn" @click="showForm = !showForm">
-        <XMarkIcon v-if="showForm" class="room-search__toggle-icon" />
-        <PlusIcon v-else class="room-search__toggle-icon" />
-        {{ showForm ? '닫기' : '새 방 등록' }}
-      </button>
-
-      <form v-if="showForm" class="room-search__form" @submit.prevent="submitNewRoom">
-        <div class="room-search__field">
-          <label class="room-search__label">업체 (지역)</label>
-          <template v-if="!isNewVendor">
-            <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
-            <button type="button" class="room-search__link-btn" @click="isNewVendor = true">
-              + 새 업체 직접 입력
-            </button>
-          </template>
-          <template v-else>
-            <div class="room-search__row">
-              <input
-                v-model="newVendorName"
-                class="room-search__input"
-                type="text"
-                placeholder="업체명 (예: 키이스케이프)"
-              />
-              <input
-                v-model="newVendorRegion"
-                class="room-search__input room-search__input--short"
-                type="text"
-                placeholder="지역 (예: 홍대)"
-              />
-            </div>
-            <button type="button" class="room-search__link-btn" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''">
-              기존 업체에서 선택
-            </button>
-          </template>
-        </div>
-        <div class="room-search__field">
-          <label class="room-search__label">테마명</label>
-          <input
-            v-model="newThemeName"
-            class="room-search__input"
-            type="text"
-            placeholder="예) 셜록홈즈: 마지막 사건"
-          />
-        </div>
-        <p v-if="registerError" class="room-search__error">{{ registerError }}</p>
-        <button type="submit" class="room-search__submit-btn" :disabled="registering">
-          {{ registering ? '등록 중...' : '등록' }}
-        </button>
-      </form>
-    </div>
   </div>
 </template>
 
@@ -266,26 +265,30 @@ async function submitNewRoom() {
   color: #e53935;
 }
 
-.room-search__register {
+.room-search__toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border-top: 1px solid #eee;
-  padding-top: 16px;
+  gap: 8px;
+  align-items: center;
+}
+
+.room-search__toolbar .room-search__input {
+  flex: 1;
 }
 
 .room-search__toggle-btn {
-  align-self: flex-start;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 10px 14px;
   border: 1px solid #4a90d9;
   border-radius: 8px;
   background: #fff;
   color: #4a90d9;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .room-search__toggle-icon {
@@ -302,6 +305,10 @@ async function submitNewRoom() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #eee;
+  border-radius: 8px;
 }
 
 .room-search__field {
