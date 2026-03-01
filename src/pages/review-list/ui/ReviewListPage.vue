@@ -6,6 +6,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
 import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
+import StatsDashboard from '@/features/stats-dashboard/ui/StatsDashboard.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import { getRoomPosterUrl } from '@/shared/api/storage'
 import { useSessionStore } from '@/app/stores/session'
@@ -32,6 +33,11 @@ const sortOptions: Array<{ value: '' | 'asc' | 'desc'; label: string }> = [
 ]
 
 const myUserId = computed(() => session.user?.id ?? null)
+
+/** 대시보드용: 내 리뷰 전체 */
+const myReviews = computed(() =>
+  reviews.value.filter((r) => r.userId === myUserId.value),
+)
 
 /** 현재 탭의 기본 리뷰 목록 (필터 적용 전) */
 const baseReviews = computed(() =>
@@ -129,6 +135,9 @@ onMounted(async () => {
     </template>
 
     <template v-else>
+      <!-- 대시보드 -->
+      <StatsDashboard :reviews="myReviews" :rooms="rooms" />
+
       <!-- 탭 -->
       <div class="review-list__tabs">
         <button
