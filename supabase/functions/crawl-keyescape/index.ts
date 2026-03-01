@@ -61,7 +61,7 @@ async function crawlBranch(
   return rooms
 }
 
-Deno.serve(async (_req) => {
+Deno.serve(async () => {
   const allRooms: CrawledRoom[] = []
   const errors: string[] = []
 
