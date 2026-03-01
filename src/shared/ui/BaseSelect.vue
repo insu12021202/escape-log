@@ -1,53 +1,63 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ChevronDownIcon } from "@heroicons/vue/24/outline";
 
 const props = defineProps<{
-  modelValue: string | number
-  options: Array<{ value: string | number; label: string }>
-  variant?: 'pill' | 'input'
-}>()
+  modelValue: string | number;
+  options: Array<{ value: string | number; label: string }>;
+  variant?: "pill" | "input";
+}>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string | number]
-}>()
+  "update:modelValue": [value: string | number];
+}>();
 
-const isOpen = ref(false)
-const wrapperRef = ref<HTMLElement | null>(null)
+const isOpen = ref(false);
+const wrapperRef = ref<HTMLElement | null>(null);
 
 const selectedLabel = computed(
-  () => props.options.find((o) => o.value === props.modelValue)?.label ?? '',
-)
+  () => props.options.find((o) => o.value === props.modelValue)?.label ?? "",
+);
 
 function toggle() {
-  isOpen.value = !isOpen.value
+  isOpen.value = !isOpen.value;
 }
 
 function select(value: string | number) {
-  emit('update:modelValue', value)
-  isOpen.value = false
+  emit("update:modelValue", value);
+  isOpen.value = false;
 }
 
 function onClickOutside(e: MouseEvent) {
   if (!wrapperRef.value?.contains(e.target as Node)) {
-    isOpen.value = false
+    isOpen.value = false;
   }
 }
 
-onMounted(() => document.addEventListener('mousedown', onClickOutside))
-onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
+onMounted(() => document.addEventListener("mousedown", onClickOutside));
+onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
 </script>
 
 <template>
-  <div ref="wrapperRef" class="base-select" :class="{ 'base-select--input': variant === 'input' }">
+  <div
+    ref="wrapperRef"
+    class="base-select"
+    :class="{ 'base-select--input': variant === 'input' }"
+  >
     <button
       type="button"
       class="base-select__trigger"
-      :class="{ 'base-select__trigger--open': isOpen, 'base-select__trigger--input': variant === 'input' }"
+      :class="{
+        'base-select__trigger--open': isOpen,
+        'base-select__trigger--input': variant === 'input',
+      }"
       @click="toggle"
     >
       <span class="base-select__label">{{ selectedLabel }}</span>
-      <ChevronDownIcon class="base-select__chevron" :class="{ 'base-select__chevron--open': isOpen }" />
+      <ChevronDownIcon
+        class="base-select__chevron"
+        :class="{ 'base-select__chevron--open': isOpen }"
+      />
     </button>
 
     <Transition name="dropdown">
@@ -56,7 +66,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
           v-for="option in options"
           :key="option.value"
           class="base-select__option"
-          :class="{ 'base-select__option--selected': option.value === modelValue }"
+          :class="{
+            'base-select__option--selected': option.value === modelValue,
+          }"
           @click="select(option.value)"
         >
           {{ option.label }}
@@ -76,7 +88,7 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
+  min-height: 42px;
   padding: 8px 14px;
   border: 1.5px solid var(--color-border);
   border-radius: 99px;
@@ -85,7 +97,10 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   background: var(--color-surface);
   color: var(--color-text-sub);
   cursor: pointer;
-  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
   outline: none;
   white-space: nowrap;
   user-select: none;
@@ -106,7 +121,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   width: 14px;
   height: 14px;
   color: var(--color-text-muted);
-  transition: transform 0.2s, color var(--transition-fast);
+  transition:
+    transform 0.2s,
+    color var(--transition-fast);
   flex-shrink: 0;
 }
 
@@ -142,7 +159,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
   color: var(--color-text);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -177,7 +196,9 @@ onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 /* 드롭다운 열기/닫기 애니메이션 */
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: opacity 0.15s, transform 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
 }
 
 .dropdown-enter-from,
