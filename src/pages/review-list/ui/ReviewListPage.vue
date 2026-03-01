@@ -23,6 +23,13 @@ const activeTab = ref<Tab>('mine')
 const searchQuery = ref('')
 const regionFilter = ref('')
 const ratingFilter = ref(0)
+const sortOrder = ref<'' | 'asc' | 'desc'>('')
+
+const sortOptions: Array<{ value: '' | 'asc' | 'desc'; label: string }> = [
+  { value: '', label: '최신순' },
+  { value: 'desc', label: '평점 높은순' },
+  { value: 'asc', label: '평점 낮은순' },
+]
 
 const myUserId = computed(() => session.user?.id ?? null)
 
@@ -63,12 +70,12 @@ const successRate = computed(() => {
 })
 
 const hasActiveFilter = computed(() =>
-  !!searchQuery.value.trim() || !!regionFilter.value || ratingFilter.value > 0,
+  !!searchQuery.value.trim() || !!regionFilter.value || ratingFilter.value > 0 || !!sortOrder.value,
 )
 
 const filteredReviews = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  return baseReviews.value.filter((review) => {
+  const filtered = baseReviews.value.filter((review) => {
     const room = rooms.value[review.roomId]
     if (!room) return false
     if (q && !`${room.vendorName} ${room.themeName}`.toLowerCase().includes(q)) return false
@@ -76,12 +83,16 @@ const filteredReviews = computed(() => {
     if (ratingFilter.value && review.rating < ratingFilter.value) return false
     return true
   })
+  if (sortOrder.value === 'desc') return [...filtered].sort((a, b) => b.rating - a.rating)
+  if (sortOrder.value === 'asc') return [...filtered].sort((a, b) => a.rating - b.rating)
+  return filtered
 })
 
 function clearFilters() {
   searchQuery.value = ''
   regionFilter.value = ''
   ratingFilter.value = 0
+  sortOrder.value = ''
 }
 
 function switchTab(tab: Tab) {
@@ -89,6 +100,7 @@ function switchTab(tab: Tab) {
   searchQuery.value = ''
   regionFilter.value = ''
   ratingFilter.value = 0
+  sortOrder.value = ''
 }
 
 onMounted(async () => {
@@ -155,6 +167,7 @@ onMounted(async () => {
       <div class="review-list__filters">
         <BaseSelect v-model="regionFilter" :options="regionOptions" />
         <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
+        <BaseSelect v-model="sortOrder" :options="sortOptions" />
       </div>
 
       <!-- 리뷰 목록 -->
