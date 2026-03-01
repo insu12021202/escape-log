@@ -32,7 +32,8 @@ function fillPct(index: number): number {
 
 function calcMouseVal(e: MouseEvent, index: number): number {
   const { left, width } = (e.currentTarget as Element).getBoundingClientRect()
-  return e.clientX - left < width / 2 ? index - 0.5 : index
+  const val = e.clientX - left < width / 2 ? index - 0.5 : index
+  return Math.max(1, val)
 }
 
 function onMouseDown(e: MouseEvent, index: number) {
@@ -77,7 +78,7 @@ function calcTouchVal(clientX: number): number {
   // 범위 밖이면 가장 가까운 끝값 반환
   const first = wraps[0]?.getBoundingClientRect()
   const last = wraps[wraps.length - 1]?.getBoundingClientRect()
-  if (first && clientX < first.left) return 0.5
+  if (first && clientX < first.left) return 1
   if (last && clientX > last.right) return 5
   return props.modelValue
 }
