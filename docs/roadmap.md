@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 8 진행 중** (전역 토스트 + PWA)
-- 마지막 완료 PR: feat(shared): 전역 토스트 알림 시스템 구현 (#23)
+- 현재 Phase: **Phase 8 완료** (전역 토스트 + PWA + 업체/방 관리 고도화)
+- 마지막 완료 PR: feat(room-search): 업체/방 삭제 및 사진 개별 삭제 (#27)
 
 ### 완료된 작업 요약
 
@@ -342,6 +342,24 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - ReviewCreateForm 저장/수정 성공 토스트 추가 — PR #23
 - RoomSearchPage 방 등록 성공 토스트 추가 — PR #23
 
+#### Phase 8 — PWA 지원 완료
+- vite-plugin-pwa 설정 (manifest, 서비스 워커, 아이콘셋) — PR #24
+- PwaUpdatePrompt.vue 업데이트 안내 컴포넌트 — PR #24
+
+#### Phase 8 — 업체/방 관리 고도화 (vendor-table-migration) 완료
+- vendors 테이블 분리 및 캐스케이딩 선택 UI (업체 → 테마) — PR #26
+- region을 vendors 테이블로 이동 (정규화) — PR #26
+- 방문일 날짜 선택 입력 + 스포일러 토글/블러 기능 — PR #26
+- 리뷰 등록 시 새 업체 직접 등록 기능 — PR #26
+- 테마 포스터 이미지 등록 및 표시 (Supabase Storage) — PR #26
+- PosterPicker 클립보드 이미지 붙여넣기 지원 — PR #26
+- 크롤러 소스 파일 통합 (room-crawlers 브랜치에서 이관) — PR #26
+- 방 삭제 기능 추가 — PR #27
+- 방 목록을 업체별 그룹 리스팅으로 개선 — PR #27
+- 업체 삭제 기능 및 삭제 전 리뷰 연결 체크 — PR #27
+- 기존 사진 개별 삭제 기능 추가 — PR #27
+- 크롤링 방 증가로 리뷰 목록이 빈 화면으로 표시되는 버그 수정 — PR #27
+
 ### 미완료 항목
-- [ ] Vercel 배포 확인
-- [ ] README 정리 — Phase 6
+- [x] README 정리 — Phase 6
+- [ ] Vercel 배포 최종 확인
