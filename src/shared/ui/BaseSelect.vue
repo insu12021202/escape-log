@@ -53,7 +53,7 @@ onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
       }"
       @click="toggle"
     >
-      <span class="base-select__label">{{ selectedLabel }}</span>
+      <span class="base-select__label" :class="{ 'base-select__label--pill': variant !== 'input' }">{{ selectedLabel }}</span>
       <ChevronDownIcon
         class="base-select__chevron"
         :class="{ 'base-select__chevron--open': isOpen }"
@@ -87,13 +87,14 @@ onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
 .base-select__trigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 42px;
-  padding: 8px 14px;
+  gap: 4px;
+  height: 34px;
+  padding: 0 12px;
   border: 1.5px solid var(--color-border);
   border-radius: 99px;
   font-size: 0.8125rem;
   font-weight: 500;
+  line-height: 1;
   background: var(--color-surface);
   color: var(--color-text-sub);
   cursor: pointer;
@@ -117,9 +118,14 @@ onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
   box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
 }
 
+.base-select__label--pill {
+  position: relative;
+  top: -0.5px;
+}
+
 .base-select__chevron {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   color: var(--color-text-muted);
   transition:
     transform 0.2s,
