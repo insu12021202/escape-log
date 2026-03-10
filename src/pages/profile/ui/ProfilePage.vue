@@ -1,14 +1,39 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import { useSessionStore } from '@/app/stores/session'
+import { fetchReviews } from '@/entities/review/api'
+import { fetchAllRooms } from '@/entities/room/api'
+import type { Review } from '@/entities/review/types'
+import type { Room } from '@/entities/room/types'
+import StatsDashboard from '@/features/stats-dashboard/ui/StatsDashboard.vue'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
 
 const session = useSessionStore()
 const router = useRouter()
 
 const showLogoutDialog = ref(false)
+
+const reviews = ref<Review[]>([])
+const rooms = ref<Record<string, Room>>({})
+const statsLoading = ref(true)
+
+const myReviews = computed(() =>
+  reviews.value.filter((r) => r.userId === session.user?.id),
+)
+
+onMounted(async () => {
+  try {
+    const [allReviews, allRooms] = await Promise.all([fetchReviews(), fetchAllRooms()])
+    reviews.value = allReviews
+    rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]))
+  } catch (e) {
+    console.error('통계 데이터 로드 실패', e)
+  } finally {
+    statsLoading.value = false
+  }
+})
 
 const displayName = computed(() => {
   const user = session.user
@@ -32,6 +57,9 @@ async function handleSignOut() {
       <div class="profile-page__avatar">{{ avatarLetter }}</div>
       <p class="profile-page__name">{{ displayName }}</p>
     </div>
+
+    <!-- 통계 대시보드 -->
+    <StatsDashboard v-if="!statsLoading" :reviews="myReviews" :rooms="rooms" />
 
     <!-- 링크 목록 -->
     <div class="profile-page__section">
