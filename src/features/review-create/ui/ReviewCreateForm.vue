@@ -489,11 +489,11 @@ function navigateAfterSave(reviewId: string) {
         </template>
         <template v-else>
           <div class="review-form__row">
-            <div class="review-form__field review-form__field--inline">
+            <div class="review-form__field review-form__field--inline review-form__field--grow">
               <input v-model="newVendorName" class="review-form__input" type="text" placeholder="업체명 (예: 키이스케이프)" />
             </div>
             <div class="review-form__field review-form__field--inline">
-              <input v-model="newVendorRegion" class="review-form__input review-form__input--short" type="text" placeholder="지역 (예: 홍대)" />
+              <input v-model="newVendorRegion" class="review-form__input" type="text" placeholder="지역 (예: 홍대)" />
             </div>
           </div>
           <button type="button" class="review-form__add-room-toggle" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''; showRoomForm = false">
@@ -811,6 +811,10 @@ function navigateAfterSave(reviewId: string) {
 .review-form__field--inline {
   flex: 1;
   min-width: 0;
+}
+
+.review-form__field--grow {
+  flex: 2;
 }
 
 .review-form__row {
