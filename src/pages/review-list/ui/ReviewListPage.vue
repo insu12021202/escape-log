@@ -1,50 +1,44 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { fetchReviews } from '@/entities/review/api'
-import { fetchAllRooms } from '@/entities/room/api'
-import type { Review } from '@/entities/review/types'
-import type { Room } from '@/entities/room/types'
-import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
-import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
-import StatsDashboard from '@/features/stats-dashboard/ui/StatsDashboard.vue'
-import BaseSelect from '@/shared/ui/BaseSelect.vue'
-import { getRoomPosterUrl } from '@/shared/api/storage'
-import { useSessionStore } from '@/app/stores/session'
+import { ref, computed, onMounted } from "vue";
+import { fetchReviews } from "@/entities/review/api";
+import { fetchAllRooms } from "@/entities/room/api";
+import type { Review } from "@/entities/review/types";
+import type { Room } from "@/entities/room/types";
+import ReviewCard from "@/features/review-list/ui/ReviewCard.vue";
+import ReviewCardSkeleton from "@/features/review-list/ui/ReviewCardSkeleton.vue";
+import BaseSelect from "@/shared/ui/BaseSelect.vue";
+import { getRoomPosterUrl } from "@/shared/api/storage";
+import { useSessionStore } from "@/app/stores/session";
 
-const session = useSessionStore()
+const session = useSessionStore();
 
-const reviews = ref<Review[]>([])
-const rooms = ref<Record<string, Room>>({})
-const loading = ref(true)
-const error = ref<string | null>(null)
+const reviews = ref<Review[]>([]);
+const rooms = ref<Record<string, Room>>({});
+const loading = ref(true);
+const error = ref<string | null>(null);
 
-type Tab = 'mine' | 'all'
-const activeTab = ref<Tab>('mine')
+type Tab = "mine" | "all";
+const activeTab = ref<Tab>("mine");
 
-const searchQuery = ref('')
-const regionFilter = ref('')
-const ratingFilter = ref(0)
-const sortOrder = ref<'' | 'asc' | 'desc'>('')
+const searchQuery = ref("");
+const regionFilter = ref("");
+const ratingFilter = ref(0);
+const sortOrder = ref<"" | "asc" | "desc">("");
 
-const sortOptions: Array<{ value: '' | 'asc' | 'desc'; label: string }> = [
-  { value: '', label: '최신순' },
-  { value: 'desc', label: '평점 높은순' },
-  { value: 'asc', label: '평점 낮은순' },
-]
+const sortOptions: Array<{ value: "" | "asc" | "desc"; label: string }> = [
+  { value: "", label: "최신순" },
+  { value: "desc", label: "평점 높은순" },
+  { value: "asc", label: "평점 낮은순" },
+];
 
-const myUserId = computed(() => session.user?.id ?? null)
-
-/** 대시보드용: 내 리뷰 전체 */
-const myReviews = computed(() =>
-  reviews.value.filter((r) => r.userId === myUserId.value),
-)
+const myUserId = computed(() => session.user?.id ?? null);
 
 /** 현재 탭의 기본 리뷰 목록 (필터 적용 전) */
 const baseReviews = computed(() =>
-  activeTab.value === 'mine'
+  activeTab.value === "mine"
     ? reviews.value.filter((r) => r.userId === myUserId.value)
     : reviews.value,
-)
+);
 
 const regions = computed(() => [
   ...new Set(
@@ -52,75 +46,87 @@ const regions = computed(() => [
       .map((r) => rooms.value[r.roomId]?.region)
       .filter((r): r is string => !!r),
   ),
-])
+]);
 
 const regionOptions = computed(() => [
-  { value: '', label: '전체 지역' },
+  { value: "", label: "전체 지역" },
   ...regions.value.map((r) => ({ value: r, label: r })),
-])
+]);
 
 const ratingOptions = [
-  { value: 0, label: '전체 평점' },
-  { value: 1, label: '1점 이상' },
-  { value: 2, label: '2점 이상' },
-  { value: 3, label: '3점 이상' },
-  { value: 4, label: '4점 이상' },
-  { value: 5, label: '5점 이상' },
-]
+  { value: 0, label: "전체 평점" },
+  { value: 1, label: "1점 이상" },
+  { value: 2, label: "2점 이상" },
+  { value: 3, label: "3점 이상" },
+  { value: 4, label: "4점 이상" },
+  { value: 5, label: "5점 이상" },
+];
 
-const totalCount = computed(() => baseReviews.value.length)
+const totalCount = computed(() => baseReviews.value.length);
 const successRate = computed(() => {
-  if (!totalCount.value) return null
-  const succeeded = baseReviews.value.filter((r) => r.visitMeta.isSuccess).length
-  return Math.round((succeeded / totalCount.value) * 100)
-})
+  if (!totalCount.value) return null;
+  const succeeded = baseReviews.value.filter(
+    (r) => r.visitMeta.isSuccess,
+  ).length;
+  return Math.round((succeeded / totalCount.value) * 100);
+});
 
-const hasActiveFilter = computed(() =>
-  !!searchQuery.value.trim() || !!regionFilter.value || ratingFilter.value > 0 || !!sortOrder.value,
-)
+const hasActiveFilter = computed(
+  () =>
+    !!searchQuery.value.trim() ||
+    !!regionFilter.value ||
+    ratingFilter.value > 0 ||
+    !!sortOrder.value,
+);
 
 const filteredReviews = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
+  const q = searchQuery.value.trim().toLowerCase();
   const filtered = baseReviews.value.filter((review) => {
-    const room = rooms.value[review.roomId]
-    if (!room) return false
-    if (q && !`${room.vendorName} ${room.themeName}`.toLowerCase().includes(q)) return false
-    if (regionFilter.value && room.region !== regionFilter.value) return false
-    if (ratingFilter.value && review.rating < ratingFilter.value) return false
-    return true
-  })
-  if (sortOrder.value === 'desc') return [...filtered].sort((a, b) => b.rating - a.rating)
-  if (sortOrder.value === 'asc') return [...filtered].sort((a, b) => a.rating - b.rating)
-  return filtered
-})
+    const room = rooms.value[review.roomId];
+    if (!room) return false;
+    if (q && !`${room.vendorName} ${room.themeName}`.toLowerCase().includes(q))
+      return false;
+    if (regionFilter.value && room.region !== regionFilter.value) return false;
+    if (ratingFilter.value && review.rating < ratingFilter.value) return false;
+    return true;
+  });
+  if (sortOrder.value === "desc")
+    return [...filtered].sort((a, b) => b.rating - a.rating);
+  if (sortOrder.value === "asc")
+    return [...filtered].sort((a, b) => a.rating - b.rating);
+  return filtered;
+});
 
 function clearFilters() {
-  searchQuery.value = ''
-  regionFilter.value = ''
-  ratingFilter.value = 0
-  sortOrder.value = ''
+  searchQuery.value = "";
+  regionFilter.value = "";
+  ratingFilter.value = 0;
+  sortOrder.value = "";
 }
 
 function switchTab(tab: Tab) {
-  activeTab.value = tab
-  searchQuery.value = ''
-  regionFilter.value = ''
-  ratingFilter.value = 0
-  sortOrder.value = ''
+  activeTab.value = tab;
+  searchQuery.value = "";
+  regionFilter.value = "";
+  ratingFilter.value = 0;
+  sortOrder.value = "";
 }
 
 onMounted(async () => {
   try {
-    const [data, allRooms] = await Promise.all([fetchReviews(), fetchAllRooms()])
-    reviews.value = data
-    rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]))
+    const [data, allRooms] = await Promise.all([
+      fetchReviews(),
+      fetchAllRooms(),
+    ]);
+    reviews.value = data;
+    rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]));
   } catch (e) {
-    error.value = '리뷰를 불러오는 데 실패했습니다.'
-    console.error(e)
+    error.value = "리뷰를 불러오는 데 실패했습니다.";
+    console.error(e);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 </script>
 
 <template>
@@ -135,21 +141,22 @@ onMounted(async () => {
     </template>
 
     <template v-else>
-      <!-- 대시보드 -->
-      <StatsDashboard :reviews="myReviews" :rooms="rooms" />
-
       <!-- 탭 -->
       <div class="review-list__tabs">
         <button
           class="review-list__tab"
           :class="{ 'review-list__tab--active': activeTab === 'mine' }"
           @click="switchTab('mine')"
-        >내 기록</button>
+        >
+          내 기록
+        </button>
         <button
           class="review-list__tab"
           :class="{ 'review-list__tab--active': activeTab === 'all' }"
           @click="switchTab('all')"
-        >전체</button>
+        >
+          전체
+        </button>
       </div>
 
       <!-- 통계 + CTA -->
@@ -161,22 +168,24 @@ onMounted(async () => {
             <span class="review-list__stat">성공률 {{ successRate }}%</span>
           </template>
         </div>
-        <RouterLink to="/review/new" class="review-list__cta">+ 리뷰 등록</RouterLink>
+        <RouterLink to="/review/new" class="review-list__cta"
+          >+ 리뷰 등록</RouterLink
+        >
       </div>
 
-      <!-- 검색 + 필터 -->
-      <div class="review-list__search-bar">
+      <!-- 검색 + 필터 (sticky) -->
+      <div class="review-list__sticky-bar">
         <input
           v-model="searchQuery"
           class="review-list__search-input"
           type="search"
           placeholder="업체명 · 테마명 검색"
         />
-      </div>
-      <div class="review-list__filters">
-        <BaseSelect v-model="regionFilter" :options="regionOptions" />
-        <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
-        <BaseSelect v-model="sortOrder" :options="sortOptions" />
+        <div class="review-list__filters">
+          <BaseSelect v-model="regionFilter" :options="regionOptions" />
+          <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
+          <BaseSelect v-model="sortOrder" :options="sortOptions" />
+        </div>
       </div>
 
       <!-- 리뷰 목록 -->
@@ -196,7 +205,11 @@ onMounted(async () => {
           :visited-at="review.visitedAt"
           :remaining-minutes="review.visitMeta.remainingMinutes"
           :has-spoiler="review.hasSpoiler"
-          :poster-url="rooms[review.roomId]?.posterPath ? getRoomPosterUrl(rooms[review.roomId]!.posterPath!) : null"
+          :poster-url="
+            rooms[review.roomId]?.posterPath
+              ? getRoomPosterUrl(rooms[review.roomId]!.posterPath!)
+              : null
+          "
         />
       </div>
       <div v-else class="review-list__empty">
@@ -204,13 +217,19 @@ onMounted(async () => {
         <template v-if="hasActiveFilter">
           <p class="review-list__empty-title">검색 결과가 없어요</p>
           <p class="review-list__empty-desc">다른 조건으로 검색해보세요.</p>
-          <button class="review-list__empty-btn" @click="clearFilters">필터 초기화</button>
+          <button class="review-list__empty-btn" @click="clearFilters">
+            필터 초기화
+          </button>
         </template>
         <!-- 내 기록 탭 비어있음 -->
         <template v-else-if="activeTab === 'mine'">
           <p class="review-list__empty-title">아직 기록이 없어요</p>
-          <p class="review-list__empty-desc">방탈출 다녀오셨나요? 첫 리뷰를 남겨보세요.</p>
-          <RouterLink to="/review/new" class="review-list__empty-cta">+ 첫 리뷰 작성하기</RouterLink>
+          <p class="review-list__empty-desc">
+            방탈출 다녀오셨나요? 첫 리뷰를 남겨보세요.
+          </p>
+          <RouterLink to="/review/new" class="review-list__empty-cta"
+            >+ 첫 리뷰 작성하기</RouterLink
+          >
         </template>
         <!-- 전체 탭 비어있음 -->
         <template v-else>
@@ -241,7 +260,9 @@ onMounted(async () => {
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1.5px;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .review-list__tab--active {
@@ -255,7 +276,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0 16px;
+  padding: 4px 0 0;
 }
 
 .review-list__stats {
@@ -303,14 +324,17 @@ onMounted(async () => {
   color: var(--color-error);
 }
 
-/* 검색 */
-.review-list__search-bar {
-  margin-bottom: 8px;
+/* 검색 + 필터 sticky 컨테이너 */
+.review-list__sticky-bar {
   position: sticky;
   top: 52px;
-  background: var(--color-bg);
-  padding-top: 12px;
   z-index: 10;
+  background: var(--color-bg);
+  padding: 16px 0 12px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-shadow: 0 1px 0 var(--color-border);
 }
 
 .review-list__search-input {
@@ -337,13 +361,8 @@ onMounted(async () => {
 .review-list__filters {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
-  position: sticky;
-  top: 104px; /* 헤더 52px + 검색바 ~52px */
-  background: var(--color-bg);
-  padding: 0 0 12px;
-  z-index: 10;
+  margin-top: 10px;
 }
 
 /* 그리드 */
@@ -351,6 +370,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding-top: 16px;
 }
 
 /* 빈 상태 */
