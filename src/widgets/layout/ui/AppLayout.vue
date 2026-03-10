@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   ArrowRightOnRectangleIcon,
   ListBulletIcon,
   PlusIcon,
   UserCircleIcon,
 } from '@heroicons/vue/24/outline'
+import {
+  ListBulletIcon as ListBulletSolidIcon,
+  UserCircleIcon as UserCircleSolidIcon,
+} from '@heroicons/vue/24/solid'
 import logoUrl from '@/app/assets/logo.png'
 import { useSessionStore } from '@/app/stores/session'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
@@ -14,6 +18,7 @@ import AppToast from '@/shared/ui/AppToast.vue'
 import PwaUpdatePrompt from '@/shared/ui/PwaUpdatePrompt.vue'
 
 const session = useSessionStore()
+const route = useRoute()
 const router = useRouter()
 
 const showLogoutDialog = ref(false)
@@ -52,7 +57,8 @@ async function handleSignOut() {
 
     <nav class="app-tab-bar">
       <RouterLink to="/" class="app-tab" exact-active-class="app-tab--active">
-        <ListBulletIcon class="app-tab__icon" />
+        <ListBulletSolidIcon v-if="route.name === 'review-list'" class="app-tab__icon" />
+        <ListBulletIcon v-else class="app-tab__icon" />
         <span class="app-tab__label">목록</span>
       </RouterLink>
       <RouterLink to="/review/new" class="app-tab app-tab--fab" active-class="app-tab--fab-active">
@@ -61,7 +67,8 @@ async function handleSignOut() {
         </div>
       </RouterLink>
       <RouterLink to="/profile" class="app-tab" active-class="app-tab--active">
-        <UserCircleIcon class="app-tab__icon" />
+        <UserCircleSolidIcon v-if="route.name === 'profile'" class="app-tab__icon" />
+        <UserCircleIcon v-else class="app-tab__icon" />
         <span class="app-tab__label">프로필</span>
       </RouterLink>
     </nav>
