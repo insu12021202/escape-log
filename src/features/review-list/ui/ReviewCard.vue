@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, useAttrs } from 'vue'
 import StarRating from '@/shared/ui/StarRating.vue'
+import AppBadge from '@/shared/ui/AppBadge.vue'
 
-defineProps<{
+const props = defineProps<{
   rating: number
   summary: string
   vendorName: string
@@ -17,61 +18,92 @@ defineProps<{
   posterUrl?: string | null
 }>()
 
+const attrs = useAttrs()
 const revealed = ref(false)
 
+const serial = computed(() => {
+  const id = (attrs['data-id'] as string | undefined) ?? ''
+  if (!id) return '#000'
+  let sum = 0
+  for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i)
+  return '#' + String(sum % 9999).padStart(3, '0')
+})
+
 function formatVisitedAt(dateStr: string) {
-  return dateStr.slice(0, 7).replace('-', '.')
+  // "2025-05-12" → "25.05"
+  return dateStr.slice(2, 7).replace('-', '.')
 }
+
+const metaParts = computed(() => {
+  const parts: string[] = []
+  if (props.visitedAt) parts.push(formatVisitedAt(props.visitedAt))
+  if (props.region) parts.push(props.region)
+  if (props.remainingMinutes != null) parts.push(`${props.remainingMinutes}m`)
+  if (props.authorName) parts.push(props.authorName)
+  return parts
+})
+
+const visibleTags = computed(() => props.genreTags.slice(0, 3))
+const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
 </script>
 
 <template>
-  <RouterLink :to="`/review/${$attrs['data-id']}`" class="review-card">
-    <div class="review-card__top">
-      <img
-        v-if="posterUrl"
-        :src="posterUrl"
-        :alt="`${themeName} 포스터`"
-        class="review-card__poster"
-      />
-      <div class="review-card__top-content">
-        <div class="review-card__title-row">
+  <RouterLink
+    :to="`/review/${$attrs['data-id']}`"
+    class="review-card"
+    :class="{ 'review-card--fail': !isSuccess }"
+  >
+    <span class="review-card__serial label">{{ serial }}</span>
+
+    <div v-if="posterUrl" class="review-card__poster">
+      <img :src="posterUrl" :alt="`${themeName} 포스터`" />
+    </div>
+    <div v-else class="review-card__poster review-card__poster--empty">
+      <span class="label">NO IMG</span>
+    </div>
+
+    <div class="review-card__body">
+      <div class="review-card__head">
+        <div class="review-card__title">
           <span class="review-card__vendor">{{ vendorName }}</span>
           <span class="review-card__theme">{{ themeName }}</span>
         </div>
-        <span class="review-card__result" :class="{ 'review-card__result--fail': !isSuccess }">
-          {{ isSuccess ? '성공' : '실패' }}
-        </span>
+        <AppBadge :kind="isSuccess ? 'success' : 'error'" mono size="sm">
+          {{ isSuccess ? 'CLEAR' : 'FAIL' }}
+        </AppBadge>
       </div>
-    </div>
 
-    <div class="review-card__rating-row">
-      <StarRating :model-value="rating" readonly size="sm" />
-      <span class="review-card__rating-num">{{ rating }}</span>
-    </div>
+      <div
+        v-if="hasSpoiler && !revealed"
+        class="review-card__spoiler scratch"
+      >
+        스포일러 —
+        <button
+          type="button"
+          class="review-card__spoiler-btn"
+          @click.prevent.stop="revealed = true"
+        >탭하여 보기</button>
+      </div>
+      <p v-else class="review-card__summary">{{ summary }}</p>
 
-    <p
-      class="review-card__summary"
-      :class="{ 'review-card__summary--blurred': hasSpoiler && !revealed }"
-    >{{ summary }}</p>
-    <span
-      v-if="hasSpoiler && !revealed"
-      class="review-card__spoiler-badge"
-      @click.prevent.stop="revealed = true"
-    >스포일러 포함 — 탭하여 보기</span>
+      <div v-if="visibleTags.length" class="review-card__tags">
+        <span v-for="tag in visibleTags" :key="tag" class="review-card__tag">
+          {{ tag }}
+        </span>
+        <span
+          v-if="extraTagCount > 0"
+          class="review-card__tag review-card__tag--more"
+        >+{{ extraTagCount }}</span>
+      </div>
 
-    <div v-if="genreTags.length" class="review-card__tags">
-      <span v-for="tag in genreTags.slice(0, 3)" :key="tag" class="review-card__tag">{{ tag }}</span>
-      <span v-if="genreTags.length > 3" class="review-card__tag review-card__tag--more">+{{ genreTags.length - 3 }}</span>
-    </div>
-
-    <div class="review-card__footer">
-      <span class="review-card__region">{{ region }}</span>
-      <div class="review-card__meta">
-        <span v-if="visitedAt" class="review-card__date">{{ formatVisitedAt(visitedAt) }}</span>
-        <span v-if="visitedAt && remainingMinutes != null" class="review-card__meta-sep">·</span>
-        <span v-if="remainingMinutes != null" class="review-card__escape-time">탈출 {{ remainingMinutes }}m</span>
-        <span v-if="authorName && (visitedAt || remainingMinutes != null)" class="review-card__meta-sep">·</span>
-        <span v-if="authorName" class="review-card__author">{{ authorName }}</span>
+      <div class="review-card__footer">
+        <div class="review-card__rating">
+          <StarRating :model-value="rating" readonly size="sm" mute />
+          <span class="review-card__rating-num mono tnum">{{ rating }}</span>
+        </div>
+        <div v-if="metaParts.length" class="review-card__meta mono tnum">
+          {{ metaParts.join(' · ') }}
+        </div>
       </div>
     </div>
   </RouterLink>
@@ -79,11 +111,13 @@ function formatVisitedAt(dateStr: string) {
 
 <style scoped>
 .review-card {
-  display: block;
-  padding: 18px 20px;
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 12px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   text-decoration: none;
   color: inherit;
   transition: box-shadow var(--transition-base), transform var(--transition-base);
@@ -94,156 +128,177 @@ function formatVisitedAt(dateStr: string) {
   transform: translateY(-1px);
 }
 
-.review-card__top {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 10px;
+.review-card::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 3px;
+  background: var(--color-success);
+  border-radius: 0 2px 2px 0;
 }
 
+.review-card--fail::before {
+  background: var(--color-error);
+}
+
+.review-card__serial {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 9.5px;
+  color: var(--ink-400);
+  letter-spacing: 0.08em;
+}
+
+/* 포스터 */
 .review-card__poster {
-  width: 40px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
   flex-shrink: 0;
+  width: 72px;
+  height: 96px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ink-100);
 }
 
-.review-card__top-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
+.review-card__poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.review-card__poster--empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 컨텐츠 */
+.review-card__body {
   flex: 1;
   min-width: 0;
-}
-
-.review-card__title-row {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+  padding-right: 28px; /* 시리얼 자리 확보 */
+}
+
+.review-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.review-card__title {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
 .review-card__vendor {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .review-card__theme {
-  font-size: 0.875rem;
-  color: var(--color-text-sub);
+  margin-top: 1px;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--ink-1000);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.review-card__result {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 99px;
-  background: var(--color-success-bg);
-  color: var(--color-success);
-}
-
-.review-card__result--fail {
-  background: var(--color-error-bg);
-  color: var(--color-error);
-}
-
-.review-card__rating-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.review-card__rating-num {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--color-star);
-}
-
 .review-card__summary {
-  font-size: 0.9375rem;
+  font-size: 13.5px;
   line-height: 1.5;
-  color: var(--color-text);
-  margin-bottom: 12px;
+  color: var(--ink-700);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.review-card__summary--blurred {
-  filter: blur(6px);
-  user-select: none;
-  transition: filter 0.2s ease;
+.review-card__spoiler {
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--paper);
 }
 
-.review-card__spoiler-badge {
-  display: inline-block;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  background: var(--color-bg-subtle);
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+.review-card__spoiler-btn {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: underline;
+  color: inherit;
+  opacity: 0.85;
   cursor: pointer;
-  margin-bottom: 12px;
 }
 
+/* 태그 */
 .review-card__tags {
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
 .review-card__tag {
-  font-size: 0.75rem;
-  padding: 3px 9px;
-  background: var(--color-bg);
-  border-radius: 99px;
-  color: var(--color-text-sub);
+  font-size: 11.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--ink-700);
   white-space: nowrap;
 }
 
 .review-card__tag--more {
-  color: var(--color-text-muted);
+  border-style: dashed;
+  color: var(--ink-500);
 }
 
+/* 푸터 */
 .review-card__footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.review-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-card__rating-num {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-900);
 }
 
 .review-card__meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.review-card__date,
-.review-card__escape-time,
-.review-card__author {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.review-card__author {
-  font-weight: 500;
-  color: var(--color-text-sub);
-}
-
-.review-card__meta-sep {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  opacity: 0.6;
+  font-size: 11px;
+  color: var(--ink-500);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
