@@ -11,6 +11,9 @@ import type { Vendor } from '@/entities/vendor/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import PosterPicker from '@/shared/ui/PosterPicker.vue'
+import AppChip from '@/shared/ui/AppChip.vue'
+import AppStepper from '@/shared/ui/AppStepper.vue'
+import BigToggle from '@/shared/ui/BigToggle.vue'
 import SubMetricsSection from './SubMetricsSection.vue'
 import GenreTagSelector from './GenreTagSelector.vue'
 import PhotoUploader from './PhotoUploader.vue'
@@ -142,10 +145,30 @@ const roomOptions = computed(() => [
   ...vendorRooms.value.map((r) => ({ value: r.id, label: r.themeName })),
 ])
 
-const visibilityOptions = [
-  { value: 'group', label: '회원 공개' },
-  { value: 'private', label: '나만 보기' },
-]
+const wizardTitle = computed(() => {
+  switch (currentStep.value) {
+    case 1: return '어디서 했나요'
+    case 2: return '어땠나요'
+    case 3: return '어떻게 끝났나요'
+    case 4: return '더 남길 게 있나요'
+    default: return ''
+  }
+})
+
+const sectionShortTitles: Record<number, string> = {
+  1: '어디서',
+  2: '어땠나',
+  3: '어떻게',
+  4: '더 남길 것',
+}
+
+const successToggleValue = computed(() =>
+  form.isSuccess === null ? '' : form.isSuccess ? 'success' : 'fail',
+)
+
+function onSuccessToggle(v: string) {
+  form.isSuccess = v === 'success' ? true : v === 'fail' ? false : null
+}
 
 onMounted(async () => {
   const [vendorList, tagList] = await Promise.all([fetchVendors(), fetchGenreTags()])
@@ -458,20 +481,33 @@ function navigateAfterSave(reviewId: string) {
 
   <form class="review-form" @submit.prevent="handleSubmit">
 
-    <!-- 위자드 헤더: create 모드만 표시 -->
-    <div v-if="mode === 'create'" class="review-form__wizard-header">
-      <div class="review-form__wizard-nav">
-        <button v-if="currentStep > 1" type="button" class="review-form__back" @click="goPrev">← 이전</button>
-        <span class="review-form__step-counter">{{ currentStep }} / {{ TOTAL_STEPS }}</span>
+    <!-- 위자드 다크 헤더 카드: create 모드만 -->
+    <div v-if="mode === 'create'" class="wizard-head dot-bg-dark">
+      <span class="wizard-head__serial label">LOG · NEW</span>
+      <div class="wizard-head__top">
+        <span class="wizard-head__step label">STEP {{ String(currentStep).padStart(2, '0') }}</span>
+        <span class="wizard-head__count mono">{{ String(currentStep).padStart(2, '0') }} / 04</span>
       </div>
-      <div class="review-form__progress-track">
-        <div class="review-form__progress-fill" :style="{ width: (currentStep / TOTAL_STEPS * 100) + '%' }" />
+      <h2 class="wizard-head__title">{{ wizardTitle }}</h2>
+      <div class="wizard-head__dots">
+        <span
+          v-for="i in TOTAL_STEPS"
+          :key="i"
+          class="wizard-head__dot"
+          :class="{ 'wizard-head__dot--filled': i <= currentStep }"
+        />
+      </div>
+      <div v-if="currentStep > 1" class="wizard-head__nav">
+        <button type="button" class="wizard-head__back" @click="goPrev">← 이전</button>
       </div>
     </div>
 
-    <!-- 섹션 1: 기본 -->
+    <!-- 섹션 1: 어디서 -->
     <section v-if="mode === 'edit' || currentStep === 1" class="review-form__section">
-      <h3 class="review-form__section-title">기본 정보</h3>
+      <header class="section-head">
+        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 01</span>
+        <h3 class="section-head__title">{{ sectionShortTitles[1] }}</h3>
+      </header>
 
       <div class="review-form__field">
         <label class="review-form__label">업체 선택 *</label>
@@ -544,9 +580,12 @@ function navigateAfterSave(reviewId: string) {
       </div>
     </section>
 
-    <!-- 섹션 2: 평가 -->
+    <!-- 섹션 2: 어땠나 -->
     <section v-if="mode === 'edit' || currentStep === 2" class="review-form__section">
-      <h3 class="review-form__section-title">평가</h3>
+      <header class="section-head">
+        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 02</span>
+        <h3 class="section-head__title">{{ sectionShortTitles[2] }}</h3>
+      </header>
 
       <div class="review-form__field">
         <label class="review-form__label">총평 별점 *</label>
@@ -564,7 +603,7 @@ function navigateAfterSave(reviewId: string) {
           maxlength="100"
           placeholder="100자 이내로 작성"
         />
-        <span class="review-form__counter">{{ form.summary.length }}/100</span>
+        <span class="review-form__counter mono tnum">{{ form.summary.length }}/100</span>
         <p v-if="errors.summary" class="review-form__field-error">{{ errors.summary }}</p>
       </div>
 
@@ -572,40 +611,30 @@ function navigateAfterSave(reviewId: string) {
       <SubMetricsSection v-model="form.subMetrics" />
     </section>
 
-    <!-- 섹션 3: 방문 정보 -->
+    <!-- 섹션 3: 어떻게 -->
     <section v-if="mode === 'edit' || currentStep === 3" class="review-form__section">
-      <h3 class="review-form__section-title">방문 정보</h3>
+      <header class="section-head">
+        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 03</span>
+        <h3 class="section-head__title">{{ sectionShortTitles[3] }}</h3>
+      </header>
 
       <div class="review-form__field">
         <label class="review-form__label">결과 *</label>
-        <div class="review-form__pill-group">
-          <button
-            type="button"
-            class="review-form__pill"
-            :class="{ 'review-form__pill--active-success': form.isSuccess === true }"
-            @click="form.isSuccess = true"
-          >성공</button>
-          <button
-            type="button"
-            class="review-form__pill"
-            :class="{ 'review-form__pill--active-fail': form.isSuccess === false }"
-            @click="form.isSuccess = false"
-          >실패</button>
-        </div>
+        <BigToggle
+          :model-value="successToggleValue"
+          :options="[
+            { value: 'success', label: 'CLEAR', icon: 'check', accent: 'var(--color-success)' },
+            { value: 'fail',    label: 'FAIL',  icon: 'cross', accent: 'var(--color-error)' },
+          ]"
+          @update:model-value="onSuccessToggle"
+        />
         <p v-if="errors.isSuccess" class="review-form__field-error">{{ errors.isSuccess }}</p>
       </div>
 
-      <div class="review-form__row">
-        <div class="review-form__field review-form__field--inline">
-          <label class="review-form__label" for="headcount-input">인원 수 *</label>
-          <input
-            id="headcount-input"
-            v-model.number="form.headcount"
-            class="review-form__input review-form__input--short"
-            type="number"
-            min="1"
-            max="10"
-          />
+      <div class="review-form__row review-form__row--align-end">
+        <div class="review-form__field review-form__field--stepper">
+          <label class="review-form__label">인원 수 *</label>
+          <AppStepper v-model="form.headcount" :min="1" :max="10" unit="명" />
           <p v-if="errors.headcount" class="review-form__field-error">{{ errors.headcount }}</p>
         </div>
 
@@ -631,26 +660,19 @@ function navigateAfterSave(reviewId: string) {
 
       <div class="review-form__field">
         <label class="review-form__label">재방문 의사</label>
-        <div class="review-form__pill-group">
-          <button
-            type="button"
-            class="review-form__pill"
-            :class="{ 'review-form__pill--active': form.wouldRevisit === true }"
-            @click="form.wouldRevisit = true"
-          >Yes</button>
-          <button
-            type="button"
-            class="review-form__pill"
-            :class="{ 'review-form__pill--active': form.wouldRevisit === false }"
-            @click="form.wouldRevisit = false"
-          >No</button>
+        <div class="review-form__chip-row">
+          <AppChip :active="form.wouldRevisit === true" @click="form.wouldRevisit = true">다시 가요</AppChip>
+          <AppChip :active="form.wouldRevisit === false" @click="form.wouldRevisit = false">충분해요</AppChip>
         </div>
       </div>
     </section>
 
-    <!-- 섹션 4: 기록 -->
+    <!-- 섹션 4: 더 남길 것 -->
     <section v-if="mode === 'edit' || currentStep === 4" class="review-form__section">
-      <h3 class="review-form__section-title">기록</h3>
+      <header class="section-head">
+        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 04</span>
+        <h3 class="section-head__title">{{ sectionShortTitles[4] }}</h3>
+      </header>
 
       <div class="review-form__field">
         <label class="review-form__label" for="body-input">본문</label>
@@ -662,19 +684,18 @@ function navigateAfterSave(reviewId: string) {
           rows="5"
           placeholder="자유롭게 작성 (3000자 이내)"
         />
-        <span class="review-form__counter">{{ form.body.length }}/3000</span>
+        <span class="review-form__counter mono tnum">{{ form.body.length }}/3000</span>
       </div>
 
-      <div class="review-form__field">
-        <label class="review-form__checkbox-label">
-          <input
-            type="checkbox"
-            v-model="form.hasSpoiler"
-            class="review-form__checkbox"
-          />
+      <div
+        class="review-form__spoiler-card"
+        :class="{ 'review-form__spoiler-card--active': form.hasSpoiler }"
+      >
+        <label class="review-form__spoiler-label">
+          <input type="checkbox" v-model="form.hasSpoiler" class="review-form__checkbox" />
           <span>스포일러 포함</span>
         </label>
-        <p class="review-form__field-hint">체크하면 다른 사용자에게 한줄평과 본문이 블러 처리됩니다.</p>
+        <p class="review-form__spoiler-hint">체크하면 다른 사용자에게 한줄평과 본문이 블러 처리됩니다.</p>
       </div>
 
       <div class="review-form__field">
@@ -689,7 +710,10 @@ function navigateAfterSave(reviewId: string) {
 
       <div class="review-form__field">
         <label class="review-form__label">공개 범위</label>
-        <BaseSelect v-model="form.visibility" :options="visibilityOptions" variant="input" />
+        <div class="review-form__chip-row">
+          <AppChip :active="form.visibility === 'group'" @click="form.visibility = 'group'">회원 공개</AppChip>
+          <AppChip :active="form.visibility === 'private'" @click="form.visibility = 'private'">나만 보기</AppChip>
+        </div>
       </div>
     </section>
 
@@ -706,14 +730,14 @@ function navigateAfterSave(reviewId: string) {
     </div>
 
     <div v-if="!pendingReviewId" class="review-form__footer">
-      <!-- create 모드: 마지막 스텝 전까지 "다음", 마지막은 "리뷰 저장" -->
+      <!-- create 모드: 마지막 스텝 전까지 "다음 →", 마지막은 "리뷰 저장" -->
       <button
         v-if="mode === 'create' && currentStep < TOTAL_STEPS"
         type="button"
         class="review-form__submit"
         @click="goNext"
       >
-        다음
+        다음<span class="review-form__submit-arrow">→</span>
       </button>
       <button v-else type="submit" class="review-form__submit" :disabled="submitting">
         {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
@@ -726,82 +750,119 @@ function navigateAfterSave(reviewId: string) {
 .review-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 80px; /* sticky footer 여백 */
+  gap: 14px;
+  padding-bottom: 80px;
 }
 
-/* 위자드 헤더 */
-.review-form__wizard-header {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 2px 0 4px;
+/* ── 위자드 다크 헤더 카드 ── */
+.wizard-head {
+  position: relative;
+  padding: 18px 20px 16px;
+  margin-bottom: 0;
+  background-color: var(--ink-1000);
+  color: var(--paper);
+  border-radius: 12px;
 }
 
-.review-form__wizard-nav {
+.wizard-head__serial {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  color: rgba(244, 237, 224, 0.35);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+}
+
+.wizard-head__top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  min-height: 28px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.review-form__back {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
+.wizard-head__step {
+  color: rgba(244, 237, 224, 0.55);
+  letter-spacing: 0.08em;
+}
+
+.wizard-head__count {
+  font-size: 11.5px;
+  color: rgba(244, 237, 224, 0.7);
+  letter-spacing: 0.04em;
+}
+
+.wizard-head__title {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--paper);
+  letter-spacing: -0.005em;
+}
+
+.wizard-head__dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.wizard-head__dot {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(244, 237, 224, 0.18);
+  transition: background var(--transition-base);
+}
+
+.wizard-head__dot--filled {
+  background: var(--brand-500);
+}
+
+.wizard-head__nav {
+  margin-top: 12px;
+}
+
+.wizard-head__back {
   background: none;
   border: none;
-  padding: 0;
+  padding: 4px 0;
+  font-size: 12px;
+  color: rgba(244, 237, 224, 0.7);
   cursor: pointer;
   transition: color var(--transition-fast);
 }
 
-.review-form__back:hover {
-  color: var(--color-text-sub);
+.wizard-head__back:hover {
+  color: var(--paper);
 }
 
-.review-form__progress-track {
-  width: 100%;
-  height: 4px;
-  background: var(--color-border);
-  border-radius: 99px;
-  overflow: hidden;
+/* ── 섹션 헤더 ── */
+.section-head {
+  margin-bottom: 14px;
 }
 
-.review-form__progress-fill {
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: 99px;
-  transition: width 0.3s ease;
+.section-head :deep(.label) {
+  color: var(--ink-500);
 }
 
-.review-form__step-counter {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
+.section-head__title {
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-1000);
 }
 
-/* 섹션 */
+/* ── 섹션 카드 ── */
 .review-form__section {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 20px 16px;
+  border-radius: 12px;
+  padding: 22px 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-.review-form__section-title {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
-}
-
-/* 필드 */
+/* ── 필드 ── */
 .review-form__field {
   display: flex;
   flex-direction: column;
@@ -817,31 +878,40 @@ function navigateAfterSave(reviewId: string) {
   flex: 2;
 }
 
+.review-form__field--stepper {
+  flex: 0 0 180px;
+  max-width: 180px;
+}
+
 .review-form__row {
   display: flex;
   gap: 16px;
 }
 
-.review-form__label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-sub);
+.review-form__row--align-end {
+  align-items: flex-end;
 }
 
-/* 입력 */
+.review-form__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+/* ── 입력 ── */
 .review-form__input,
 .review-form__select,
 .review-form__textarea {
   width: 100%;
   box-sizing: border-box;
   padding: 11px 14px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--ink-1000);
   background: var(--color-surface);
-  transition: border-color var(--transition-fast);
-  min-height: 48px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-height: 44px;
   max-width: 100%;
 }
 
@@ -853,9 +923,9 @@ function navigateAfterSave(reviewId: string) {
 .review-form__select:focus,
 .review-form__textarea:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-50);
 }
-
 
 .review-form__textarea {
   resize: vertical;
@@ -863,133 +933,82 @@ function navigateAfterSave(reviewId: string) {
 }
 
 .review-form__counter {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+  font-size: 11px;
+  color: var(--ink-400);
   text-align: right;
 }
 
-/* 체크박스 */
-.review-form__checkbox-label {
+/* ── 칩 row ── */
+.review-form__chip-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── 스포일러 카드 ── */
+.review-form__spoiler-card {
+  position: relative;
+  padding: 12px 14px;
+  background: var(--ink-100);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.review-form__spoiler-card--active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--ink-1000);
+}
+
+.review-form__spoiler-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9375rem;
-  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-1000);
   cursor: pointer;
 }
 
 .review-form__checkbox {
   width: 18px;
   height: 18px;
-  accent-color: var(--color-primary);
+  accent-color: var(--ink-1000);
 }
 
-.review-form__field-hint {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  margin-top: 4px;
+.review-form__spoiler-hint {
+  padding-top: 6px;
+  font-size: 12px;
+  color: var(--ink-500);
 }
 
-/* 에러 */
+/* ── 에러 ── */
 .review-form__field-error {
-  font-size: 0.8125rem;
+  font-size: 12.5px;
   color: var(--color-error);
 }
 
-/* 고정 방 표시 */
+/* ── 고정 방 표시 ── */
 .review-form__room-fixed {
-  font-size: 0.9375rem;
-  color: var(--color-text-sub);
+  font-size: 15px;
+  color: var(--ink-700);
   padding: 11px 14px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-  min-height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--ink-50);
+  min-height: 44px;
   display: flex;
   align-items: center;
 }
 
-/* Pill 버튼 (성공/실패, 재방문) */
-.review-form__pill-group {
-  display: flex;
-  gap: 8px;
-}
-
-.review-form__pill {
-  flex: 1;
-  padding: 10px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--color-text-sub);
-  background: var(--color-surface);
-  transition: all var(--transition-fast);
-  min-height: 44px;
-}
-
-.review-form__pill:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.review-form__pill--active {
-  border-color: var(--color-primary);
-  background: var(--color-primary-bg);
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.review-form__pill--active-success {
-  border-color: var(--color-success);
-  background: var(--color-success-bg);
-  color: var(--color-success);
-  font-weight: 600;
-}
-
-.review-form__pill--active-fail {
-  border-color: var(--color-error);
-  background: var(--color-error-bg);
-  color: var(--color-error);
-  font-weight: 600;
-}
-
-/* 제출 푸터 */
-.review-form__footer {
-  position: sticky;
-  bottom: 0;
-  background: var(--color-bg);
-  padding: 12px 0;
-  margin: 0 -16px;
-  padding: 12px 16px;
-}
-
-.review-form__submit {
-  width: 100%;
-  padding: 14px;
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  font-weight: 600;
-  transition: background var(--transition-fast);
-  min-height: 52px;
-}
-
-.review-form__submit:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-}
-
-.review-form__submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* 인라인 방 등록 */
+/* ── 인라인 방 등록 ── */
 .review-form__add-room-toggle {
-  font-size: 0.8125rem;
-  color: var(--color-primary);
+  font-size: 13px;
+  color: var(--brand-500);
   background: none;
   border: none;
   padding: 0;
@@ -999,7 +1018,7 @@ function navigateAfterSave(reviewId: string) {
 }
 
 .review-form__add-room-toggle:hover {
-  color: var(--color-primary-dark);
+  color: var(--brand-600);
 }
 
 .review-form__room-mini {
@@ -1007,18 +1026,18 @@ function navigateAfterSave(reviewId: string) {
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  background: var(--color-bg);
+  background: var(--ink-50);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
 }
 
 .review-form__room-submit {
   padding: 10px;
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--ink-1000);
+  color: var(--paper);
   border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   min-height: 44px;
@@ -1026,15 +1045,54 @@ function navigateAfterSave(reviewId: string) {
 }
 
 .review-form__room-submit:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--ink-900);
 }
 
 .review-form__room-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* expand 애니메이션 */
+/* ── 제출 푸터 ── */
+.review-form__footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg);
+  margin: 0 -16px;
+  padding: 12px 16px;
+}
+
+.review-form__submit {
+  width: 100%;
+  padding: 14px;
+  background: var(--ink-1000);
+  color: var(--paper);
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: background var(--transition-fast);
+  min-height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-form__submit:hover:not(:disabled) {
+  background: var(--ink-900);
+}
+
+.review-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-form__submit-arrow {
+  margin-left: 10px;
+}
+
+/* ── expand 애니메이션 ── */
 .expand-enter-active,
 .expand-leave-active {
   transition: max-height 0.28s ease, opacity 0.22s ease;
@@ -1053,7 +1111,7 @@ function navigateAfterSave(reviewId: string) {
   opacity: 1;
 }
 
-/* 사진 재시도 */
+/* ── 사진 재시도 ── */
 .review-form__photo-actions {
   display: flex;
   gap: 8px;
@@ -1062,45 +1120,49 @@ function navigateAfterSave(reviewId: string) {
 .review-form__retry-btn {
   flex: 1;
   padding: 12px;
-  background: var(--color-primary);
+  background: var(--brand-500);
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   min-height: 48px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
 }
 
 .review-form__retry-btn:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--brand-600);
 }
 
 .review-form__skip-btn {
   padding: 12px 16px;
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
+  background: transparent;
+  color: var(--ink-700);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
   min-height: 48px;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .review-form__skip-btn:hover:not(:disabled) {
-  border-color: var(--color-text-sub);
-  color: var(--color-text-sub);
+  background: var(--ink-100);
 }
 
 .review-form__retry-btn:disabled,
 .review-form__skip-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* 임시 저장 복원 다이얼로그 */
+/* ── 임시 저장 복원 다이얼로그 ── */
 .draft-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(11, 14, 20, 0.5);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1110,22 +1172,23 @@ function navigateAfterSave(reviewId: string) {
 
 .draft-dialog {
   background: var(--color-surface);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  padding: 24px 20px 20px;
+  border-radius: 14px 14px 0 0;
+  padding: 22px;
   width: 100%;
   max-width: 640px;
+  box-shadow: var(--shadow-modal);
 }
 
 .draft-dialog__title {
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--ink-1000);
   margin-bottom: 6px;
 }
 
 .draft-dialog__desc {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+  font-size: 13px;
+  color: var(--ink-500);
   margin-bottom: 20px;
 }
 
@@ -1137,27 +1200,31 @@ function navigateAfterSave(reviewId: string) {
 .draft-dialog__btn {
   flex: 1;
   padding: 13px;
-  border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   min-height: 48px;
-  border: none;
   cursor: pointer;
-  transition: opacity var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .draft-dialog__btn--secondary {
-  background: var(--color-bg);
-  color: var(--color-text-sub);
-  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--ink-700);
+  border: 1px solid var(--color-border);
+}
+
+.draft-dialog__btn--secondary:hover {
+  background: var(--ink-100);
 }
 
 .draft-dialog__btn--primary {
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--ink-1000);
+  color: var(--paper);
+  border: none;
 }
 
-.draft-dialog__btn:hover {
-  opacity: 0.85;
+.draft-dialog__btn--primary:hover {
+  background: var(--ink-900);
 }
 </style>
