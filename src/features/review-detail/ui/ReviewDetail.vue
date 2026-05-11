@@ -27,11 +27,11 @@ const VISIBILITY_CODE: Record<string, string> = {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 10).replaceAll('-', '.')
+  return new Date(iso).toISOString().slice(0, 10).replace(/-/g, '.')
 }
 
 function formatVisited(dateStr: string): string {
-  return dateStr.slice(2, 10).replaceAll('-', '.')
+  return dateStr.slice(2, 10).replace(/-/g, '.')
 }
 
 const serial = computed(() => {
