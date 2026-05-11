@@ -7,6 +7,7 @@ import type { Room } from "@/entities/room/types";
 import ReviewCard from "@/features/review-list/ui/ReviewCard.vue";
 import ReviewCardSkeleton from "@/features/review-list/ui/ReviewCardSkeleton.vue";
 import BaseSelect from "@/shared/ui/BaseSelect.vue";
+import AppChip from "@/shared/ui/AppChip.vue";
 import { getRoomPosterUrl } from "@/shared/api/storage";
 import { useSessionStore } from "@/app/stores/session";
 
@@ -33,7 +34,6 @@ const sortOptions: Array<{ value: "" | "asc" | "desc"; label: string }> = [
 
 const myUserId = computed(() => session.user?.id ?? null);
 
-/** 현재 탭의 기본 리뷰 목록 (필터 적용 전) */
 const baseReviews = computed(() =>
   activeTab.value === "mine"
     ? reviews.value.filter((r) => r.userId === myUserId.value)
@@ -131,6 +131,23 @@ onMounted(async () => {
 
 <template>
   <div class="review-list">
+    <!-- 다크 hero -->
+    <section class="review-list__hero dot-bg-dark">
+      <span class="review-list__hero-label label">LOG · INDEX</span>
+      <h1 class="review-list__hero-title">방탈출 기록장</h1>
+      <div class="review-list__hero-stats mono tnum">
+        <span class="review-list__hero-stat">
+          TOTAL <strong>{{ totalCount }}</strong>
+        </span>
+        <template v-if="successRate !== null">
+          <span class="review-list__hero-sep">·</span>
+          <span class="review-list__hero-stat">
+            SUCCESS <strong>{{ successRate }}%</strong>
+          </span>
+        </template>
+      </div>
+    </section>
+
     <!-- 스켈레톤 로딩 -->
     <div v-if="loading" class="review-list__grid">
       <ReviewCardSkeleton v-for="i in 3" :key="i" />
@@ -143,44 +160,39 @@ onMounted(async () => {
     <template v-else>
       <!-- 탭 -->
       <div class="review-list__tabs">
-        <button
-          class="review-list__tab"
-          :class="{ 'review-list__tab--active': activeTab === 'mine' }"
-          @click="switchTab('mine')"
-        >
+        <AppChip :active="activeTab === 'mine'" @click="switchTab('mine')">
           내 기록
-        </button>
-        <button
-          class="review-list__tab"
-          :class="{ 'review-list__tab--active': activeTab === 'all' }"
-          @click="switchTab('all')"
-        >
+        </AppChip>
+        <AppChip :active="activeTab === 'all'" @click="switchTab('all')">
           전체
-        </button>
-      </div>
-
-      <!-- 통계 + CTA -->
-      <div class="review-list__hero">
-        <div class="review-list__stats">
-          <span class="review-list__stat">총 {{ totalCount }}개</span>
-          <template v-if="successRate !== null">
-            <span class="review-list__stat-sep">·</span>
-            <span class="review-list__stat">성공률 {{ successRate }}%</span>
-          </template>
-        </div>
-        <RouterLink to="/review/new" class="review-list__cta"
-          >+ 리뷰 등록</RouterLink
-        >
+        </AppChip>
       </div>
 
       <!-- 검색 + 필터 (sticky) -->
       <div class="review-list__sticky-bar">
-        <input
-          v-model="searchQuery"
-          class="review-list__search-input"
-          type="search"
-          placeholder="업체명 · 테마명 검색"
-        />
+        <div class="review-list__search">
+          <svg
+            class="review-list__search-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <line x1="20" y1="20" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            v-model="searchQuery"
+            class="review-list__search-input"
+            type="search"
+            placeholder="업체명 · 테마명 검색"
+          />
+        </div>
         <div class="review-list__filters">
           <BaseSelect v-model="regionFilter" :options="regionOptions" />
           <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
@@ -188,7 +200,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- 리뷰 목록 -->
+      <!-- 리뷰 그리드 -->
       <div v-if="filteredReviews.length" class="review-list__grid">
         <ReviewCard
           v-for="review in filteredReviews"
@@ -213,7 +225,9 @@ onMounted(async () => {
         />
       </div>
       <div v-else class="review-list__empty">
-        <!-- 필터/검색 적용 중인데 결과 없음 -->
+        <pre class="review-list__empty-art mono">┌──────────────┐
+│   ESC LOG    │
+└──────────────┘</pre>
         <template v-if="hasActiveFilter">
           <p class="review-list__empty-title">검색 결과가 없어요</p>
           <p class="review-list__empty-desc">다른 조건으로 검색해보세요.</p>
@@ -221,17 +235,15 @@ onMounted(async () => {
             필터 초기화
           </button>
         </template>
-        <!-- 내 기록 탭 비어있음 -->
         <template v-else-if="activeTab === 'mine'">
           <p class="review-list__empty-title">아직 기록이 없어요</p>
           <p class="review-list__empty-desc">
             방탈출 다녀오셨나요? 첫 리뷰를 남겨보세요.
           </p>
-          <RouterLink to="/review/new" class="review-list__empty-cta"
-            >+ 첫 리뷰 작성하기</RouterLink
-          >
+          <RouterLink to="/review/new" class="review-list__empty-cta">
+            + 첫 리뷰 작성하기
+          </RouterLink>
         </template>
-        <!-- 전체 탭 비어있음 -->
         <template v-else>
           <p class="review-list__empty-title">리뷰가 없어요</p>
           <p class="review-list__empty-desc">아직 작성된 리뷰가 없습니다.</p>
@@ -242,78 +254,119 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* 탭 */
-.review-list__tabs {
-  display: flex;
-  border-bottom: 1.5px solid var(--color-border);
-  margin-bottom: 16px;
+.review-list {
+  position: relative;
 }
 
-.review-list__tab {
-  flex: 1;
-  padding: 10px 0;
-  background: none;
-  border: none;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1.5px;
-  transition:
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.review-list__tab--active {
-  color: var(--color-primary);
-  font-weight: 700;
-  border-bottom-color: var(--color-primary);
-}
-
-/* 통계 + CTA */
+/* ── 다크 hero ── */
 .review-list__hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0 0;
+  margin: -20px -16px 0;
+  padding: 24px 20px 20px;
+  background-color: var(--ink-1000);
+  color: var(--paper);
 }
 
-.review-list__stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.review-list__hero-label {
+  color: rgba(244, 237, 224, 0.55);
 }
 
-.review-list__stat {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-text);
+.review-list__hero-title {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--paper);
 }
 
-.review-list__stat-sep {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
-
-.review-list__cta {
+.review-list__hero-stats {
+  margin-top: 14px;
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-sm);
-  font-size: 0.8125rem;
+  gap: 10px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: rgba(244, 237, 224, 0.7);
+}
+
+.review-list__hero-stat strong {
+  color: var(--paper);
   font-weight: 600;
-  text-decoration: none;
-  transition: background var(--transition-fast);
 }
 
-.review-list__cta:hover {
-  background: var(--color-primary-dark);
+.review-list__hero-sep {
+  opacity: 0.4;
 }
 
-/* 상태 */
+/* ── 탭 ── */
+.review-list__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0 12px;
+}
+
+/* ── 검색 + 필터 sticky ── */
+.review-list__sticky-bar {
+  position: sticky;
+  top: 52px;
+  z-index: 10;
+  margin: 0 -16px;
+  padding: 12px 16px;
+  background: rgba(244, 245, 247, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.review-list__search {
+  position: relative;
+}
+
+.review-list__search-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: var(--ink-500);
+  pointer-events: none;
+}
+
+.review-list__search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px 0 38px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  font-size: 14px;
+  color: var(--ink-1000);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.review-list__search-input::placeholder {
+  color: var(--ink-400);
+}
+
+.review-list__search-input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-50);
+}
+
+.review-list__filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* ── 그리드 ── */
+.review-list__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+/* ── 상태 ── */
 .review-list__status {
   color: var(--color-text-muted);
   text-align: center;
@@ -324,104 +377,76 @@ onMounted(async () => {
   color: var(--color-error);
 }
 
-/* 검색 + 필터 sticky 컨테이너 */
-.review-list__sticky-bar {
-  position: sticky;
-  top: 52px;
-  z-index: 10;
-  background: var(--color-bg);
-  padding: 16px 0 12px;
-  margin: 0 -16px;
-  padding-left: 16px;
-  padding-right: 16px;
-  box-shadow: 0 1px 0 var(--color-border);
-}
-
-.review-list__search-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9375rem;
-  color: var(--color-text);
-  background: var(--color-surface);
-  transition: border-color var(--transition-fast);
-}
-
-.review-list__search-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.review-list__search-input::placeholder {
-  color: var(--color-text-muted);
-}
-
-/* 필터 */
-.review-list__filters {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-/* 그리드 */
-.review-list__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 16px;
-}
-
-/* 빈 상태 */
+/* ── 빈 상태 ── */
 .review-list__empty {
   text-align: center;
   padding: 60px 0;
 }
 
+.review-list__empty-art {
+  margin: 0 auto 16px;
+  font-size: 11.5px;
+  color: var(--ink-300);
+  line-height: 1.4;
+  white-space: pre;
+  text-align: center;
+}
+
 .review-list__empty-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-sub);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-900);
   margin-bottom: 6px;
 }
 
 .review-list__empty-desc {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+  font-size: 13px;
+  color: var(--ink-500);
   margin-bottom: 16px;
 }
 
 .review-list__empty-cta {
   display: inline-flex;
   align-items: center;
-  padding: 10px 20px;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  padding: 12px 22px;
+  background: var(--ink-1000);
+  color: var(--paper);
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   transition: background var(--transition-fast);
 }
 
 .review-list__empty-cta:hover {
-  background: var(--color-primary-dark);
+  background: var(--ink-900);
 }
 
 .review-list__empty-btn {
-  padding: 8px 16px;
-  background: var(--color-bg-subtle);
-  color: var(--color-text-sub);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--ink-700);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .review-list__empty-btn:hover {
-  background: var(--color-border);
+  background: var(--ink-100);
+}
+
+@media (min-width: 640px) {
+  .review-list__hero {
+    margin: -28px -24px 0;
+    padding: 32px 28px 24px;
+  }
+
+  .review-list__sticky-bar {
+    margin: 0 -24px;
+    padding: 12px 24px;
+  }
 }
 </style>
