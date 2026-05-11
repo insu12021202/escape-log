@@ -24,12 +24,12 @@ withDefaults(
 .skeleton-block {
   background: linear-gradient(
     90deg,
-    var(--color-bg-subtle) 25%,
-    var(--color-border-light) 50%,
-    var(--color-bg-subtle) 75%
+    var(--ink-100) 25%,
+    var(--ink-150) 50%,
+    var(--ink-100) 75%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite ease-in-out;
+  animation: shimmer 1.4s linear infinite;
 }
 
 @keyframes shimmer {

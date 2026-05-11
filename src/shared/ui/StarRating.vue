@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { computed, ref, onUnmounted } from 'vue'
+
+type SizeToken = 'sm' | 'md'
 
 const props = withDefaults(
   defineProps<{
     modelValue: number
     readonly?: boolean
-    size?: 'sm' | 'md'
+    size?: SizeToken | number
+    mute?: boolean
+    gap?: number
   }>(),
-  { readonly: false, size: 'md' },
+  { readonly: false, size: 'md', mute: false, gap: 2 },
 )
 
 const emit = defineEmits<{
@@ -18,14 +22,25 @@ const hoverValue = ref(0)
 const isDragging = ref(false)
 const containerRef = ref<HTMLDivElement>()
 
+const sizePx = computed(() => {
+  if (typeof props.size === 'number') return props.size
+  return props.size === 'sm' ? 20 : 28
+})
+
+const strokeColor = computed(() =>
+  props.mute ? 'var(--ink-300)' : 'var(--ink-200)',
+)
+
 const STAR_PATH =
   'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z'
 
-function fillPct(index: number): number {
+function fillRatio(index: number): number {
   const val = hoverValue.value || props.modelValue
-  if (val >= index) return 100
-  if (val >= index - 0.5) return 50
-  return 0
+  return Math.max(0, Math.min(1, val - (index - 1)))
+}
+
+function fillPct(index: number): number {
+  return fillRatio(index) * 100
 }
 
 // ── 마우스 ──────────────────────────────────────────
@@ -63,10 +78,8 @@ function endDrag() {
 
 // ── 터치 ──────────────────────────────────────────
 
-/** 터치 좌표에서 어느 별 몇 번째인지 계산 */
 function calcTouchVal(clientX: number): number {
   if (!containerRef.value) return props.modelValue
-  // data-n 속성이 붙은 star-wrap span들을 순회해서 어느 별 위인지 찾음
   const wraps = containerRef.value.querySelectorAll<HTMLElement>('[data-n]')
   for (const wrap of wraps) {
     const { left, right, width } = wrap.getBoundingClientRect()
@@ -75,7 +88,6 @@ function calcTouchVal(clientX: number): number {
       return clientX - left < width / 2 ? n - 0.5 : n
     }
   }
-  // 범위 밖이면 가장 가까운 끝값 반환
   const first = wraps[0]?.getBoundingClientRect()
   const last = wraps[wraps.length - 1]?.getBoundingClientRect()
   if (first && clientX < first.left) return 1
@@ -93,7 +105,7 @@ function onTouchStart(e: TouchEvent) {
 
 function onTouchMove(e: TouchEvent) {
   if (props.readonly || !isDragging.value || !e.touches[0]) return
-  e.preventDefault() // 스크롤 방지
+  e.preventDefault()
   const val = calcTouchVal(e.touches[0].clientX)
   hoverValue.value = val
   emit('update:modelValue', val)
@@ -113,7 +125,8 @@ onUnmounted(() => {
   <div
     ref="containerRef"
     class="star-rating"
-    :class="[`star-rating--${size}`, { 'star-rating--readonly': readonly }]"
+    :class="{ 'star-rating--readonly': readonly }"
+    :style="{ gap: `${gap}px` }"
     @mouseleave="onContainerLeave"
     @touchstart.prevent="onTouchStart"
     @touchmove.prevent="onTouchMove"
@@ -124,22 +137,39 @@ onUnmounted(() => {
       :key="n"
       :data-n="n"
       class="star-wrap"
+      :style="{ width: `${sizePx}px`, height: `${sizePx}px` }"
       @mousedown="onMouseDown($event, n)"
       @mousemove="onMouseMove($event, n)"
     >
-      <!-- 배경별 (항상 회색) -->
-      <svg class="star star--bg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path :d="STAR_PATH" fill="#D1D5DB" />
-      </svg>
-      <!-- 앞별 (노란색, clip-path로 채우기 비율만큼만 노출) -->
+      <!-- 빈 별 (stroke only) -->
       <svg
-        class="star star--fg"
+        class="star star--bg"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
-        :style="{ clipPath: `inset(0 ${100 - fillPct(n)}% 0 0)` }"
       >
-        <path :d="STAR_PATH" fill="#FBBF24" />
+        <path
+          :d="STAR_PATH"
+          fill="none"
+          :stroke="strokeColor"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+        />
       </svg>
+      <!-- 가득찬 별 마스킹 (width = fill%) -->
+      <span
+        class="star-fill"
+        :style="{ width: `${fillPct(n)}%` }"
+        aria-hidden="true"
+      >
+        <svg
+          class="star star--fg"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+          :style="{ width: `${sizePx}px`, height: `${sizePx}px` }"
+        >
+          <path :d="STAR_PATH" fill="var(--color-star)" />
+        </svg>
+      </span>
     </span>
   </div>
 </template>
@@ -148,34 +178,17 @@ onUnmounted(() => {
 .star-rating {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: pan-y; /* 수직 스크롤은 허용, 수평 터치는 컴포넌트가 처리 */
+  touch-action: pan-y;
 }
 
 .star-wrap {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
-}
-
-/* 인터랙티브 md */
-.star-rating--md .star-wrap {
-  width: 28px;
-  height: 28px;
   cursor: pointer;
   transition: transform 0.1s ease;
-}
-
-.star-rating--md:not(.star-rating--readonly) .star-wrap:hover {
-  transform: scale(1.2);
-}
-
-/* 작은 사이즈 sm */
-.star-rating--sm .star-wrap {
-  width: 20px;
-  height: 20px;
 }
 
 .star-rating--readonly .star-wrap {
@@ -189,5 +202,19 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.star-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.star-fill .star {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 </style>
