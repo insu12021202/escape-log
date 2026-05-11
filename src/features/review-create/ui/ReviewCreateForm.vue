@@ -483,10 +483,12 @@ function navigateAfterSave(reviewId: string) {
 
     <!-- 위자드 다크 헤더 카드: create 모드만 -->
     <div v-if="mode === 'create'" class="wizard-head dot-bg-dark">
-      <span class="wizard-head__serial label">LOG · NEW</span>
       <div class="wizard-head__top">
         <span class="wizard-head__step label">STEP {{ String(currentStep).padStart(2, '0') }}</span>
-        <span class="wizard-head__count mono">{{ String(currentStep).padStart(2, '0') }} / 04</span>
+        <div class="wizard-head__top-right">
+          <span class="wizard-head__serial label">LOG · NEW</span>
+          <span class="wizard-head__count mono">{{ String(currentStep).padStart(2, '0') }} / 04</span>
+        </div>
       </div>
       <h2 class="wizard-head__title">{{ wizardTitle }}</h2>
       <div class="wizard-head__dots">
@@ -764,20 +766,23 @@ function navigateAfterSave(reviewId: string) {
   border-radius: 12px;
 }
 
-.wizard-head__serial {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  color: rgba(244, 237, 224, 0.35);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-}
-
 .wizard-head__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.wizard-head__top-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wizard-head__serial {
+  color: rgba(244, 237, 224, 0.35);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
 }
 
 .wizard-head__step {

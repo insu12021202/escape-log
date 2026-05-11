@@ -53,8 +53,6 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
     class="review-card"
     :class="{ 'review-card--fail': !isSuccess }"
   >
-    <span class="review-card__serial label">{{ serial }}</span>
-
     <div v-if="posterUrl" class="review-card__poster">
       <img :src="posterUrl" :alt="`${themeName} 포스터`" />
     </div>
@@ -68,9 +66,12 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
           <span class="review-card__vendor">{{ vendorName }}</span>
           <span class="review-card__theme">{{ themeName }}</span>
         </div>
-        <AppBadge :kind="isSuccess ? 'success' : 'error'" mono size="sm">
-          {{ isSuccess ? 'CLEAR' : 'FAIL' }}
-        </AppBadge>
+        <div class="review-card__head-right">
+          <span class="review-card__serial label">{{ serial }}</span>
+          <AppBadge :kind="isSuccess ? 'success' : 'error'" mono size="sm">
+            {{ isSuccess ? 'CLEAR' : 'FAIL' }}
+          </AppBadge>
+        </div>
       </div>
 
       <div
@@ -144,12 +145,18 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
 }
 
 .review-card__serial {
-  position: absolute;
-  top: 10px;
-  right: 12px;
   font-size: 9.5px;
   color: var(--ink-400);
   letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.review-card__head-right {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 /* 포스터 */
@@ -182,7 +189,6 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 28px; /* 시리얼 자리 확보 */
 }
 
 .review-card__head {
