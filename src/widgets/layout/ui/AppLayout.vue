@@ -35,6 +35,7 @@ async function handleSignOut() {
     <header class="app-header">
       <RouterLink to="/" class="app-logo-link">
         <img :src="logoUrl" alt="방탈출 리뷰 로고" class="app-logo" />
+        <span class="app-wordmark">ESCAPE—LOG</span>
       </RouterLink>
       <nav class="app-header__nav">
         <RouterLink to="/">목록</RouterLink>
@@ -123,6 +124,16 @@ async function handleSignOut() {
   width: auto;
 }
 
+.app-wordmark {
+  display: none;
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ink-1000);
+}
+
 .app-header__signout {
   background: none;
   border: none;
@@ -171,7 +182,9 @@ async function handleSignOut() {
   padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   align-items: stretch;
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--color-border);
   z-index: 50;
 }
@@ -194,7 +207,7 @@ async function handleSignOut() {
 }
 
 .app-tab--active {
-  color: var(--color-primary);
+  color: var(--brand-500);
 }
 
 .app-tab__icon {
@@ -204,8 +217,9 @@ async function handleSignOut() {
 }
 
 .app-tab__label {
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -219,20 +233,35 @@ async function handleSignOut() {
 }
 
 .app-tab__fab {
-  width: 48px;
-  height: 48px;
+  position: relative;
+  width: 52px;
+  height: 52px;
+  margin-top: -10px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: var(--ink-1000);
+  color: var(--paper);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 6px 16px rgba(11, 14, 20, 0.28),
+    inset 0 0 0 1px rgba(244, 237, 224, 0.06);
   transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.app-tab__fab::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 1.5px solid var(--brand-500);
+  border-radius: 999px;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .app-tab--fab:hover .app-tab__fab,
 .app-tab--fab-active .app-tab__fab {
-  background: var(--color-primary-dark);
+  background: var(--ink-900);
 }
 
 .app-tab--fab:active .app-tab__fab {
@@ -242,8 +271,8 @@ async function handleSignOut() {
 .app-tab__fab-icon {
   width: 24px;
   height: 24px;
-  color: #fff;
-  stroke-width: 2.5;
+  color: var(--paper);
+  stroke-width: 2.4;
 }
 
 /* ── 페이지 트랜지션 ── */
@@ -266,6 +295,10 @@ async function handleSignOut() {
 @media (min-width: 640px) {
   .app-header {
     padding: 0 24px;
+  }
+
+  .app-wordmark {
+    display: inline-block;
   }
 
   .app-header__nav {
