@@ -137,10 +137,10 @@ const ratingDistribution = computed(() => {
 
     <!-- Summary Cards -->
     <div class="dashboard__cards">
-      <StatCard label="총 플레이" :value="totalCount" sub="개" color="var(--color-primary)" />
-      <StatCard label="탈출 성공률" :value="`${successRate}%`" color="var(--color-success)" />
-      <StatCard label="평균 평점" :value="avgRating" sub="/ 5" color="var(--color-star)" />
-      <StatCard label="평균 인원" :value="avgHeadcount" sub="명" color="#8b5cf6" />
+      <StatCard label="총 플레이" :value="totalCount" unit="개" accent="var(--brand-500)" />
+      <StatCard label="탈출 성공률" :value="`${successRate}%`" accent="var(--color-success)" />
+      <StatCard label="평균 평점" :value="avgRating" unit="/ 5" accent="var(--color-star)" />
+      <StatCard label="평균 인원" :value="avgHeadcount" unit="명" accent="#8b5cf6" />
     </div>
 
     <!-- 세부 지표 레이더 -->
