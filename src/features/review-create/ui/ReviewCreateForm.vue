@@ -19,6 +19,7 @@ import GenreTagSelector from './GenreTagSelector.vue'
 import PhotoUploader from './PhotoUploader.vue'
 import { uploadRoomPoster } from '@/shared/api/storage'
 import { useToastStore } from '@/shared/model/toast'
+import { REVIEW_DRAFT_KEY } from '@/shared/lib/storage-keys'
 
 const props = withDefaults(
   defineProps<{
@@ -49,21 +50,20 @@ const router = useRouter()
 const toast = useToastStore()
 
 // ── 임시 저장 (create 모드 전용) ──────────────────────
-const DRAFT_KEY = 'escape-log:review-draft'
 const showRestoreDialog = ref(false)
 
 function saveDraft() {
   if (props.mode !== 'create') return
-  localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, currentStep: currentStep.value }))
+  localStorage.setItem(REVIEW_DRAFT_KEY, JSON.stringify({ form, currentStep: currentStep.value }))
 }
 
 function clearDraft() {
-  localStorage.removeItem(DRAFT_KEY)
+  localStorage.removeItem(REVIEW_DRAFT_KEY)
 }
 
 function loadDraft() {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY)
+    const raw = localStorage.getItem(REVIEW_DRAFT_KEY)
     if (!raw) return
     const saved = JSON.parse(raw) as { form: typeof form; currentStep: number }
     Object.assign(form, saved.form)
@@ -185,7 +185,7 @@ onMounted(async () => {
     }
   }
 
-  if (props.mode === 'create' && localStorage.getItem(DRAFT_KEY)) {
+  if (props.mode === 'create' && localStorage.getItem(REVIEW_DRAFT_KEY)) {
     showRestoreDialog.value = true
   }
 })

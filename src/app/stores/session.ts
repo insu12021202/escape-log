@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/shared/api/supabase'
+import { clearUserScopedStorage } from '@/shared/lib/storage-keys'
 
 export const useSessionStore = defineStore('session', () => {
   const user = ref<User | null>(null)
@@ -38,6 +39,7 @@ export const useSessionStore = defineStore('session', () => {
   async function signOut() {
     await supabase.auth.signOut()
     user.value = null
+    clearUserScopedStorage()
   }
 
   return { user, ready, init, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }
