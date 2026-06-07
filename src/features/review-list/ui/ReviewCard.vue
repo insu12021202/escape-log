@@ -36,7 +36,7 @@ const metaParts = computed(() => {
   const parts: string[] = []
   if (props.visitedAt) parts.push(formatYearMonth(props.visitedAt))
   if (props.region) parts.push(props.region)
-  if (props.remainingMinutes != null) parts.push(`${props.remainingMinutes}m`)
+  if (props.remainingMinutes != null) parts.push(`${props.remainingMinutes}분`)
   if (props.authorName) parts.push(props.authorName)
   return parts
 })
@@ -55,7 +55,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
       <img :src="posterUrl" :alt="`${themeName} 포스터`" />
     </div>
     <div v-else class="review-card__poster review-card__poster--empty">
-      <span class="label">NO IMG</span>
+      <span class="review-card__poster-empty-text">포스터 없음</span>
     </div>
 
     <div class="review-card__body">
@@ -66,8 +66,8 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
         </div>
         <div class="review-card__head-right">
           <span class="review-card__serial label">{{ serial }}</span>
-          <AppBadge :kind="isSuccess ? 'success' : 'error'" mono size="sm">
-            {{ isSuccess ? 'CLEAR' : 'FAIL' }}
+          <AppBadge :kind="isSuccess ? 'success' : 'error'" size="sm">
+            {{ isSuccess ? '성공' : '실패' }}
           </AppBadge>
         </div>
       </div>
@@ -76,12 +76,12 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
         v-if="hasSpoiler && !revealed"
         class="review-card__spoiler scratch"
       >
-        스포일러 —
+        스포일러 ·
         <button
           type="button"
           class="review-card__spoiler-btn"
           @click.prevent.stop="reveal"
-        >탭하여 보기</button>
+        >탭해서 보기</button>
       </div>
       <p v-else class="review-card__summary">{{ summary }}</p>
 
@@ -100,7 +100,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
           <StarRating :model-value="rating" readonly size="sm" mute />
           <span class="review-card__rating-num mono tnum">{{ rating }}</span>
         </div>
-        <div v-if="metaParts.length" class="review-card__meta mono tnum">
+        <div v-if="metaParts.length" class="review-card__meta tnum">
           {{ metaParts.join(' · ') }}
         </div>
       </div>
@@ -180,6 +180,11 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   justify-content: center;
 }
 
+.review-card__poster-empty-text {
+  font-size: 11px;
+  color: var(--ink-400);
+}
+
 /* 컨텐츠 */
 .review-card__body {
   flex: 1;
@@ -235,9 +240,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
 .review-card__spoiler {
   padding: 10px 12px;
   border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 12.5px;
   color: var(--paper);
 }
 

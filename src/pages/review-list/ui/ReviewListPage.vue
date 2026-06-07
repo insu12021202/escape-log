@@ -10,6 +10,7 @@ import BaseSelect from "@/shared/ui/BaseSelect.vue";
 import AppChip from "@/shared/ui/AppChip.vue";
 import { getRoomPosterUrl } from "@/shared/api/storage";
 import { useSessionStore } from "@/app/stores/session";
+import { ERRORS, EMPTY } from "@/shared/lib/messages";
 
 const session = useSessionStore();
 
@@ -129,7 +130,7 @@ async function loadMore() {
     reviews.value = [...reviews.value, ...next];
   } catch (e) {
     console.error(e);
-    error.value = "더 불러오지 못했어요. 잠시 후 다시 시도해주세요.";
+    error.value = "더 불러오지 못했어요. 잠시 후 다시 시도해 주세요.";
   } finally {
     loadingMore.value = false;
   }
@@ -145,7 +146,7 @@ onMounted(async () => {
     if (data.length < PAGE_SIZE) hasMore.value = false;
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]));
   } catch (e) {
-    error.value = "리뷰를 불러오는 데 실패했습니다.";
+    error.value = ERRORS.loadReviews;
     console.error(e);
   } finally {
     loading.value = false;
@@ -157,16 +158,15 @@ onMounted(async () => {
   <div class="review-list">
     <!-- 다크 hero -->
     <section class="review-list__hero dot-bg-dark">
-      <span class="review-list__hero-label label">LOG · INDEX</span>
       <h1 class="review-list__hero-title">방탈출 기록장</h1>
-      <div class="review-list__hero-stats mono tnum">
+      <div class="review-list__hero-stats tnum">
         <span class="review-list__hero-stat">
-          TOTAL <strong>{{ totalCount }}</strong>
+          총 <strong>{{ totalCount }}</strong>개
         </span>
         <template v-if="successRate !== null">
           <span class="review-list__hero-sep">·</span>
           <span class="review-list__hero-stat">
-            SUCCESS <strong>{{ successRate }}%</strong>
+            성공률 <strong>{{ successRate }}%</strong>
           </span>
         </template>
       </div>
@@ -224,7 +224,7 @@ onMounted(async () => {
             v-model="searchQuery"
             class="review-list__search-input"
             type="search"
-            placeholder="지점명 · 테마명 검색"
+            placeholder="지점명, 테마명으로 검색"
           />
         </div>
         <div class="review-list__filters">
@@ -273,24 +273,22 @@ onMounted(async () => {
 │   ESC LOG    │
 └──────────────┘</pre>
         <template v-if="hasActiveFilter">
-          <p class="review-list__empty-title">검색 결과가 없어요</p>
-          <p class="review-list__empty-desc">다른 조건으로 검색해보세요.</p>
+          <p class="review-list__empty-title">{{ EMPTY.noSearchTitle }}</p>
+          <p class="review-list__empty-desc">{{ EMPTY.noSearchMessage }}</p>
           <button class="review-list__empty-btn" @click="clearFilters">
             필터 초기화
           </button>
         </template>
         <template v-else-if="activeTab === 'mine'">
-          <p class="review-list__empty-title">아직 기록이 없어요</p>
-          <p class="review-list__empty-desc">
-            방탈출 다녀오셨나요? 첫 리뷰를 남겨보세요.
-          </p>
+          <p class="review-list__empty-title">{{ EMPTY.noReviewsTitle }}</p>
+          <p class="review-list__empty-desc">{{ EMPTY.noReviewsMessage }}</p>
           <RouterLink to="/review/new" class="review-list__empty-cta">
-            + 첫 리뷰 작성하기
+            첫 리뷰 작성하기
           </RouterLink>
         </template>
         <template v-else>
-          <p class="review-list__empty-title">리뷰가 없어요</p>
-          <p class="review-list__empty-desc">아직 작성된 리뷰가 없습니다.</p>
+          <p class="review-list__empty-title">아직 리뷰가 없어요</p>
+          <p class="review-list__empty-desc">가장 먼저 기록을 남겨보세요</p>
         </template>
       </div>
     </template>
@@ -310,12 +308,7 @@ onMounted(async () => {
   color: var(--paper);
 }
 
-.review-list__hero-label {
-  color: rgba(244, 237, 224, 0.55);
-}
-
 .review-list__hero-title {
-  margin-top: 6px;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -327,8 +320,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 11.5px;
-  letter-spacing: 0.04em;
+  font-size: 12px;
   color: rgba(244, 237, 224, 0.7);
 }
 
