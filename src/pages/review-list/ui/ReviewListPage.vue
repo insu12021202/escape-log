@@ -159,11 +159,21 @@ onMounted(async () => {
 
     <template v-else>
       <!-- 탭 -->
-      <div class="review-list__tabs">
-        <AppChip :active="activeTab === 'mine'" @click="switchTab('mine')">
+      <div class="review-list__tabs" role="tablist" aria-label="리뷰 범위">
+        <AppChip
+          role="tab"
+          :aria-selected="activeTab === 'mine'"
+          :active="activeTab === 'mine'"
+          @click="switchTab('mine')"
+        >
           내 기록
         </AppChip>
-        <AppChip :active="activeTab === 'all'" @click="switchTab('all')">
+        <AppChip
+          role="tab"
+          :aria-selected="activeTab === 'all'"
+          :active="activeTab === 'all'"
+          @click="switchTab('all')"
+        >
           전체
         </AppChip>
       </div>
