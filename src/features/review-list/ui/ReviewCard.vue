@@ -2,6 +2,8 @@
 import { computed, ref, useAttrs } from 'vue'
 import StarRating from '@/shared/ui/StarRating.vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
+import { makeSerial } from '@/shared/lib/serial'
+import { formatYearMonth } from '@/shared/lib/date'
 
 const props = defineProps<{
   rating: number
@@ -21,22 +23,11 @@ const props = defineProps<{
 const attrs = useAttrs()
 const revealed = ref(false)
 
-const serial = computed(() => {
-  const id = (attrs['data-id'] as string | undefined) ?? ''
-  if (!id) return '#000'
-  let sum = 0
-  for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i)
-  return '#' + String(sum % 9999).padStart(3, '0')
-})
-
-function formatVisitedAt(dateStr: string) {
-  // "2025-05-12" → "25.05"
-  return dateStr.slice(2, 7).replace('-', '.')
-}
+const serial = computed(() => makeSerial(attrs['data-id'] as string | undefined))
 
 const metaParts = computed(() => {
   const parts: string[] = []
-  if (props.visitedAt) parts.push(formatVisitedAt(props.visitedAt))
+  if (props.visitedAt) parts.push(formatYearMonth(props.visitedAt))
   if (props.region) parts.push(props.region)
   if (props.remainingMinutes != null) parts.push(`${props.remainingMinutes}m`)
   if (props.authorName) parts.push(props.authorName)
