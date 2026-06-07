@@ -123,6 +123,9 @@
 - 링크 공유 v1 포함 / 로그인 필요
 - 태그는 시스템 고정 + 기타 1개
 - v1 그룹 정의: **로그인한 전체 사용자 = 단일 전역 그룹** (초대 기반 아님). UI 라벨은 '회원 공개', DB 값은 `visibility='group'` 유지
+- v2 디자인 시스템 도입 (PR #32~#39): "노트앱 정돈감 + 방탈출 미스터리" 톤. ink 11단계 그레이 스케일 + paper(#f4ede0) + brand 액센트. Pretendard + JetBrains Mono. 기존 `--color-*` 토큰은 별칭으로 유지해 점진 마이그레이션. 다크 hero / 모노 시리얼 / 스크래치 스포일러 / 시각 메타가 핵심.
+- 재방문 의사 라벨: SSOT §3.3은 "Yes/No"였으나 UI는 토스 톤 카피로 "다시 가요/충분해요" 사용 (PR #39). DB 값(`would_revisit boolean`)은 그대로.
+- 서비스 워딩 통일: "업체" → "지점" (PR #40). DB 컬럼명(`vendor_*`)·코드 식별자는 영문 그대로, 사용자 노출 텍스트만 변경.
 
 ---
 
@@ -169,6 +172,16 @@
 - [x] 방 목록 지점별 그룹 리스팅 개선 (PR #27)
 - [x] 지점 삭제 기능 및 삭제 전 리뷰 연결 체크 (PR #27)
 - [x] 기존 사진 개별 삭제 기능 (PR #27)
+- [x] v2 디자인 토큰 — ink 11단계 + paper + brand + 모노 폰트 (PR #32)
+- [x] shared/ui v2 프리미티브 — AppBadge·AppChip·AppStepper·BigToggle (PR #33)
+- [x] StarRating·StatCard·SkeletonBlock v2 리프레시 (PR #33)
+- [x] AppLayout v2 — 다크 FAB·blur 탭바·모노 워드마크 (PR #34)
+- [x] review-list v2 — 다크 hero·시리얼 카드·스크래치 스포일러·모노 ASCII 빈 상태 (PR #35)
+- [x] review-create 4단계 위자드 v2 — 다크 헤더 카드·BigToggle/Stepper/Chip 적용·스포일러 카드 (PR #36)
+- [x] review-detail v2 — 다크 hero·스크래치 스포일러·메트릭 바·모노 메타 그리드 (PR #37)
+- [x] ReviewCard 시리얼 라벨이 CLEAR 뱃지와 겹치는 문제 해결 (PR #38)
+- [x] 인원수 행 세로 정렬 + 위자드 카피 토스 톤 (PR #39)
+- [x] 서비스 워딩 "업체" → "지점" 일괄 변경 (PR #40)
 
 ---
 

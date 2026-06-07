@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 8 완료** (전역 토스트 + PWA + 지점/방 관리 고도화)
-- 마지막 완료 PR: feat(room-search): 지점/방 삭제 및 사진 개별 삭제 (#27)
+- 현재 Phase: **Phase 9 완료** (v2 디자인 시스템 마이그레이션 + 서비스 워딩 정리)
+- 마지막 완료 PR: refactor(shared): 서비스 워딩 '업체' → '지점' 일괄 변경 (#40)
 
 ### 완료된 작업 요약
 
@@ -359,6 +359,22 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 지점 삭제 기능 및 삭제 전 리뷰 연결 체크 — PR #27
 - 기존 사진 개별 삭제 기능 추가 — PR #27
 - 크롤링 방 증가로 리뷰 목록이 빈 화면으로 표시되는 버그 수정 — PR #27
+
+#### Phase 9 — v2 디자인 시스템 마이그레이션 완료
+- v2 디자인 토큰: ink 11단계 그레이 + paper(#f4ede0) + brand 액센트, 기존 `--color-*`는 별칭 유지 — PR #32
+- 모노 폰트 추가(JetBrains Mono) + Pretendard 명시 적용 — PR #32
+- 전역 유틸 클래스: `.mono`, `.tnum`, `.label`, `.dot-bg`, `.dot-bg-dark`, `.scratch`, `.scroll-x-hidden` — PR #32
+- shared/ui v2 프리미티브: AppBadge·AppChip·AppStepper·BigToggle — PR #33
+- StarRating(half-fill + size/mute) · StatCard(라이트 카드 톤 + percent) · SkeletonBlock(ink shimmer) 리프레시 — PR #33
+- AppLayout: 다크 FAB + brand 링 + backdrop blur 탭바, 데스크톱 모노 워드마크 — PR #34
+- review-list: 다크 hero(LOG · INDEX) + 시리얼 카드 + 스크래치 스포일러 + 모노 ASCII 빈 상태 + 탭바 FAB가 등록 CTA 대체 — PR #35
+- review-create 4단계 위자드: 다크 헤더 카드(STEP·dots·LOG · NEW) + BigToggle 결과 + AppStepper 인원 + AppChip 재방문·공개범위 + ink-100 스포일러 카드 — PR #36
+- review-detail: 다크 hero(LOG · ENTRY) + 인용구 한줄평 카드 + 스크래치 스포일러 + 메트릭 horizontal bar + 2×2 모노 메타 그리드 — PR #37
+- ReviewCard 시리얼 ↔ CLEAR/FAIL 뱃지 좌측 absolute 겹침 해결 (head row 내 세로 스택으로 통합) — PR #38
+- 위자드 헤더 시리얼 동일 패턴 사전 수정 — PR #38
+- 인원수 행 세로 정렬 + AppStepper 내부 중앙 정렬 — PR #39
+- 위자드 카피 토스 톤("어디서 했나요" → "어느 방을 다녀오셨어요?") + 섹션 라벨 명사구화 — PR #39
+- 서비스 워딩 "업체" → "지점" 일괄 변경 (코드 식별자·DB 컬럼은 영문 그대로) — PR #40
 
 ### 미완료 항목
 - [x] README 정리 — Phase 6
