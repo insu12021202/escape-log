@@ -190,7 +190,7 @@ onMounted(async () => {
             v-model="searchQuery"
             class="review-list__search-input"
             type="search"
-            placeholder="업체명 · 테마명 검색"
+            placeholder="지점명 · 테마명 검색"
           />
         </div>
         <div class="review-list__filters">

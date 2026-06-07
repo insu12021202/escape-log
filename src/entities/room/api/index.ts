@@ -27,7 +27,7 @@ export async function fetchAllRooms(): Promise<Room[]> {
   return (data ?? []).map(toRoom)
 }
 
-/** 키워드로 방 검색 (업체명·테마명·지역). Spec: §4.2 */
+/** 키워드로 방 검색 (지점명·테마명·지역). Spec: §4.2 */
 export async function searchRooms(keyword: string): Promise<Room[]> {
   const q = keyword.trim()
   if (!q) return fetchAllRooms()
@@ -42,7 +42,7 @@ export async function searchRooms(keyword: string): Promise<Room[]> {
   )
 }
 
-/** 업체별 방 목록 조회 (캐스케이딩 선택용) */
+/** 지점별 방 목록 조회 (캐스케이딩 선택용) */
 export async function fetchRoomsByVendor(vendorId: string): Promise<Room[]> {
   const { data, error } = await supabase
     .from('rooms')
@@ -82,7 +82,7 @@ export async function countReviewsByRoom(roomId: string): Promise<number> {
   return count ?? 0
 }
 
-/** 해당 업체의 방에 연결된 리뷰 수 조회 */
+/** 해당 지점의 방에 연결된 리뷰 수 조회 */
 export async function countReviewsByVendor(vendorId: string): Promise<number> {
   const { count, error } = await supabase
     .from('reviews')

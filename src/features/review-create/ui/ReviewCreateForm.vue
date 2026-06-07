@@ -136,7 +136,7 @@ const form = reactive({
 })
 
 const vendorOptions = computed(() => [
-  { value: '', label: '업체를 선택하세요' },
+  { value: '', label: '지점을 선택하세요' },
   ...vendors.value.map((v) => ({ value: v.id, label: `${v.name} (${v.region})` })),
 ])
 
@@ -190,7 +190,7 @@ onMounted(async () => {
   }
 })
 
-// 업체 선택 시 해당 업체의 테마 목록 로드
+// 지점 선택 시 해당 지점의 테마 목록 로드
 watch(selectedVendorId, async (vendorId) => {
   if (props.mode === 'edit') return
   form.roomId = ''
@@ -206,12 +206,12 @@ watch([() => ({ ...form }), currentStep], saveDraft, { deep: true })
 async function handleCreateRoom() {
   roomFormError.value = ''
 
-  // 새 업체 모드: 업체 생성 후 테마 추가
+  // 새 지점 모드: 지점 생성 후 테마 추가
   if (isNewVendor.value) {
-    if (!newVendorName.value.trim()) { roomFormError.value = '업체명을 입력해주세요.'; return }
+    if (!newVendorName.value.trim()) { roomFormError.value = '지점명을 입력해주세요.'; return }
     if (!newVendorRegion.value.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
   } else {
-    if (!selectedVendorId.value) { roomFormError.value = '업체를 선택해주세요.'; return }
+    if (!selectedVendorId.value) { roomFormError.value = '지점을 선택해주세요.'; return }
   }
   if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해주세요.'; return }
 
@@ -512,7 +512,7 @@ function navigateAfterSave(reviewId: string) {
       </header>
 
       <div class="review-form__field">
-        <label class="review-form__label">업체 선택 *</label>
+        <label class="review-form__label">지점 선택 *</label>
         <template v-if="mode === 'edit'">
           <p class="review-form__room-fixed">
             {{ rooms.find((r) => r.id === form.roomId)?.vendorName }} ·
@@ -522,20 +522,20 @@ function navigateAfterSave(reviewId: string) {
         <template v-else-if="!isNewVendor">
           <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
           <button type="button" class="review-form__add-room-toggle" @click="isNewVendor = true; showRoomForm = true">
-            + 업체가 없나요? 직접 등록
+            + 지점이 없나요? 직접 등록
           </button>
         </template>
         <template v-else>
           <div class="review-form__row">
             <div class="review-form__field review-form__field--inline review-form__field--grow">
-              <input v-model="newVendorName" class="review-form__input" type="text" placeholder="업체명 (예: 키이스케이프)" />
+              <input v-model="newVendorName" class="review-form__input" type="text" placeholder="지점명 (예: 키이스케이프)" />
             </div>
             <div class="review-form__field review-form__field--inline">
               <input v-model="newVendorRegion" class="review-form__input" type="text" placeholder="지역 (예: 홍대)" />
             </div>
           </div>
           <button type="button" class="review-form__add-room-toggle" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''; showRoomForm = false">
-            기존 업체에서 선택
+            기존 지점에서 선택
           </button>
         </template>
       </div>
@@ -565,7 +565,7 @@ function navigateAfterSave(reviewId: string) {
               </div>
               <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
               <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
-                {{ roomFormSubmitting ? '등록 중...' : isNewVendor ? '업체 + 테마 등록' : '테마 추가' }}
+                {{ roomFormSubmitting ? '등록 중...' : isNewVendor ? '지점 + 테마 등록' : '테마 추가' }}
               </button>
             </div>
           </Transition>

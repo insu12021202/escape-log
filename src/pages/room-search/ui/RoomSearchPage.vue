@@ -82,25 +82,25 @@ async function handleDeleteRoom(room: Room) {
 
 async function handleDeleteVendor(group: VendorGroup) {
   const msg = group.rooms.length
-    ? `"${group.vendorName}" 업체와 하위 ${group.rooms.length}개 테마를 모두 삭제하시겠습니까?`
-    : `"${group.vendorName}" 업체를 삭제하시겠습니까?`
+    ? `"${group.vendorName}" 지점과 하위 ${group.rooms.length}개 테마를 모두 삭제하시겠습니까?`
+    : `"${group.vendorName}" 지점을 삭제하시겠습니까?`
   if (!confirm(msg)) return
   try {
     const reviewCount = await countReviewsByVendor(group.vendorId)
     if (reviewCount > 0) {
-      toast.error(`이 업체에 연결된 리뷰가 ${reviewCount}개 있어 삭제할 수 없습니다.`)
+      toast.error(`이 지점에 연결된 리뷰가 ${reviewCount}개 있어 삭제할 수 없습니다.`)
       return
     }
     await deleteVendor(group.vendorId)
     rooms.value = rooms.value.filter((r) => r.vendorId !== group.vendorId)
     vendors.value = vendors.value.filter((v) => v.id !== group.vendorId)
-    toast.success('업체가 삭제되었습니다.')
+    toast.success('지점이 삭제되었습니다.')
   } catch {
-    toast.error('업체 삭제에 실패했습니다.')
+    toast.error('지점 삭제에 실패했습니다.')
   }
 }
 
-// 업체별 그룹핑
+// 지점별 그룹핑
 interface VendorGroup {
   vendorId: string
   vendorName: string
@@ -111,12 +111,12 @@ interface VendorGroup {
 const groupedRooms = computed<VendorGroup[]>(() => {
   const map = new Map<string, VendorGroup>()
 
-  // 모든 업체를 빈 그룹으로 먼저 등록
+  // 모든 지점을 빈 그룹으로 먼저 등록
   for (const v of vendors.value) {
     map.set(v.id, { vendorId: v.id, vendorName: v.name, region: v.region, rooms: [] })
   }
 
-  // 방을 해당 업체 그룹에 추가
+  // 방을 해당 지점 그룹에 추가
   for (const room of rooms.value) {
     let group = map.get(room.vendorId)
     if (!group) {
@@ -144,7 +144,7 @@ function toggleVendor(vendorId: string) {
 }
 
 const vendorOptions = computed(() => [
-  { value: '', label: '업체를 선택하세요' },
+  { value: '', label: '지점을 선택하세요' },
   ...vendors.value.map((v) => ({ value: v.id, label: `${v.name} (${v.region})` })),
 ])
 
@@ -182,8 +182,8 @@ async function submitNewRoom() {
 
   if (!hasVendor || !newThemeName.value.trim()) {
     registerError.value = isNewVendor.value
-      ? '업체명, 지역, 테마명을 모두 입력해주세요.'
-      : '업체를 선택하고 테마명을 입력해주세요.'
+      ? '지점명, 지역, 테마명을 모두 입력해주세요.'
+      : '지점을 선택하고 테마명을 입력해주세요.'
     return
   }
   registering.value = true
@@ -244,7 +244,7 @@ async function submitNewRoom() {
         v-model="keyword"
         class="room-search__input"
         type="text"
-        placeholder="업체명, 테마명, 지역으로 검색"
+        placeholder="지점명, 테마명, 지역으로 검색"
       />
       <button class="room-search__toggle-btn" @click="showForm = !showForm">
         <XMarkIcon v-if="showForm" class="room-search__toggle-icon" />
@@ -256,11 +256,11 @@ async function submitNewRoom() {
     <!-- 방 등록 폼 -->
     <form v-if="showForm" class="room-search__form" @submit.prevent="submitNewRoom">
       <div class="room-search__field">
-        <label class="room-search__label">업체 (지역)</label>
+        <label class="room-search__label">지점 (지역)</label>
         <template v-if="!isNewVendor">
           <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
           <button type="button" class="room-search__link-btn" @click="isNewVendor = true">
-            + 새 업체 직접 입력
+            + 새 지점 직접 입력
           </button>
         </template>
         <template v-else>
@@ -269,7 +269,7 @@ async function submitNewRoom() {
               v-model="newVendorName"
               class="room-search__input"
               type="text"
-              placeholder="업체명 (예: 키이스케이프)"
+              placeholder="지점명 (예: 키이스케이프)"
             />
             <input
               v-model="newVendorRegion"
@@ -279,7 +279,7 @@ async function submitNewRoom() {
             />
           </div>
           <button type="button" class="room-search__link-btn" @click="isNewVendor = false; newVendorName = ''; newVendorRegion = ''">
-            기존 업체에서 선택
+            기존 지점에서 선택
           </button>
         </template>
       </div>
@@ -309,7 +309,7 @@ async function submitNewRoom() {
     </p>
     <div v-else-if="groupedRooms.length" class="room-search__groups">
       <section v-for="group in groupedRooms" :key="group.vendorId" class="room-search__group">
-        <!-- 업체 헤더 -->
+        <!-- 지점 헤더 -->
         <div class="room-search__group-header">
           <button class="room-search__group-toggle" @click="toggleVendor(group.vendorId)">
             <span class="room-search__group-name">{{ group.vendorName }}</span>
