@@ -70,12 +70,26 @@ function toReview(row: Record<string, unknown>): Review {
   };
 }
 
-/** 내 그룹의 리뷰 목록 조회. Spec: §5 */
-export async function fetchReviews(): Promise<Review[]> {
-  const { data, error } = await supabase
+/**
+ * 내 그룹의 리뷰 목록 조회. Spec: §5
+ * limit/offset 미지정 시 전체 조회 (마이그레이션 호환).
+ */
+export async function fetchReviews(opts?: {
+  limit?: number;
+  offset?: number;
+}): Promise<Review[]> {
+  let query = supabase
     .from("reviews")
     .select(REVIEW_SELECT)
     .order("created_at", { ascending: false });
+
+  if (opts?.limit != null) {
+    const from = opts.offset ?? 0;
+    const to = from + opts.limit - 1;
+    query = query.range(from, to);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return ((data ?? []) as unknown as Record<string, unknown>[]).map(toReview);
 }
