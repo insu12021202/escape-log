@@ -19,7 +19,7 @@ function dismiss() {
 <template>
   <Transition name="pwa-prompt">
     <div v-if="needRefresh && !dismissed" class="pwa-prompt">
-      <span class="pwa-prompt__text">새 버전이 있습니다.</span>
+      <span class="pwa-prompt__text">새 버전이 나왔어요</span>
       <div class="pwa-prompt__actions">
         <button class="pwa-prompt__btn pwa-prompt__btn--update" @click="update">
           업데이트
