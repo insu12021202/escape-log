@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { XMarkIcon, PhotoIcon } from '@heroicons/vue/24/outline'
 import { getPhotoPublicUrl } from '@/shared/api/storage'
+import { compressImage } from '@/shared/lib/compressImage'
 
 const props = defineProps<{
   /** 새로 선택한 로컬 파일들 */
@@ -18,17 +19,19 @@ const emit = defineEmits<{
 }>()
 
 const MAX_PHOTOS = 3
-const MAX_BYTES = 5 * 1024 * 1024 // 5MB
+// 원본 업로드 한도 — 모바일 4-5MB 사진까지 허용 후 클라이언트 압축.
+const MAX_BYTES = 12 * 1024 * 1024
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const sizeError = ref('')
+const compressing = ref(false)
 
 function openPicker() {
-  if (props.disabled) return
+  if (props.disabled || compressing.value) return
   fileInput.value?.click()
 }
 
-function onFileChange(e: Event) {
+async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files) return
 
@@ -37,15 +40,21 @@ function onFileChange(e: Event) {
 
   const oversized = newFiles.filter((f) => f.size > MAX_BYTES)
   if (oversized.length > 0) {
-    sizeError.value = `파일당 최대 5MB까지 가능합니다. (${oversized.map((f) => f.name).join(', ')})`
+    sizeError.value = `파일당 최대 12MB까지 가능합니다. (${oversized.map((f) => f.name).join(', ')})`
     input.value = ''
     return
   }
 
-  const existingCount = props.existingPaths?.length ?? 0
-  const combined = [...props.modelValue, ...newFiles].slice(0, MAX_PHOTOS - existingCount)
-  emit('update:modelValue', combined)
-  input.value = ''
+  compressing.value = true
+  try {
+    const compressed = await Promise.all(newFiles.map((f) => compressImage(f)))
+    const existingCount = props.existingPaths?.length ?? 0
+    const combined = [...props.modelValue, ...compressed].slice(0, MAX_PHOTOS - existingCount)
+    emit('update:modelValue', combined)
+  } finally {
+    compressing.value = false
+    input.value = ''
+  }
 }
 
 function removeNewFile(index: number) {
@@ -109,15 +118,18 @@ const canAddMore = () => !props.disabled && totalCount() < MAX_PHOTOS
         v-if="canAddMore()"
         type="button"
         class="photo-uploader__add"
+        :disabled="compressing"
         @click="openPicker"
       >
         <PhotoIcon class="photo-uploader__add-icon" />
-        <span>{{ totalCount() === 0 ? '사진 추가' : '추가' }}</span>
+        <span>
+          {{ compressing ? '압축 중...' : totalCount() === 0 ? '사진 추가' : '추가' }}
+        </span>
       </button>
     </div>
 
-    <p v-if="sizeError" class="photo-uploader__error">{{ sizeError }}</p>
-    <p class="photo-uploader__hint">최대 {{ MAX_PHOTOS }}장 · 각 5MB 이하</p>
+    <p v-if="sizeError" class="photo-uploader__error" role="alert">{{ sizeError }}</p>
+    <p class="photo-uploader__hint">최대 {{ MAX_PHOTOS }}장 · 업로드 전 자동 압축</p>
 
     <input
       ref="fileInput"
