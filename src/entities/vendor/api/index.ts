@@ -10,7 +10,7 @@ function toVendor(row: Record<string, unknown>): Vendor {
   }
 }
 
-/** 전체 업체 목록 조회 (이름 → 지역 정렬) */
+/** 전체 지점 목록 조회 (이름 → 지역 정렬) */
 export async function fetchVendors(): Promise<Vendor[]> {
   const { data, error } = await supabase
     .from('vendors')
@@ -21,7 +21,7 @@ export async function fetchVendors(): Promise<Vendor[]> {
   return (data ?? []).map(toVendor)
 }
 
-/** 업체 삭제 (하위 방도 함께 삭제됨 — FK CASCADE) */
+/** 지점 삭제 (하위 방도 함께 삭제됨 — FK CASCADE) */
 export async function deleteVendor(vendorId: string): Promise<void> {
   const { error } = await supabase
     .from('vendors')
@@ -30,7 +30,7 @@ export async function deleteVendor(vendorId: string): Promise<void> {
   if (error) throw error
 }
 
-/** 업체 조회 또는 생성 (이름+지역 기준) */
+/** 지점 조회 또는 생성 (이름+지역 기준) */
 export async function findOrCreateVendor(name: string, region: string): Promise<Vendor> {
   const trimmedName = name.trim()
   const trimmedRegion = region.trim()
