@@ -94,6 +94,17 @@ export async function fetchReviews(opts?: {
   return ((data ?? []) as unknown as Record<string, unknown>[]).map(toReview);
 }
 
+/** 특정 사용자가 작성한 리뷰 목록. 작성자 프로필 페이지용. */
+export async function fetchReviewsByUser(userId: string): Promise<Review[]> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(REVIEW_SELECT)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map(toReview);
+}
+
 /** 리뷰 단건 조회. Spec: §5 */
 export async function fetchReviewById(id: string): Promise<Review | null> {
   const { data, error } = await supabase

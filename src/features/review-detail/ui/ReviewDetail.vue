@@ -262,9 +262,13 @@ onUnmounted(() => {
     <!-- 메타 푸터 -->
     <footer class="review-detail__footer">
       <div class="review-detail__footer-left">
-        <span v-if="review.authorName" class="review-detail__author">
+        <RouterLink
+          v-if="review.authorName"
+          :to="`/author/${review.userId}`"
+          class="review-detail__author"
+        >
           {{ review.authorName }}
-        </span>
+        </RouterLink>
         <AppBadge kind="soft" mono size="sm">
           {{ VISIBILITY_CODE[review.visibility] ?? review.visibility }}
         </AppBadge>
@@ -663,6 +667,13 @@ onUnmounted(() => {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-700);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.review-detail__author:hover {
+  color: var(--brand-500);
+  text-decoration: underline;
 }
 
 .review-detail__date {
