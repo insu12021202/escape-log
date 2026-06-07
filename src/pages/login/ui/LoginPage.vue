@@ -86,6 +86,8 @@ function toggleMode() {
           class="login__input"
           required
           autocomplete="email"
+          :aria-invalid="!!error"
+          :aria-describedby="error ? 'login-error' : undefined"
         />
         <input
           v-model="password"
@@ -95,8 +97,10 @@ function toggleMode() {
           required
           minlength="6"
           autocomplete="current-password"
+          :aria-invalid="!!error"
+          :aria-describedby="error ? 'login-error' : undefined"
         />
-        <p v-if="error" class="login__error">{{ error }}</p>
+        <p v-if="error" id="login-error" class="login__error" role="alert">{{ error }}</p>
 
         <!-- 회원가입 시 약관·개인정보 동의 -->
         <div v-if="mode === 'signup'" class="login__consent">

@@ -543,7 +543,7 @@ function navigateAfterSave(reviewId: string) {
       <div v-if="mode !== 'edit'" class="review-form__field">
         <label class="review-form__label">테마 선택 *</label>
         <BaseSelect v-if="!isNewVendor" v-model="form.roomId" :options="roomOptions" variant="input" :disabled="!selectedVendorId" />
-        <p v-if="errors.room" class="review-form__field-error">{{ errors.room }}</p>
+        <p v-if="errors.room" class="review-form__field-error" role="alert">{{ errors.room }}</p>
 
           <!-- 인라인 테마 추가 -->
           <button v-if="!showRoomForm && (selectedVendorId || isNewVendor)" type="button" class="review-form__add-room-toggle" @click="showRoomForm = true">
@@ -563,7 +563,7 @@ function navigateAfterSave(reviewId: string) {
                 <label class="review-form__label">포스터 (선택)</label>
                 <PosterPicker v-model="roomPosterFile" :disabled="roomFormSubmitting" />
               </div>
-              <p v-if="roomFormError" class="review-form__field-error">{{ roomFormError }}</p>
+              <p v-if="roomFormError" class="review-form__field-error" role="alert">{{ roomFormError }}</p>
               <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
                 {{ roomFormSubmitting ? '등록 중...' : isNewVendor ? '지점 + 테마 등록' : '테마 추가' }}
               </button>
@@ -592,7 +592,7 @@ function navigateAfterSave(reviewId: string) {
       <div class="review-form__field">
         <label class="review-form__label">총평 별점 *</label>
         <StarRating v-model="form.rating" />
-        <p v-if="errors.rating" class="review-form__field-error">{{ errors.rating }}</p>
+        <p v-if="errors.rating" class="review-form__field-error" role="alert">{{ errors.rating }}</p>
       </div>
 
       <div class="review-form__field">
@@ -604,9 +604,16 @@ function navigateAfterSave(reviewId: string) {
           type="text"
           maxlength="100"
           placeholder="100자 이내로 작성"
+          :aria-invalid="!!errors.summary"
+          :aria-describedby="errors.summary ? 'summary-error' : undefined"
         />
         <span class="review-form__counter mono tnum">{{ form.summary.length }}/100</span>
-        <p v-if="errors.summary" class="review-form__field-error">{{ errors.summary }}</p>
+        <p
+          v-if="errors.summary"
+          id="summary-error"
+          class="review-form__field-error"
+          role="alert"
+        >{{ errors.summary }}</p>
       </div>
 
       <!-- 보조 지표 Spec: §3.2 -->
@@ -630,14 +637,14 @@ function navigateAfterSave(reviewId: string) {
           ]"
           @update:model-value="onSuccessToggle"
         />
-        <p v-if="errors.isSuccess" class="review-form__field-error">{{ errors.isSuccess }}</p>
+        <p v-if="errors.isSuccess" class="review-form__field-error" role="alert">{{ errors.isSuccess }}</p>
       </div>
 
       <div class="review-form__row">
         <div class="review-form__field review-form__field--stepper">
           <label class="review-form__label">인원 수 *</label>
           <AppStepper v-model="form.headcount" :min="1" :max="10" unit="명" />
-          <p v-if="errors.headcount" class="review-form__field-error">{{ errors.headcount }}</p>
+          <p v-if="errors.headcount" class="review-form__field-error" role="alert">{{ errors.headcount }}</p>
         </div>
 
         <div class="review-form__field review-form__field--inline">
@@ -685,6 +692,8 @@ function navigateAfterSave(reviewId: string) {
           maxlength="3000"
           rows="5"
           placeholder="자유롭게 작성 (3000자 이내)"
+          :aria-invalid="!!errors.general"
+          :aria-describedby="errors.general ? 'body-error' : undefined"
         />
         <span class="review-form__counter mono tnum">{{ form.body.length }}/3000</span>
       </div>
@@ -719,7 +728,12 @@ function navigateAfterSave(reviewId: string) {
       </div>
     </section>
 
-    <p v-if="(mode === 'edit' || currentStep === 4) && errors.general" class="review-form__field-error">{{ errors.general }}</p>
+    <p
+      v-if="(mode === 'edit' || currentStep === 4) && errors.general"
+      id="body-error"
+      class="review-form__field-error"
+      role="alert"
+    >{{ errors.general }}</p>
 
     <!-- 사진 업로드 실패 시 retry / skip 버튼 -->
     <div v-if="pendingReviewId && photoUploadState.some((s) => s === 'error')" class="review-form__photo-actions">

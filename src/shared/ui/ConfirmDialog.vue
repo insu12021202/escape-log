@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, ref, toRef, watch } from 'vue'
+import { useFocusTrap } from '@/shared/lib/useFocusTrap'
 
 const props = withDefaults(
   defineProps<{
@@ -22,6 +23,9 @@ const emit = defineEmits<{
   confirm: []
   cancel: []
 }>()
+
+const cardRef = ref<HTMLElement | null>(null)
+useFocusTrap(cardRef, toRef(props, 'visible'))
 
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') emit('cancel')
@@ -48,7 +52,13 @@ onUnmounted(() => {
   <Teleport to="body">
     <Transition name="confirm-dialog">
       <div v-if="visible" class="confirm-overlay" @click="emit('cancel')">
-        <div class="confirm-card" role="dialog" aria-modal="true" @click.stop>
+        <div
+          ref="cardRef"
+          class="confirm-card"
+          role="dialog"
+          aria-modal="true"
+          @click.stop
+        >
           <h3 class="confirm-card__title">{{ title }}</h3>
           <p v-if="message" class="confirm-card__message">{{ message }}</p>
           <div class="confirm-card__actions">

@@ -296,7 +296,7 @@ async function submitNewRoom() {
         <label class="room-search__label">포스터 (선택)</label>
         <PosterPicker v-model="posterFile" :disabled="registering" />
       </div>
-      <p v-if="registerError" class="room-search__error">{{ registerError }}</p>
+      <p v-if="registerError" class="room-search__error" role="alert">{{ registerError }}</p>
       <button type="submit" class="room-search__submit-btn" :disabled="registering">
         {{ registering ? '등록 중...' : '등록' }}
       </button>

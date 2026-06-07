@@ -7,6 +7,7 @@ import AppBadge from '@/shared/ui/AppBadge.vue'
 import { getPhotoPublicUrl } from '@/shared/api/storage'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatFullDate, formatVisitedDate } from '@/shared/lib/date'
+import { useFocusTrap } from '@/shared/lib/useFocusTrap'
 
 const props = defineProps<{
   review: Review
@@ -40,6 +41,10 @@ const photoCount = computed(() => props.review.photos.length)
 // 라이트박스
 const lightboxPhotos = ref<string[]>([])
 const lightboxIndex = ref<number | null>(null)
+const lightboxRef = ref<HTMLElement | null>(null)
+const lightboxOpen = computed(() => lightboxIndex.value !== null)
+
+useFocusTrap(lightboxRef, lightboxOpen)
 
 const lightboxUrl = computed(() =>
   lightboxIndex.value !== null
@@ -224,9 +229,11 @@ onUnmounted(() => {
     <Teleport to="body">
       <div
         v-if="lightboxUrl"
+        ref="lightboxRef"
         class="lightbox"
         role="dialog"
         aria-modal="true"
+        aria-label="사진 크게 보기"
         @click="closeLightbox"
       >
         <img
