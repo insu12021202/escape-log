@@ -35,7 +35,6 @@ async function handleSignOut() {
     <header class="app-header">
       <RouterLink to="/" class="app-logo-link">
         <img :src="logoUrl" alt="방탈출 리뷰 로고" class="app-logo" />
-        <span class="app-wordmark">ESCAPE—LOG</span>
       </RouterLink>
       <nav class="app-header__nav">
         <RouterLink to="/">목록</RouterLink>
@@ -122,16 +121,6 @@ async function handleSignOut() {
 .app-logo {
   height: 28px;
   width: auto;
-}
-
-.app-wordmark {
-  display: none;
-  margin-left: 8px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--ink-1000);
 }
 
 .app-header__signout {
@@ -295,10 +284,6 @@ async function handleSignOut() {
 @media (min-width: 640px) {
   .app-header {
     padding: 0 24px;
-  }
-
-  .app-wordmark {
-    display: inline-block;
   }
 
   .app-header__nav {
