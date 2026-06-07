@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/app/stores/session'
 
 const session = useSessionStore()
 const router = useRouter()
+const route = useRoute()
 
 const mode = ref<'login' | 'signup'>('login')
 const email = ref('')
@@ -12,6 +13,24 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 const signupDone = ref(false)
+const termsAgreed = ref(false)
+const privacyAgreed = ref(false)
+
+/** 가입 시에만 양쪽 동의 필요. */
+const canSubmit = computed(
+  () => mode.value === 'login' || (termsAgreed.value && privacyAgreed.value),
+)
+
+/**
+ * 로그인 후 복귀할 경로. router 가드에서 ?redirect=/share/abc 식으로 보존.
+ * Open redirect 방지: 같은 origin(슬래시로 시작 + 슬래시슬래시 아님)만 허용.
+ */
+function safeRedirect(): string {
+  const raw = route.query.redirect
+  if (typeof raw !== 'string') return '/'
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/'
+  return raw
+}
 
 async function submit() {
   error.value = ''
@@ -19,13 +38,13 @@ async function submit() {
   try {
     if (mode.value === 'login') {
       await session.signInWithEmail(email.value, password.value)
-      router.push('/')
+      router.push(safeRedirect())
     } else {
       await session.signUpWithEmail(email.value, password.value)
       try {
         // 이메일 인증 미사용 시 즉시 로그인
         await session.signInWithEmail(email.value, password.value)
-        router.push('/')
+        router.push(safeRedirect())
       } catch {
         // 이메일 인증 필요 시 확인 안내 화면 표시
         signupDone.value = true
@@ -78,7 +97,30 @@ function toggleMode() {
           autocomplete="current-password"
         />
         <p v-if="error" class="login__error">{{ error }}</p>
-        <button type="submit" class="login__submit-btn" :disabled="loading">
+
+        <!-- 회원가입 시 약관·개인정보 동의 -->
+        <div v-if="mode === 'signup'" class="login__consent">
+          <label class="login__consent-row">
+            <input v-model="termsAgreed" type="checkbox" />
+            <span>
+              <RouterLink to="/terms" target="_blank" rel="noopener" class="login__policy-link">
+                이용약관
+              </RouterLink>
+              에 동의합니다 (필수)
+            </span>
+          </label>
+          <label class="login__consent-row">
+            <input v-model="privacyAgreed" type="checkbox" />
+            <span>
+              <RouterLink to="/privacy" target="_blank" rel="noopener" class="login__policy-link">
+                개인정보 처리방침
+              </RouterLink>
+              에 동의합니다 (필수)
+            </span>
+          </label>
+        </div>
+
+        <button type="submit" class="login__submit-btn" :disabled="loading || !canSubmit">
           {{ loading ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입' }}
         </button>
       </form>
@@ -163,6 +205,40 @@ function toggleMode() {
   font-size: 0.8125rem;
   color: #e53935;
   margin: 0;
+}
+
+.login__consent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.login__consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #555;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.login__consent-row input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: #4a90d9;
+}
+
+.login__policy-link {
+  color: #4a90d9;
+  text-decoration: underline;
+}
+
+.login__policy-link:hover {
+  color: #357abd;
 }
 
 .login__submit-btn {

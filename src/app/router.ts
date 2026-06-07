@@ -46,6 +46,18 @@ const routes: RouteRecordRaw[] = [
     name: 'profile',
     component: () => import('@/pages/profile/ui/ProfilePage.vue'),
   },
+  {
+    path: '/terms',
+    name: 'terms',
+    component: () => import('@/pages/policy/ui/TermsPage.vue'),
+    meta: { public: true },
+  },
+  {
+    path: '/privacy',
+    name: 'privacy',
+    component: () => import('@/pages/policy/ui/PrivacyPage.vue'),
+    meta: { public: true },
+  },
 ]
 
 export const router = createRouter({
@@ -63,5 +75,8 @@ router.beforeEach(async (to) => {
 
   if (to.name === 'login' && session.user) return { name: 'review-list' }
   if (to.meta.public) return true
-  if (!session.user) return { name: 'login' }
+  if (!session.user) {
+    // 원래 가려던 경로를 쿼리로 보존 — 로그인 후 그 곳으로 복귀
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
 })
