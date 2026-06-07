@@ -69,11 +69,15 @@ function inc() {
 
 .app-stepper__btn {
   width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
   color: var(--ink-800);
   font-size: 18px;
   font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast);
 }
@@ -90,11 +94,12 @@ function inc() {
 .app-stepper__value {
   flex: 1;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   gap: 4px;
   padding: 0 12px;
   min-width: 64px;
+  line-height: 1;
 }
 
 .app-stepper__num {

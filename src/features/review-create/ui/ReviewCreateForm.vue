@@ -147,19 +147,19 @@ const roomOptions = computed(() => [
 
 const wizardTitle = computed(() => {
   switch (currentStep.value) {
-    case 1: return '어디서 했나요'
-    case 2: return '어땠나요'
-    case 3: return '어떻게 끝났나요'
-    case 4: return '더 남길 게 있나요'
+    case 1: return '어느 방을 다녀오셨어요?'
+    case 2: return '방은 어땠어요?'
+    case 3: return '탈출은 성공하셨어요?'
+    case 4: return '조금 더 적어볼까요?'
     default: return ''
   }
 })
 
 const sectionShortTitles: Record<number, string> = {
-  1: '어디서',
-  2: '어땠나',
-  3: '어떻게',
-  4: '더 남길 것',
+  1: '다녀온 방',
+  2: '방 평가',
+  3: '방문 정보',
+  4: '추가 기록',
 }
 
 const successToggleValue = computed(() =>
@@ -633,7 +633,7 @@ function navigateAfterSave(reviewId: string) {
         <p v-if="errors.isSuccess" class="review-form__field-error">{{ errors.isSuccess }}</p>
       </div>
 
-      <div class="review-form__row review-form__row--align-end">
+      <div class="review-form__row">
         <div class="review-form__field review-form__field--stepper">
           <label class="review-form__label">인원 수 *</label>
           <AppStepper v-model="form.headcount" :min="1" :max="10" unit="명" />
@@ -891,10 +891,7 @@ function navigateAfterSave(reviewId: string) {
 .review-form__row {
   display: flex;
   gap: 16px;
-}
-
-.review-form__row--align-end {
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .review-form__label {
@@ -922,6 +919,11 @@ function navigateAfterSave(reviewId: string) {
 
 .review-form__input--short {
   max-width: 120px;
+  height: 44px;
+  min-height: 0;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  line-height: 1.2;
 }
 
 .review-form__input:focus,
