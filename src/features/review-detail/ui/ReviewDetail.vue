@@ -5,6 +5,8 @@ import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
 import { getPhotoPublicUrl } from '@/shared/api/storage'
+import { makeSerial } from '@/shared/lib/serial'
+import { formatFullDate, formatVisitedDate } from '@/shared/lib/date'
 
 const props = defineProps<{
   review: Review
@@ -26,41 +28,27 @@ const VISIBILITY_CODE: Record<string, string> = {
   link: 'LINK',
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 10).replace(/-/g, '.')
-}
-
-function formatVisited(dateStr: string): string {
-  return dateStr.slice(2, 10).replace(/-/g, '.')
-}
-
-const serial = computed(() => {
-  const id = props.review.id ?? ''
-  if (!id) return '#000'
-  let sum = 0
-  for (let i = 0; i < id.length; i++) sum += id.charCodeAt(i)
-  return '#' + String(sum % 9999).padStart(3, '0')
-})
-
-const spoilerLocked = computed(
-  () => props.review.hasSpoiler && !spoilerRevealed.value,
-)
-
-const photoCount = computed(() => props.review.photos.length)
-
 // 스포일러
 const spoilerRevealed = ref(false)
 
+const serial = computed(() => makeSerial(props.review.id))
+const spoilerLocked = computed(
+  () => props.review.hasSpoiler && !spoilerRevealed.value,
+)
+const photoCount = computed(() => props.review.photos.length)
+
 // 라이트박스
+const lightboxPhotos = ref<string[]>([])
 const lightboxIndex = ref<number | null>(null)
-let lightboxPhotos: string[] = []
 
 const lightboxUrl = computed(() =>
-  lightboxIndex.value !== null ? getPhotoPublicUrl(lightboxPhotos[lightboxIndex.value]!) : null,
+  lightboxIndex.value !== null
+    ? getPhotoPublicUrl(lightboxPhotos.value[lightboxIndex.value]!)
+    : null,
 )
 
 function openLightbox(photos: string[], index: number) {
-  lightboxPhotos = photos
+  lightboxPhotos.value = photos
   lightboxIndex.value = index
   document.addEventListener('keydown', onKeydown)
 }
@@ -72,12 +60,13 @@ function closeLightbox() {
 
 function prev() {
   if (lightboxIndex.value === null) return
-  lightboxIndex.value = (lightboxIndex.value - 1 + lightboxPhotos.length) % lightboxPhotos.length
+  lightboxIndex.value =
+    (lightboxIndex.value - 1 + lightboxPhotos.value.length) % lightboxPhotos.value.length
 }
 
 function next() {
   if (lightboxIndex.value === null) return
-  lightboxIndex.value = (lightboxIndex.value + 1) % lightboxPhotos.length
+  lightboxIndex.value = (lightboxIndex.value + 1) % lightboxPhotos.value.length
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -184,7 +173,7 @@ onUnmounted(() => {
         <div v-if="review.visitedAt" class="review-detail__meta-cell">
           <span class="review-detail__meta-cell-label label">VISITED</span>
           <span class="review-detail__meta-cell-value mono tnum">
-            {{ formatVisited(review.visitedAt) }}
+            {{ formatVisitedDate(review.visitedAt) }}
           </span>
         </div>
       </div>
@@ -267,7 +256,7 @@ onUnmounted(() => {
           {{ VISIBILITY_CODE[review.visibility] ?? review.visibility }}
         </AppBadge>
       </div>
-      <span class="review-detail__date mono tnum">{{ formatDate(review.createdAt) }}</span>
+      <span class="review-detail__date mono tnum">{{ formatFullDate(review.createdAt) }}</span>
     </footer>
   </article>
 </template>
