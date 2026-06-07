@@ -243,8 +243,9 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 9 완료** (v2 디자인 시스템 마이그레이션 + 서비스 워딩 정리)
-- 마지막 완료 PR: refactor(shared): 서비스 워딩 '업체' → '지점' 일괄 변경 (#40)
+- 현재 Phase: **Phase 10 진행 중** (서비스 전체 UX 라이팅 토스 보이스&톤 전환)
+- 마지막 완료 PR: feat: 리뷰 상세 문구 토스화 및 한글 폰트 깨짐 수정 (#54)
+- 참고: #41~#50(shared 유틸·StatCard 정리·v2 폴리시·페이지네이션·스포일러 노출 유지·작성자 프로필)은 roadmap 미반영분으로 별도 정리 필요
 
 ### 완료된 작업 요약
 
@@ -376,6 +377,15 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 위자드 카피 토스 톤("어디서 했나요" → "어느 방을 다녀오셨어요?") + 섹션 라벨 명사구화 — PR #39
 - 서비스 워딩 "업체" → "지점" 일괄 변경 (코드 식별자·DB 컬럼은 영문 그대로) — PR #40
 
+#### Phase 10 — UX 라이팅 토스화 (진행 중)
+- 카카오 JS SDK 2.7.4 integrity(SRI) 해시 불일치로 공유 스크립트가 차단되던 문제 수정 — PR #51
+- UX 라이팅 문구 SSOT(shared/lib/messages.ts: COMMON·ERRORS·TOAST·CONFIRM·EMPTY) + 토스 보이스 가이드(docs/ux-writing-guide.md) 신설 — PR #52
+- 용어 확정: 다녀온 공간 "테마", 매장 "지점", 해요체 통일 / ConfirmDialog·PwaUpdatePrompt 적용 — PR #52
+- 리뷰 상세 컨셉 라벨 한국어화(METRICS→세부 평가, VISIT→방문 정보, CLEAR/FAIL→성공/실패 등) — PR #54(내용 #53)
+- 한글이 영문 전용 모노 폰트로 폴백돼 깨지던 문제를 sans(Pretendard)로 원천 수정 — PR #54
+
 ### 미완료 항목
 - [x] README 정리 — Phase 6
 - [ ] Vercel 배포 최종 확인
+- [ ] UX 라이팅 토스화 잔여 화면: 로그인/레이아웃, 리뷰 목록, 리뷰 작성/수정, 방 검색, 프로필, 공유/정책, 작성자 프로필 — Phase 10
+- [ ] #41~#50 roadmap/handoff 미반영분 백필
