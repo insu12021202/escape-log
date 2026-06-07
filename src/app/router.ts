@@ -58,6 +58,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/pages/policy/ui/PrivacyPage.vue'),
     meta: { public: true },
   },
+  {
+    path: '/author/:id',
+    name: 'author',
+    component: () => import('@/pages/author/ui/AuthorPage.vue'),
+    props: true,
+  },
 ]
 
 export const router = createRouter({
