@@ -4,6 +4,7 @@ import StarRating from '@/shared/ui/StarRating.vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatYearMonth } from '@/shared/lib/date'
+import { hasRevealedSpoiler, markSpoilerRevealed } from '@/shared/lib/spoiler'
 
 const props = defineProps<{
   rating: number
@@ -21,9 +22,15 @@ const props = defineProps<{
 }>()
 
 const attrs = useAttrs()
-const revealed = ref(false)
+const reviewId = computed(() => (attrs['data-id'] as string | undefined) ?? '')
+const revealed = ref(hasRevealedSpoiler(reviewId.value))
 
-const serial = computed(() => makeSerial(attrs['data-id'] as string | undefined))
+function reveal() {
+  revealed.value = true
+  markSpoilerRevealed(reviewId.value)
+}
+
+const serial = computed(() => makeSerial(reviewId.value))
 
 const metaParts = computed(() => {
   const parts: string[] = []
@@ -73,7 +80,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
         <button
           type="button"
           class="review-card__spoiler-btn"
-          @click.prevent.stop="revealed = true"
+          @click.prevent.stop="reveal"
         >탭하여 보기</button>
       </div>
       <p v-else class="review-card__summary">{{ summary }}</p>

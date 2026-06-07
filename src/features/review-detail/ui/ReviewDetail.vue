@@ -8,6 +8,7 @@ import { getPhotoPublicUrl } from '@/shared/api/storage'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatFullDate, formatVisitedDate } from '@/shared/lib/date'
 import { useFocusTrap } from '@/shared/lib/useFocusTrap'
+import { hasRevealedSpoiler, markSpoilerRevealed } from '@/shared/lib/spoiler'
 
 const props = defineProps<{
   review: Review
@@ -29,8 +30,13 @@ const VISIBILITY_CODE: Record<string, string> = {
   link: 'LINK',
 }
 
-// 스포일러
-const spoilerRevealed = ref(false)
+// 스포일러 — 이전에 펼친 적 있는 리뷰는 자동 노출
+const spoilerRevealed = ref(hasRevealedSpoiler(props.review.id))
+
+function revealSpoiler() {
+  spoilerRevealed.value = true
+  markSpoilerRevealed(props.review.id)
+}
 
 const serial = computed(() => makeSerial(props.review.id))
 const spoilerLocked = computed(
@@ -117,7 +123,7 @@ onUnmounted(() => {
         <div class="review-detail__scratch-label">
           <span class="label">SPOILER · LOCKED</span>
           <p>스크래치된 영역입니다.</p>
-          <button type="button" @click="spoilerRevealed = true">내용 보기 →</button>
+          <button type="button" @click="revealSpoiler">내용 보기 →</button>
         </div>
       </div>
       <p v-else class="review-detail__summary-text">{{ review.summary }}</p>
@@ -202,7 +208,7 @@ onUnmounted(() => {
         <div class="review-detail__scratch-label">
           <span class="label">SPOILER · LOCKED</span>
           <p>스크래치된 영역입니다.</p>
-          <button type="button" @click="spoilerRevealed = true">내용 보기 →</button>
+          <button type="button" @click="revealSpoiler">내용 보기 →</button>
         </div>
       </div>
       <p v-else class="review-detail__body">{{ review.body }}</p>
