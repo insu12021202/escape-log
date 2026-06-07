@@ -12,6 +12,7 @@ import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 import SkeletonBlock from '@/shared/ui/SkeletonBlock.vue'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
 import { useToastStore } from '@/shared/model/toast'
+import { COMMON, CONFIRM, ERRORS, TOAST } from '@/shared/lib/messages'
 
 const route = useRoute()
 const router = useRouter()
@@ -44,10 +45,10 @@ async function handleShare() {
       isSuccess: review.value.visitMeta.isSuccess,
     })
 
-    if (result === 'copied') toast.info('링크가 복사되었습니다.')
-    else if (result === 'failed') toast.error('공유에 실패했습니다.')
+    if (result === 'copied') toast.info(TOAST.linkCopied)
+    else if (result === 'failed') toast.error(ERRORS.share)
   } catch {
-    toast.error('공유에 실패했습니다.')
+    toast.error(ERRORS.share)
   } finally {
     sharing.value = false
   }
@@ -61,7 +62,7 @@ async function handleDelete() {
     showDeleteDialog.value = false
     router.push('/')
   } catch {
-    toast.error('삭제에 실패했습니다.')
+    toast.error(TOAST.reviewDeleteFailed)
     deleting.value = false
   }
 }
@@ -102,7 +103,8 @@ onMounted(async () => {
           v-if="isOwner()"
           class="review-detail-page__action-btn"
           :disabled="sharing"
-          title="공유"
+          title="공유하기"
+          aria-label="공유하기"
           @click="handleShare"
         >
           <ShareIcon class="review-detail-page__action-icon" />
@@ -111,14 +113,16 @@ onMounted(async () => {
           v-if="isOwner()"
           :to="`/review/${review!.id}/edit`"
           class="review-detail-page__action-btn"
-          title="수정"
+          title="수정하기"
+          aria-label="수정하기"
         >
           <PencilSquareIcon class="review-detail-page__action-icon" />
         </RouterLink>
         <button
           v-if="isOwner()"
           class="review-detail-page__action-btn review-detail-page__action-btn--danger"
-          title="삭제"
+          title="삭제하기"
+          aria-label="삭제하기"
           @click="showDeleteDialog = true"
         >
           <TrashIcon class="review-detail-page__action-icon" />
@@ -151,18 +155,17 @@ onMounted(async () => {
     </div>
 
     <p v-else-if="fetchError" class="review-detail-page__status review-detail-page__status--error">
-      리뷰를 불러오는 데 실패했습니다.
+      {{ ERRORS.loadReview }}
     </p>
     <ReviewDetail v-else-if="review && room" :review="review" :room="room" />
-    <p v-else class="review-detail-page__status">리뷰를 찾을 수 없습니다.</p>
+    <p v-else class="review-detail-page__status">{{ ERRORS.reviewNotFound }}</p>
 
     <!-- 삭제 확인 다이얼로그 -->
     <ConfirmDialog
       :visible="showDeleteDialog"
-      title="리뷰를 삭제할까요?"
-      message="삭제된 리뷰는 복구할 수 없습니다."
-      confirm-label="삭제"
-      cancel-label="취소"
+      :title="CONFIRM.deleteReviewTitle"
+      :message="CONFIRM.deleteReviewMessage"
+      :confirm-label="COMMON.delete"
       variant="danger"
       @confirm="handleDelete"
       @cancel="showDeleteDialog = false"

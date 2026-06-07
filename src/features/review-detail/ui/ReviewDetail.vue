@@ -24,10 +24,10 @@ const SUB_METRIC_LABELS: Record<string, string> = {
   clearDifficulty: '클리어 난이도',
 }
 
-const VISIBILITY_CODE: Record<string, string> = {
-  group: 'GROUP',
-  private: 'PRIVATE',
-  link: 'LINK',
+const VISIBILITY_LABEL: Record<string, string> = {
+  group: '회원 공개',
+  private: '나만 보기',
+  link: '링크 공개',
 }
 
 // 스포일러 — 이전에 펼친 적 있는 리뷰는 자동 노출
@@ -96,7 +96,7 @@ onUnmounted(() => {
     <!-- 다크 hero 카드 -->
     <header class="review-detail__hero dot-bg-dark">
       <div class="review-detail__hero-top">
-        <span class="review-detail__hero-label label">LOG · ENTRY</span>
+        <span class="review-detail__hero-label">리뷰 기록</span>
         <span class="review-detail__hero-serial mono">{{ serial }}</span>
       </div>
 
@@ -111,8 +111,8 @@ onUnmounted(() => {
             {{ review.rating.toFixed(1) }}
           </span>
         </div>
-        <AppBadge :kind="review.visitMeta.isSuccess ? 'success' : 'error'" mono size="md">
-          {{ review.visitMeta.isSuccess ? 'CLEAR' : 'FAIL' }}
+        <AppBadge :kind="review.visitMeta.isSuccess ? 'success' : 'error'" size="md">
+          {{ review.visitMeta.isSuccess ? '성공' : '실패' }}
         </AppBadge>
       </div>
     </header>
@@ -121,9 +121,9 @@ onUnmounted(() => {
     <div class="review-detail__summary-card">
       <div v-if="spoilerLocked" class="review-detail__scratch-veil scratch">
         <div class="review-detail__scratch-label">
-          <span class="label">SPOILER · LOCKED</span>
-          <p>스크래치된 영역입니다.</p>
-          <button type="button" @click="revealSpoiler">내용 보기 →</button>
+          <span class="review-detail__scratch-eyebrow">스포일러</span>
+          <p>가려진 내용이에요</p>
+          <button type="button" @click="revealSpoiler">내용 보기</button>
         </div>
       </div>
       <p v-else class="review-detail__summary-text">{{ review.summary }}</p>
@@ -131,7 +131,7 @@ onUnmounted(() => {
 
     <!-- 보조 지표 -->
     <section class="review-detail__section">
-      <span class="review-detail__section-title label">METRICS · 평가 지표</span>
+      <span class="review-detail__section-title">세부 평가</span>
       <div class="review-detail__metrics">
         <div
           v-for="(value, key) in review.subMetrics"
@@ -158,11 +158,11 @@ onUnmounted(() => {
 
     <!-- 방문 정보 -->
     <section class="review-detail__section">
-      <span class="review-detail__section-title label">VISIT · 방문 정보</span>
+      <span class="review-detail__section-title">방문 정보</span>
       <div class="review-detail__meta-grid">
         <div class="review-detail__meta-cell">
-          <span class="review-detail__meta-cell-label label">HEADCOUNT</span>
-          <span class="review-detail__meta-cell-value mono tnum">
+          <span class="review-detail__meta-cell-label">인원</span>
+          <span class="review-detail__meta-cell-value">
             {{ review.visitMeta.headcount }}명
           </span>
         </div>
@@ -170,19 +170,19 @@ onUnmounted(() => {
           v-if="review.visitMeta.remainingMinutes !== null"
           class="review-detail__meta-cell"
         >
-          <span class="review-detail__meta-cell-label label">REMAINING</span>
-          <span class="review-detail__meta-cell-value mono tnum">
-            {{ review.visitMeta.remainingMinutes }}m
+          <span class="review-detail__meta-cell-label">남은 시간</span>
+          <span class="review-detail__meta-cell-value">
+            {{ review.visitMeta.remainingMinutes }}분
           </span>
         </div>
         <div class="review-detail__meta-cell">
-          <span class="review-detail__meta-cell-label label">REVISIT</span>
-          <span class="review-detail__meta-cell-value mono">
-            {{ review.visitMeta.wouldRevisit ? 'YES' : 'NO' }}
+          <span class="review-detail__meta-cell-label">재방문</span>
+          <span class="review-detail__meta-cell-value">
+            {{ review.visitMeta.wouldRevisit ? '다시 갈래요' : '안 갈래요' }}
           </span>
         </div>
         <div v-if="review.visitedAt" class="review-detail__meta-cell">
-          <span class="review-detail__meta-cell-label label">VISITED</span>
+          <span class="review-detail__meta-cell-label">방문일</span>
           <span class="review-detail__meta-cell-value mono tnum">
             {{ formatVisitedDate(review.visitedAt) }}
           </span>
@@ -190,7 +190,7 @@ onUnmounted(() => {
       </div>
 
       <div v-if="review.visitMeta.genreTags.length" class="review-detail__tag-block">
-        <span class="label">TAGS</span>
+        <span class="review-detail__tag-title">태그</span>
         <div class="review-detail__tags">
           <span
             v-for="tag in review.visitMeta.genreTags"
@@ -203,12 +203,12 @@ onUnmounted(() => {
 
     <!-- 본문 -->
     <section v-if="review.body" class="review-detail__section">
-      <span class="review-detail__section-title label">BODY · 본문</span>
+      <span class="review-detail__section-title">후기</span>
       <div v-if="spoilerLocked" class="review-detail__scratch-veil scratch">
         <div class="review-detail__scratch-label">
-          <span class="label">SPOILER · LOCKED</span>
-          <p>스크래치된 영역입니다.</p>
-          <button type="button" @click="revealSpoiler">내용 보기 →</button>
+          <span class="review-detail__scratch-eyebrow">스포일러</span>
+          <p>가려진 내용이에요</p>
+          <button type="button" @click="revealSpoiler">내용 보기</button>
         </div>
       </div>
       <p v-else class="review-detail__body">{{ review.body }}</p>
@@ -216,8 +216,8 @@ onUnmounted(() => {
 
     <!-- 사진 -->
     <section v-if="review.photos.length" class="review-detail__section">
-      <span class="review-detail__section-title label">
-        PHOTOS · 사진 {{ photoCount }}
+      <span class="review-detail__section-title">
+        사진 {{ photoCount }}
       </span>
       <div class="review-detail__photos">
         <img
@@ -269,8 +269,8 @@ onUnmounted(() => {
         >
           {{ review.authorName }}
         </RouterLink>
-        <AppBadge kind="soft" mono size="sm">
-          {{ VISIBILITY_CODE[review.visibility] ?? review.visibility }}
+        <AppBadge kind="soft" size="sm">
+          {{ VISIBILITY_LABEL[review.visibility] ?? review.visibility }}
         </AppBadge>
       </div>
       <span class="review-detail__date mono tnum">{{ formatFullDate(review.createdAt) }}</span>
@@ -302,8 +302,9 @@ onUnmounted(() => {
 }
 
 .review-detail__hero-label {
+  font-size: 11px;
+  font-weight: 600;
   color: rgba(244, 237, 224, 0.5);
-  letter-spacing: 0.08em;
 }
 
 .review-detail__hero-serial {
@@ -334,9 +335,8 @@ onUnmounted(() => {
   background: rgba(244, 237, 224, 0.12);
   color: var(--paper);
   border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 
 .review-detail__hero-result {
@@ -410,7 +410,9 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.review-detail__scratch-label :deep(.label) {
+.review-detail__scratch-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
   color: rgba(244, 237, 224, 0.6);
 }
 
@@ -427,10 +429,8 @@ onUnmounted(() => {
   color: var(--ink-1000);
   border: none;
   border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.04em;
   cursor: pointer;
   transition: opacity var(--transition-fast);
 }
@@ -452,6 +452,9 @@ onUnmounted(() => {
 
 .review-detail__section-title {
   margin-bottom: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-600);
 }
 
 /* ── 보조 지표 (horizontal bars) ── */
@@ -510,7 +513,8 @@ onUnmounted(() => {
 }
 
 .review-detail__meta-cell-label {
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--ink-500);
 }
 
@@ -525,6 +529,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.review-detail__tag-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-500);
 }
 
 .review-detail__tags {
