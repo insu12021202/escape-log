@@ -126,7 +126,7 @@ const form = reactive({
   }) as SubMetrics,
   isSuccess: (props.initialData?.isSuccess ?? null) as boolean | null,
   remainingMinutes: (props.initialData?.remainingMinutes ?? null) as number | null,
-  headcount: props.initialData?.headcount ?? 0,
+  headcount: props.initialData?.headcount ?? 1,
   genreTags: props.initialData?.genreTags ?? ([] as string[]),
   customGenre: (props.initialData?.customGenre ?? null) as string | null,
   wouldRevisit: props.initialData?.wouldRevisit ?? true,
@@ -758,7 +758,6 @@ function navigateAfterSave(reviewId: string) {
 
 /* ── 위자드 다크 헤더 카드 ── */
 .wizard-head {
-  position: relative;
   padding: 18px 20px 16px;
   margin-bottom: 0;
   background-color: var(--ink-1000);
