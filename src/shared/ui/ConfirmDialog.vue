@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, toRef, watch } from 'vue'
 import { useFocusTrap } from '@/shared/lib/useFocusTrap'
+import { COMMON } from '@/shared/lib/messages'
 
 const props = withDefaults(
   defineProps<{
@@ -13,8 +14,8 @@ const props = withDefaults(
   }>(),
   {
     message: '',
-    confirmLabel: '확인',
-    cancelLabel: '취소',
+    confirmLabel: COMMON.confirm,
+    cancelLabel: COMMON.cancel,
     variant: 'default',
   },
 )
