@@ -112,13 +112,37 @@ function switchTab(tab: Tab) {
   sortOrder.value = "";
 }
 
+// 페이지네이션 — 초기 50건 fetch, '더 보기'로 50건씩 추가.
+const PAGE_SIZE = 50;
+const loadingMore = ref(false);
+const hasMore = ref(true);
+
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return;
+  loadingMore.value = true;
+  try {
+    const next = await fetchReviews({
+      limit: PAGE_SIZE,
+      offset: reviews.value.length,
+    });
+    if (next.length < PAGE_SIZE) hasMore.value = false;
+    reviews.value = [...reviews.value, ...next];
+  } catch (e) {
+    console.error(e);
+    error.value = "더 불러오지 못했어요. 잠시 후 다시 시도해주세요.";
+  } finally {
+    loadingMore.value = false;
+  }
+}
+
 onMounted(async () => {
   try {
     const [data, allRooms] = await Promise.all([
-      fetchReviews(),
+      fetchReviews({ limit: PAGE_SIZE }),
       fetchAllRooms(),
     ]);
     reviews.value = data;
+    if (data.length < PAGE_SIZE) hasMore.value = false;
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]));
   } catch (e) {
     error.value = "리뷰를 불러오는 데 실패했습니다.";
@@ -233,6 +257,16 @@ onMounted(async () => {
               : null
           "
         />
+
+        <button
+          v-if="hasMore && !hasActiveFilter"
+          type="button"
+          class="review-list__load-more"
+          :disabled="loadingMore"
+          @click="loadMore"
+        >
+          {{ loadingMore ? '불러오는 중...' : '더 보기' }}
+        </button>
       </div>
       <div v-else class="review-list__empty">
         <pre class="review-list__empty-art mono">┌──────────────┐
@@ -446,6 +480,28 @@ onMounted(async () => {
 
 .review-list__empty-btn:hover {
   background: var(--ink-100);
+}
+
+.review-list__load-more {
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--ink-700);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.review-list__load-more:hover:not(:disabled) {
+  background: var(--ink-100);
+}
+
+.review-list__load-more:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (min-width: 640px) {
