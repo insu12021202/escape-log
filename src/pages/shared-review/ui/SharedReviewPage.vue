@@ -6,6 +6,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewDetail from '@/features/review-detail/ui/ReviewDetail.vue'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
+import { ERRORS } from '@/shared/lib/messages'
 
 const props = defineProps<{ token: string }>()
 
@@ -34,15 +35,15 @@ onMounted(async () => {
   <div class="shared-review">
     <AppSpinner v-if="loading" />
     <p v-else-if="fetchError" class="shared-review__status shared-review__status--error">
-      리뷰를 불러오는 데 실패했습니다.
+      {{ ERRORS.loadReview }}
     </p>
     <template v-else-if="review && room">
       <p class="shared-review__badge">공유된 리뷰</p>
       <ReviewDetail :review="review" :room="room" />
     </template>
     <div v-else class="shared-review__error">
-      <p class="shared-review__error-title">유효하지 않은 링크입니다.</p>
-      <p class="shared-review__error-desc">링크가 만료되었거나 존재하지 않는 리뷰입니다.</p>
+      <p class="shared-review__error-title">열 수 없는 링크예요</p>
+      <p class="shared-review__error-desc">만료됐거나 삭제된 리뷰예요</p>
     </div>
   </div>
 </template>

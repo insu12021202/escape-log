@@ -8,6 +8,7 @@ import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
 import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
 import { getRoomPosterUrl } from '@/shared/api/storage'
+import { ERRORS } from '@/shared/lib/messages'
 
 const route = useRoute()
 const router = useRouter()
@@ -44,7 +45,7 @@ onMounted(async () => {
     reviews.value = data
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]))
   } catch (e) {
-    error.value = '리뷰를 불러오는 데 실패했습니다.'
+    error.value = ERRORS.loadReviews
     console.error(e)
   } finally {
     loading.value = false
@@ -57,17 +58,17 @@ onMounted(async () => {
     <button class="author-page__back" @click="router.back()">← 돌아가기</button>
 
     <header class="author-page__hero dot-bg-dark">
-      <span class="author-page__hero-label label">AUTHOR</span>
+      <span class="author-page__hero-label">작성자</span>
       <h1 class="author-page__hero-name">{{ authorName }}</h1>
-      <div v-if="!loading" class="author-page__hero-stats mono tnum">
-        <span>TOTAL <strong>{{ totalCount }}</strong></span>
+      <div v-if="!loading" class="author-page__hero-stats tnum">
+        <span>총 <strong>{{ totalCount }}</strong>개</span>
         <template v-if="successRate !== null">
           <span class="author-page__hero-sep">·</span>
-          <span>SUCCESS <strong>{{ successRate }}%</strong></span>
+          <span>성공률 <strong>{{ successRate }}%</strong></span>
         </template>
         <template v-if="avgRating !== null">
           <span class="author-page__hero-sep">·</span>
-          <span>AVG <strong>{{ avgRating }}</strong></span>
+          <span>평균 <strong>{{ avgRating }}</strong>점</span>
         </template>
       </div>
     </header>
@@ -136,6 +137,8 @@ onMounted(async () => {
 }
 
 .author-page__hero-label {
+  font-size: 11px;
+  font-weight: 600;
   color: rgba(244, 237, 224, 0.55);
 }
 
@@ -152,8 +155,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 11.5px;
-  letter-spacing: 0.04em;
+  font-size: 12px;
   color: rgba(244, 237, 224, 0.7);
 }
 

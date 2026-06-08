@@ -38,7 +38,7 @@ async function handleSignOut() {
         <img :src="logoUrl" alt="방탈출 리뷰 로고" class="app-logo" />
       </RouterLink>
       <nav class="app-header__nav">
-        <RouterLink to="/">목록</RouterLink>
+        <RouterLink to="/">홈</RouterLink>
         <RouterLink to="/review/new">리뷰 작성</RouterLink>
         <RouterLink to="/room/search">테마 검색</RouterLink>
         <RouterLink to="/profile">프로필</RouterLink>
@@ -60,7 +60,7 @@ async function handleSignOut() {
       <RouterLink to="/" class="app-tab" exact-active-class="app-tab--active">
         <ListBulletSolidIcon v-if="route.name === 'review-list'" class="app-tab__icon" />
         <ListBulletIcon v-else class="app-tab__icon" />
-        <span class="app-tab__label">목록</span>
+        <span class="app-tab__label">홈</span>
       </RouterLink>
       <RouterLink to="/review/new" class="app-tab app-tab--fab" active-class="app-tab--fab-active">
         <div class="app-tab__fab">

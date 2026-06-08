@@ -20,10 +20,10 @@ const clampedPercent = computed(() => {
 
 <template>
   <div class="stat-card" :style="{ '--accent': accent }">
-    <span class="stat-card__label label">{{ label }}</span>
+    <span class="stat-card__label">{{ label }}</span>
     <div class="stat-card__row">
       <span class="stat-card__value mono">{{ value }}</span>
-      <span v-if="unit" class="stat-card__unit mono">{{ unit }}</span>
+      <span v-if="unit" class="stat-card__unit">{{ unit }}</span>
     </div>
     <div v-if="clampedPercent !== null" class="stat-card__bar">
       <div class="stat-card__bar-fill" :style="{ width: `${clampedPercent}%` }" />
@@ -43,6 +43,9 @@ const clampedPercent = computed(() => {
 
 .stat-card__label {
   margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-500);
 }
 
 .stat-card__row {
