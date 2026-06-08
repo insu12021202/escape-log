@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/app/stores/session'
+import { ERRORS } from '@/shared/lib/messages'
 
 const session = useSessionStore()
 const router = useRouter()
@@ -32,6 +33,16 @@ function safeRedirect(): string {
   return raw
 }
 
+/** Supabase 인증 에러 원문을 사용자 친화 한국어로 변환. */
+function mapAuthError(message: string): string {
+  const m = message.toLowerCase()
+  if (m.includes('invalid login credentials')) return '이메일 또는 비밀번호가 올바르지 않아요'
+  if (m.includes('already registered') || m.includes('already been registered')) return '이미 가입된 이메일이에요'
+  if (m.includes('email not confirmed')) return '메일 인증 후 로그인해 주세요'
+  if (m.includes('rate limit') || m.includes('too many')) return '잠시 후 다시 시도해 주세요'
+  return ERRORS.generic
+}
+
 async function submit() {
   error.value = ''
   loading.value = true
@@ -51,7 +62,7 @@ async function submit() {
       }
     }
   } catch (e) {
-    error.value = (e as Error).message
+    error.value = mapAuthError((e as Error).message)
   } finally {
     loading.value = false
   }
@@ -73,7 +84,7 @@ function toggleMode() {
       <!-- 가입 완료 안내 -->
       <div v-if="signupDone" class="login__notice">
         <p>가입 완료!</p>
-        <p class="login__notice-sub">확인 메일을 발송했습니다.<br />메일 인증 후 로그인해 주세요.</p>
+        <p class="login__notice-sub">확인 메일을 보냈어요.<br />메일 인증 후 로그인해 주세요.</p>
         <button class="login__link-btn" @click="toggleMode">로그인하기</button>
       </div>
 
@@ -125,7 +136,7 @@ function toggleMode() {
         </div>
 
         <button type="submit" class="login__submit-btn" :disabled="loading || !canSubmit">
-          {{ loading ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입' }}
+          {{ loading ? '처리 중…' : mode === 'login' ? '로그인' : '회원가입' }}
         </button>
       </form>
 
