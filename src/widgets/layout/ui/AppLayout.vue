@@ -14,6 +14,7 @@ import {
 import logoUrl from '@/app/assets/logo.png'
 import { useSessionStore } from '@/app/stores/session'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
+import { CONFIRM } from '@/shared/lib/messages'
 import AppToast from '@/shared/ui/AppToast.vue'
 import PwaUpdatePrompt from '@/shared/ui/PwaUpdatePrompt.vue'
 
@@ -42,7 +43,7 @@ async function handleSignOut() {
         <RouterLink to="/room/search">테마 검색</RouterLink>
         <RouterLink to="/profile">프로필</RouterLink>
       </nav>
-      <button class="app-header__signout" @click="showLogoutDialog = true" title="로그아웃">
+      <button class="app-header__signout" @click="showLogoutDialog = true" title="로그아웃" aria-label="로그아웃">
         <ArrowRightOnRectangleIcon class="app-header__signout-icon" />
       </button>
     </header>
@@ -76,10 +77,8 @@ async function handleSignOut() {
     <!-- 로그아웃 확인 -->
     <ConfirmDialog
       :visible="showLogoutDialog"
-      title="로그아웃"
-      message="정말 로그아웃할까요?"
+      :title="CONFIRM.logoutTitle"
       confirm-label="로그아웃"
-      cancel-label="취소"
       @confirm="handleSignOut"
       @cancel="showLogoutDialog = false"
     />
