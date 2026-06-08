@@ -65,7 +65,7 @@ async function handleSignOut() {
     <div class="profile-page__section">
       <RouterLink to="/room/search" class="profile-page__item">
         <MagnifyingGlassIcon class="profile-page__item-icon" />
-        <span>방 검색</span>
+        <span>테마 검색</span>
       </RouterLink>
     </div>
 
