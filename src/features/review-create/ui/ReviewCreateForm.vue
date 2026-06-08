@@ -20,6 +20,7 @@ import PhotoUploader from './PhotoUploader.vue'
 import { uploadRoomPoster } from '@/shared/api/storage'
 import { useToastStore } from '@/shared/model/toast'
 import { REVIEW_DRAFT_KEY } from '@/shared/lib/storage-keys'
+import { TOAST } from '@/shared/lib/messages'
 
 const props = withDefaults(
   defineProps<{
@@ -147,8 +148,8 @@ const roomOptions = computed(() => [
 
 const wizardTitle = computed(() => {
   switch (currentStep.value) {
-    case 1: return '어느 방을 다녀오셨어요?'
-    case 2: return '방은 어땠어요?'
+    case 1: return '어느 테마를 다녀오셨어요?'
+    case 2: return '테마는 어땠어요?'
     case 3: return '탈출은 성공하셨어요?'
     case 4: return '조금 더 적어볼까요?'
     default: return ''
@@ -156,8 +157,8 @@ const wizardTitle = computed(() => {
 })
 
 const sectionShortTitles: Record<number, string> = {
-  1: '다녀온 방',
-  2: '방 평가',
+  1: '다녀온 테마',
+  2: '테마 평가',
   3: '방문 정보',
   4: '추가 기록',
 }
@@ -208,12 +209,12 @@ async function handleCreateRoom() {
 
   // 새 지점 모드: 지점 생성 후 테마 추가
   if (isNewVendor.value) {
-    if (!newVendorName.value.trim()) { roomFormError.value = '지점명을 입력해주세요.'; return }
-    if (!newVendorRegion.value.trim()) { roomFormError.value = '지역을 입력해주세요.'; return }
+    if (!newVendorName.value.trim()) { roomFormError.value = '지점명을 입력해 주세요'; return }
+    if (!newVendorRegion.value.trim()) { roomFormError.value = '지역을 입력해 주세요'; return }
   } else {
-    if (!selectedVendorId.value) { roomFormError.value = '지점을 선택해주세요.'; return }
+    if (!selectedVendorId.value) { roomFormError.value = '지점을 선택해 주세요'; return }
   }
-  if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해주세요.'; return }
+  if (!roomForm.themeName.trim()) { roomFormError.value = '테마명을 입력해 주세요'; return }
 
   roomFormSubmitting.value = true
   try {
@@ -243,7 +244,7 @@ async function handleCreateRoom() {
         newRoom.posterPath = posterPath
       } catch (err) {
         console.error('포스터 업로드 실패:', err)
-        toast.error('포스터 업로드에 실패했습니다.')
+        toast.error(TOAST.posterUploadFailed)
       }
     }
 
@@ -254,7 +255,7 @@ async function handleCreateRoom() {
     roomPosterFile.value = null
   } catch (e) {
     console.error(e)
-    roomFormError.value = '등록에 실패했습니다. 다시 시도해주세요.'
+    roomFormError.value = '등록하지 못했어요. 다시 시도해 주세요'
   } finally {
     roomFormSubmitting.value = false
   }
@@ -265,7 +266,7 @@ function validateStep(step: number): boolean {
     case 1:
       errors.room = ''
       if (props.mode === 'create' && !form.roomId) {
-        errors.room = '방을 선택해주세요.'
+        errors.room = '테마를 선택해 주세요'
         return false
       }
       return true
@@ -273,15 +274,15 @@ function validateStep(step: number): boolean {
       errors.rating = ''
       errors.summary = ''
       if (form.rating < 1) {
-        errors.rating = '총평 별점을 1점 이상 입력해주세요.'
+        errors.rating = '별점을 1점 이상 매겨 주세요'
         return false
       }
       if (!form.summary.trim()) {
-        errors.summary = '한줄평을 입력해주세요.'
+        errors.summary = '한줄평을 입력해 주세요'
         return false
       }
       if (form.summary.length > 100) {
-        errors.summary = '한줄평은 100자 이내로 입력해주세요.'
+        errors.summary = '한줄평은 100자 이내로 써 주세요'
         return false
       }
       return true
@@ -289,18 +290,18 @@ function validateStep(step: number): boolean {
       errors.isSuccess = ''
       errors.headcount = ''
       if (form.isSuccess === null) {
-        errors.isSuccess = '성공/실패 여부를 선택해주세요.'
+        errors.isSuccess = '성공했는지 선택해 주세요'
         return false
       }
       if (!form.headcount || form.headcount < 1) {
-        errors.headcount = '인원 수를 1명 이상 입력해주세요.'
+        errors.headcount = '인원을 1명 이상 선택해 주세요'
         return false
       }
       return true
     case 4:
       errors.general = ''
       if (form.body.length > 3000) {
-        errors.general = '본문은 3000자 이내로 입력해주세요.'
+        errors.general = '본문은 3000자 이내로 써 주세요'
         return false
       }
       return true
@@ -375,7 +376,7 @@ async function handleSubmit() {
       const allDone = await uploadPhotos(reviewId)
       if (!allDone) {
         // 업로드 실패 — 리뷰는 저장됨, 사진 재시도 안내
-        errors.general = '리뷰가 저장됐지만 일부 사진 업로드에 실패했습니다. 재시도하거나 그대로 이동할 수 있습니다.'
+        errors.general = '리뷰는 저장됐지만 일부 사진을 올리지 못했어요. 다시 시도하거나 그대로 넘어갈 수 있어요'
         return
       }
     }
@@ -383,7 +384,7 @@ async function handleSubmit() {
     navigateAfterSave(reviewId)
   } catch (e) {
     console.error(e)
-    errors.general = '리뷰 저장 중 오류가 발생했습니다.'
+    errors.general = '리뷰를 저장하지 못했어요. 잠시 후 다시 시도해 주세요'
   } finally {
     submitting.value = false
   }
@@ -419,7 +420,7 @@ async function retryPhotoUpload() {
     if (allDone) {
       navigateAfterSave(pendingReviewId.value)
     } else {
-      errors.general = '일부 사진 업로드에 실패했습니다. 다시 시도해주세요.'
+      errors.general = '일부 사진을 올리지 못했어요. 다시 시도해 주세요'
     }
   } finally {
     submitting.value = false
@@ -437,20 +438,20 @@ async function handleRemoveExistingPhoto(path: string) {
   try {
     await detachReviewPhoto(props.reviewId, path)
     existingPhotos.value = existingPhotos.value.filter((p) => p !== path)
-    toast.success('사진이 삭제되었습니다.')
+    toast.success(TOAST.photoDeleted)
   } catch (e) {
     console.error(e)
-    toast.error('사진 삭제에 실패했습니다.')
+    toast.error(TOAST.photoDeleteFailed)
   }
 }
 
 function navigateAfterSave(reviewId: string) {
   clearDraft()
   if (props.mode === 'edit') {
-    toast.success('리뷰가 수정되었습니다.')
+    toast.success(TOAST.reviewUpdated)
     router.push(`/review/${reviewId}`)
   } else {
-    toast.success('리뷰가 저장되었습니다.')
+    toast.success(TOAST.reviewSaved)
     router.push('/')
   }
 }
@@ -468,7 +469,7 @@ function navigateAfterSave(reviewId: string) {
             type="button"
             class="draft-dialog__btn draft-dialog__btn--secondary"
             @click="clearDraft(); showRestoreDialog = false"
-          >새로 작성</button>
+          >새로 쓰기</button>
           <button
             type="button"
             class="draft-dialog__btn draft-dialog__btn--primary"
@@ -484,11 +485,8 @@ function navigateAfterSave(reviewId: string) {
     <!-- 위자드 다크 헤더 카드: create 모드만 -->
     <div v-if="mode === 'create'" class="wizard-head dot-bg-dark">
       <div class="wizard-head__top">
-        <span class="wizard-head__step label">STEP {{ String(currentStep).padStart(2, '0') }}</span>
-        <div class="wizard-head__top-right">
-          <span class="wizard-head__serial label">LOG · NEW</span>
-          <span class="wizard-head__count mono">{{ String(currentStep).padStart(2, '0') }} / 04</span>
-        </div>
+        <span class="wizard-head__step">{{ currentStep }}단계</span>
+        <span class="wizard-head__count mono">{{ String(currentStep).padStart(2, '0') }} / 04</span>
       </div>
       <h2 class="wizard-head__title">{{ wizardTitle }}</h2>
       <div class="wizard-head__dots">
@@ -500,14 +498,14 @@ function navigateAfterSave(reviewId: string) {
         />
       </div>
       <div v-if="currentStep > 1" class="wizard-head__nav">
-        <button type="button" class="wizard-head__back" @click="goPrev">← 이전</button>
+        <button type="button" class="wizard-head__back" @click="goPrev">← 이전 단계</button>
       </div>
     </div>
 
     <!-- 섹션 1: 어디서 -->
     <section v-if="mode === 'edit' || currentStep === 1" class="review-form__section">
       <header class="section-head">
-        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 01</span>
+        <span class="section-head__eyebrow">1단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[1] }}</h3>
       </header>
 
@@ -522,7 +520,7 @@ function navigateAfterSave(reviewId: string) {
         <template v-else-if="!isNewVendor">
           <BaseSelect v-model="selectedVendorId" :options="vendorOptions" variant="input" />
           <button type="button" class="review-form__add-room-toggle" @click="isNewVendor = true; showRoomForm = true">
-            + 지점이 없나요? 직접 등록
+            + 지점이 없어요? 직접 등록
           </button>
         </template>
         <template v-else>
@@ -547,7 +545,7 @@ function navigateAfterSave(reviewId: string) {
 
           <!-- 인라인 테마 추가 -->
           <button v-if="!showRoomForm && (selectedVendorId || isNewVendor)" type="button" class="review-form__add-room-toggle" @click="showRoomForm = true">
-            + 테마가 없나요? 직접 추가
+            + 테마가 없어요? 직접 추가
           </button>
           <button v-if="showRoomForm && !isNewVendor" type="button" class="review-form__add-room-toggle" @click="showRoomForm = false">
             − 취소
@@ -565,7 +563,7 @@ function navigateAfterSave(reviewId: string) {
               </div>
               <p v-if="roomFormError" class="review-form__field-error" role="alert">{{ roomFormError }}</p>
               <button type="button" class="review-form__room-submit" :disabled="roomFormSubmitting" @click="handleCreateRoom">
-                {{ roomFormSubmitting ? '등록 중...' : isNewVendor ? '지점 + 테마 등록' : '테마 추가' }}
+                {{ roomFormSubmitting ? '등록 중…' : isNewVendor ? '지점 + 테마 등록' : '테마 추가' }}
               </button>
             </div>
           </Transition>
@@ -585,7 +583,7 @@ function navigateAfterSave(reviewId: string) {
     <!-- 섹션 2: 어땠나 -->
     <section v-if="mode === 'edit' || currentStep === 2" class="review-form__section">
       <header class="section-head">
-        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 02</span>
+        <span class="section-head__eyebrow">2단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[2] }}</h3>
       </header>
 
@@ -623,7 +621,7 @@ function navigateAfterSave(reviewId: string) {
     <!-- 섹션 3: 어떻게 -->
     <section v-if="mode === 'edit' || currentStep === 3" class="review-form__section">
       <header class="section-head">
-        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 03</span>
+        <span class="section-head__eyebrow">3단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[3] }}</h3>
       </header>
 
@@ -632,8 +630,8 @@ function navigateAfterSave(reviewId: string) {
         <BigToggle
           :model-value="successToggleValue"
           :options="[
-            { value: 'success', label: 'CLEAR', icon: 'check', accent: 'var(--color-success)' },
-            { value: 'fail',    label: 'FAIL',  icon: 'cross', accent: 'var(--color-error)' },
+            { value: 'success', label: '성공', icon: 'check', accent: 'var(--color-success)' },
+            { value: 'fail',    label: '실패', icon: 'cross', accent: 'var(--color-error)' },
           ]"
           @update:model-value="onSuccessToggle"
         />
@@ -679,7 +677,7 @@ function navigateAfterSave(reviewId: string) {
     <!-- 섹션 4: 더 남길 것 -->
     <section v-if="mode === 'edit' || currentStep === 4" class="review-form__section">
       <header class="section-head">
-        <span class="label">{{ mode === 'edit' ? 'SECTION' : 'STEP' }} 04</span>
+        <span class="section-head__eyebrow">4단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[4] }}</h3>
       </header>
 
@@ -706,7 +704,7 @@ function navigateAfterSave(reviewId: string) {
           <input type="checkbox" v-model="form.hasSpoiler" class="review-form__checkbox" />
           <span>스포일러 포함</span>
         </label>
-        <p class="review-form__spoiler-hint">체크하면 다른 사용자에게 한줄평과 본문이 블러 처리됩니다.</p>
+        <p class="review-form__spoiler-hint">체크하면 한줄평과 본문이 다른 사람에게 흐리게 보여요</p>
       </div>
 
       <div class="review-form__field">
@@ -738,10 +736,10 @@ function navigateAfterSave(reviewId: string) {
     <!-- 사진 업로드 실패 시 retry / skip 버튼 -->
     <div v-if="pendingReviewId && photoUploadState.some((s) => s === 'error')" class="review-form__photo-actions">
       <button type="button" class="review-form__retry-btn" :disabled="submitting" @click="retryPhotoUpload">
-        {{ submitting ? '재시도 중...' : '사진 재시도' }}
+        {{ submitting ? '올리는 중…' : '사진 다시 올리기' }}
       </button>
       <button type="button" class="review-form__skip-btn" :disabled="submitting" @click="skipPhotosAndNavigate">
-        사진 없이 이동
+        사진 없이 넘어가기
       </button>
     </div>
 
@@ -756,7 +754,7 @@ function navigateAfterSave(reviewId: string) {
         다음<span class="review-form__submit-arrow">→</span>
       </button>
       <button v-else type="submit" class="review-form__submit" :disabled="submitting">
-        {{ submitting ? '저장 중...' : mode === 'edit' ? '수정 완료' : '리뷰 저장' }}
+        {{ submitting ? '저장 중…' : mode === 'edit' ? '수정 완료' : '리뷰 저장하기' }}
       </button>
     </div>
   </form>
@@ -792,15 +790,10 @@ function navigateAfterSave(reviewId: string) {
   gap: 10px;
 }
 
-.wizard-head__serial {
-  color: rgba(244, 237, 224, 0.35);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-}
-
 .wizard-head__step {
+  font-size: 12px;
+  font-weight: 600;
   color: rgba(244, 237, 224, 0.55);
-  letter-spacing: 0.08em;
 }
 
 .wizard-head__count {
@@ -858,7 +851,9 @@ function navigateAfterSave(reviewId: string) {
   margin-bottom: 14px;
 }
 
-.section-head :deep(.label) {
+.section-head__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
   color: var(--ink-500);
 }
 

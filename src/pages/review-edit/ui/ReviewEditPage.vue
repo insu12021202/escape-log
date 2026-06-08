@@ -6,6 +6,7 @@ import type { Review } from '@/entities/review/types'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import ReviewCreateForm from '@/features/review-create/ui/ReviewCreateForm.vue'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
+import { ERRORS } from '@/shared/lib/messages'
 
 const route = useRoute()
 const review = ref<Review | null>(null)
@@ -55,7 +56,7 @@ const initialData = computed(() => {
     <h2 class="review-edit-page__title">리뷰 수정</h2>
     <AppSpinner v-if="loading" />
     <p v-else-if="fetchError" class="review-edit-page__status review-edit-page__status--error">
-      리뷰를 불러오는 데 실패했습니다.
+      {{ ERRORS.loadReview }}
     </p>
     <ReviewCreateForm
       v-else-if="review && initialData"
@@ -63,7 +64,7 @@ const initialData = computed(() => {
       :review-id="review.id"
       :initial-data="initialData"
     />
-    <p v-else class="review-edit-page__status">리뷰를 찾을 수 없습니다.</p>
+    <p v-else class="review-edit-page__status">{{ ERRORS.reviewNotFound }}</p>
   </div>
 </template>
 
