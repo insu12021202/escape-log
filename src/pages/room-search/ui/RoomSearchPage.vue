@@ -11,6 +11,7 @@ import AppSpinner from '@/shared/ui/AppSpinner.vue'
 import PosterPicker from '@/shared/ui/PosterPicker.vue'
 import { uploadRoomPoster, getRoomPosterUrl } from '@/shared/api/storage'
 import { useToastStore } from '@/shared/model/toast'
+import { ERRORS, EMPTY, TOAST } from '@/shared/lib/messages'
 
 const toast = useToastStore()
 
@@ -45,9 +46,9 @@ async function handlePosterUpload(room: Room) {
     room.posterPath = posterPath
     editingRoomId.value = null
     editingPosterFile.value = null
-    toast.success('포스터가 등록되었습니다.')
+    toast.success(TOAST.posterSaved)
   } catch {
-    toast.error('포스터 업로드에 실패했습니다.')
+    toast.error(TOAST.posterUploadFailed)
   } finally {
     uploadingPoster.value = false
   }
@@ -64,39 +65,39 @@ function togglePosterEdit(roomId: string) {
 }
 
 async function handleDeleteRoom(room: Room) {
-  if (!confirm(`"${room.themeName}" 방을 삭제하시겠습니까?`)) return
+  if (!confirm(`'${room.themeName}' 테마를 삭제할까요?`)) return
   try {
     const reviewCount = await countReviewsByRoom(room.id)
     if (reviewCount > 0) {
-      toast.error(`이 방에 연결된 리뷰가 ${reviewCount}개 있어 삭제할 수 없습니다.`)
+      toast.error(`리뷰 ${reviewCount}개가 연결돼 있어 삭제할 수 없어요`)
       return
     }
     await deleteRoom(room.id)
     rooms.value = rooms.value.filter((r) => r.id !== room.id)
     if (editingRoomId.value === room.id) editingRoomId.value = null
-    toast.success('방이 삭제되었습니다.')
+    toast.success(TOAST.roomDeleted)
   } catch {
-    toast.error('방 삭제에 실패했습니다.')
+    toast.error(TOAST.roomDeleteFailed)
   }
 }
 
 async function handleDeleteVendor(group: VendorGroup) {
   const msg = group.rooms.length
-    ? `"${group.vendorName}" 지점과 하위 ${group.rooms.length}개 테마를 모두 삭제하시겠습니까?`
-    : `"${group.vendorName}" 지점을 삭제하시겠습니까?`
+    ? `'${group.vendorName}' 지점과 테마 ${group.rooms.length}개를 모두 삭제할까요?`
+    : `'${group.vendorName}' 지점을 삭제할까요?`
   if (!confirm(msg)) return
   try {
     const reviewCount = await countReviewsByVendor(group.vendorId)
     if (reviewCount > 0) {
-      toast.error(`이 지점에 연결된 리뷰가 ${reviewCount}개 있어 삭제할 수 없습니다.`)
+      toast.error(`리뷰 ${reviewCount}개가 연결돼 있어 삭제할 수 없어요`)
       return
     }
     await deleteVendor(group.vendorId)
     rooms.value = rooms.value.filter((r) => r.vendorId !== group.vendorId)
     vendors.value = vendors.value.filter((v) => v.id !== group.vendorId)
-    toast.success('지점이 삭제되었습니다.')
+    toast.success(TOAST.storeDeleted)
   } catch {
-    toast.error('지점 삭제에 실패했습니다.')
+    toast.error(TOAST.storeDeleteFailed)
   }
 }
 
@@ -182,8 +183,8 @@ async function submitNewRoom() {
 
   if (!hasVendor || !newThemeName.value.trim()) {
     registerError.value = isNewVendor.value
-      ? '지점명, 지역, 테마명을 모두 입력해주세요.'
-      : '지점을 선택하고 테마명을 입력해주세요.'
+      ? '지점명, 지역, 테마명을 모두 입력해 주세요'
+      : '지점을 선택하고 테마명을 입력해 주세요'
     return
   }
   registering.value = true
@@ -212,7 +213,7 @@ async function submitNewRoom() {
         created.posterPath = posterPath
       } catch (err) {
         console.error('포스터 업로드 실패:', err)
-        toast.error('포스터 업로드에 실패했습니다.')
+        toast.error(TOAST.posterUploadFailed)
       }
     }
 
@@ -224,10 +225,10 @@ async function submitNewRoom() {
     newVendorRegion.value = ''
     isNewVendor.value = false
     showForm.value = false
-    toast.success('방이 등록되었습니다.')
+    toast.success(TOAST.roomAdded)
   } catch (e) {
     console.error(e)
-    registerError.value = '방 등록 중 오류가 발생했습니다.'
+    registerError.value = '테마를 등록하지 못했어요. 잠시 후 다시 시도해 주세요'
   } finally {
     registering.value = false
   }
@@ -236,7 +237,7 @@ async function submitNewRoom() {
 
 <template>
   <div class="room-search">
-    <h2 class="room-search__title">방 검색</h2>
+    <h2 class="room-search__title">테마 검색</h2>
 
     <!-- 검색 입력 + 등록 버튼 -->
     <div class="room-search__toolbar">
@@ -298,14 +299,14 @@ async function submitNewRoom() {
       </div>
       <p v-if="registerError" class="room-search__error" role="alert">{{ registerError }}</p>
       <button type="submit" class="room-search__submit-btn" :disabled="registering">
-        {{ registering ? '등록 중...' : '등록' }}
+        {{ registering ? '등록 중…' : '테마 등록' }}
       </button>
     </form>
 
     <!-- 검색 결과 -->
     <AppSpinner v-if="loading" />
     <p v-else-if="searchError" class="room-search__empty room-search__empty--error">
-      방 목록을 불러오는 데 실패했습니다.
+      {{ ERRORS.loadRooms }}
     </p>
     <div v-else-if="groupedRooms.length" class="room-search__groups">
       <section v-for="group in groupedRooms" :key="group.vendorId" class="room-search__group">
@@ -358,14 +359,14 @@ async function submitNewRoom() {
                 :disabled="uploadingPoster"
                 @click="handlePosterUpload(room)"
               >
-                {{ uploadingPoster ? '업로드 중...' : '포스터 저장' }}
+                {{ uploadingPoster ? '올리는 중…' : '포스터 저장' }}
               </button>
             </div>
           </li>
         </ul>
       </section>
     </div>
-    <p v-else class="room-search__empty">검색 결과가 없습니다.</p>
+    <p v-else class="room-search__empty">{{ EMPTY.noSearchTitle }}</p>
   </div>
 </template>
 

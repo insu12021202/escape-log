@@ -39,7 +39,7 @@ async function handleSignOut() {
       <nav class="app-header__nav">
         <RouterLink to="/">목록</RouterLink>
         <RouterLink to="/review/new">리뷰 작성</RouterLink>
-        <RouterLink to="/room/search">방 검색</RouterLink>
+        <RouterLink to="/room/search">테마 검색</RouterLink>
         <RouterLink to="/profile">프로필</RouterLink>
       </nav>
       <button class="app-header__signout" @click="showLogoutDialog = true" title="로그아웃">
