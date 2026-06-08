@@ -39,6 +39,9 @@ function revealSpoiler() {
 }
 
 const serial = computed(() => makeSerial(props.review.id))
+
+// 포스터 로드 실패 시 깨진 이미지 대신 숨김 (텍스트만 노출)
+const posterFailed = ref(false)
 const spoilerLocked = computed(
   () => props.review.hasSpoiler && !spoilerRevealed.value,
 )
@@ -107,10 +110,11 @@ onUnmounted(() => {
           <span class="review-detail__hero-region">{{ room.region }}</span>
         </div>
         <img
-          v-if="room.posterPath"
+          v-if="room.posterPath && !posterFailed"
           :src="getRoomPosterUrl(room.posterPath)"
           :alt="`${room.themeName} 포스터`"
           class="review-detail__hero-poster"
+          @error="posterFailed = true"
         />
       </div>
 
