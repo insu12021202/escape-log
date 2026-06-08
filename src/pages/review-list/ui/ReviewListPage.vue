@@ -158,7 +158,7 @@ onMounted(async () => {
   <div class="review-list">
     <!-- 다크 hero -->
     <section class="review-list__hero dot-bg-dark">
-      <h1 class="review-list__hero-title">방탈출 기록장</h1>
+      <h1 class="review-list__hero-title">방탈출 일지</h1>
       <div class="review-list__hero-stats tnum">
         <span class="review-list__hero-stat">
           총 <strong>{{ totalCount }}</strong>개

@@ -96,7 +96,7 @@ onMounted(async () => {
   <div class="review-detail-page">
     <div class="review-detail-page__nav">
       <RouterLink to="/" class="review-detail-page__back">
-        <ArrowLeftIcon class="review-detail-page__back-icon" /> 목록으로
+        <ArrowLeftIcon class="review-detail-page__back-icon" /> 홈으로
       </RouterLink>
       <div class="review-detail-page__actions">
         <button
