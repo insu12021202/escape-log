@@ -4,7 +4,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import StarRating from '@/shared/ui/StarRating.vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
-import { getPhotoPublicUrl } from '@/shared/api/storage'
+import { getPhotoPublicUrl, getRoomPosterUrl } from '@/shared/api/storage'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatFullDate, formatVisitedDate } from '@/shared/lib/date'
 import { useFocusTrap } from '@/shared/lib/useFocusTrap'
@@ -39,6 +39,9 @@ function revealSpoiler() {
 }
 
 const serial = computed(() => makeSerial(props.review.id))
+
+// 포스터 로드 실패 시 깨진 이미지 대신 숨김 (텍스트만 노출)
+const posterFailed = ref(false)
 const spoilerLocked = computed(
   () => props.review.hasSpoiler && !spoilerRevealed.value,
 )
@@ -62,11 +65,13 @@ function openLightbox(photos: string[], index: number) {
   lightboxPhotos.value = photos
   lightboxIndex.value = index
   document.addEventListener('keydown', onKeydown)
+  document.body.style.overflow = 'hidden'
 }
 
 function closeLightbox() {
   lightboxIndex.value = null
   document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
 }
 
 function prev() {
@@ -88,6 +93,7 @@ function onKeydown(e: KeyboardEvent) {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
 })
 </script>
 
@@ -100,9 +106,20 @@ onUnmounted(() => {
         <span class="review-detail__hero-serial mono">{{ serial }}</span>
       </div>
 
-      <p class="review-detail__hero-vendor">{{ room.vendorName }}</p>
-      <h2 class="review-detail__hero-theme">{{ room.themeName }}</h2>
-      <span class="review-detail__hero-region">{{ room.region }}</span>
+      <div class="review-detail__hero-cols">
+        <div class="review-detail__hero-text">
+          <p class="review-detail__hero-vendor">{{ room.vendorName }}</p>
+          <h2 class="review-detail__hero-theme">{{ room.themeName }}</h2>
+          <span class="review-detail__hero-region">{{ room.region }}</span>
+        </div>
+        <img
+          v-if="room.posterPath && !posterFailed"
+          :src="getRoomPosterUrl(room.posterPath)"
+          :alt="`${room.themeName} 포스터`"
+          class="review-detail__hero-poster"
+          @error="posterFailed = true"
+        />
+      </div>
 
       <div class="review-detail__hero-result">
         <div class="review-detail__hero-rating">
@@ -311,6 +328,28 @@ onUnmounted(() => {
   font-size: 10.5px;
   color: rgba(244, 237, 224, 0.4);
   letter-spacing: 0.08em;
+}
+
+.review-detail__hero-cols {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.review-detail__hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-detail__hero-poster {
+  flex-shrink: 0;
+  width: 80px;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 14px;
+  background: rgba(244, 237, 224, 0.08);
 }
 
 .review-detail__hero-vendor {
