@@ -9,6 +9,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import StatsDashboard from '@/features/stats-dashboard/ui/StatsDashboard.vue'
 import ConfirmDialog from '@/shared/ui/ConfirmDialog.vue'
+import { CONFIRM } from '@/shared/lib/messages'
 
 const session = useSessionStore()
 const router = useRouter()
@@ -79,10 +80,8 @@ async function handleSignOut() {
     <!-- 로그아웃 확인 -->
     <ConfirmDialog
       :visible="showLogoutDialog"
-      title="로그아웃"
-      message="정말 로그아웃할까요?"
+      :title="CONFIRM.logoutTitle"
       confirm-label="로그아웃"
-      cancel-label="취소"
       @confirm="handleSignOut"
       @cancel="showLogoutDialog = false"
     />
