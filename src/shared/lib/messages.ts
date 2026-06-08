@@ -34,7 +34,7 @@ export const ERRORS = {
   loadRooms: '테마 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
   reviewNotFound: '리뷰를 찾을 수 없어요',
   uploadPhoto: '사진을 올리지 못했어요. 다시 시도해 주세요.',
-  photoTooLarge: '사진은 한 장당 5MB까지 올릴 수 있어요',
+  photoTooLarge: '사진은 한 장당 12MB까지 올릴 수 있어요',
   share: '공유하지 못했어요. 다시 시도해 주세요.',
   generic: '문제가 생겼어요. 잠시 후 다시 시도해 주세요.',
 } as const

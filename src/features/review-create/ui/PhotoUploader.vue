@@ -40,7 +40,7 @@ async function onFileChange(e: Event) {
 
   const oversized = newFiles.filter((f) => f.size > MAX_BYTES)
   if (oversized.length > 0) {
-    sizeError.value = `파일당 최대 12MB까지 가능합니다. (${oversized.map((f) => f.name).join(', ')})`
+    sizeError.value = `사진은 한 장당 12MB까지 올릴 수 있어요 (${oversized.map((f) => f.name).join(', ')})`
     input.value = ''
     return
   }
@@ -123,7 +123,7 @@ const canAddMore = () => !props.disabled && totalCount() < MAX_PHOTOS
       >
         <PhotoIcon class="photo-uploader__add-icon" />
         <span>
-          {{ compressing ? '압축 중...' : totalCount() === 0 ? '사진 추가' : '추가' }}
+          {{ compressing ? '압축 중…' : totalCount() === 0 ? '사진 추가' : '추가' }}
         </span>
       </button>
     </div>

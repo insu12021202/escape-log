@@ -31,7 +31,7 @@ function update(key: keyof SubMetrics, value: number) {
 <template>
   <div class="sub-metrics">
     <button type="button" class="sub-metrics__toggle" @click="isOpen = !isOpen">
-      보조 지표 (1~5)
+      세부 평가 (1~5점)
       <ChevronRightIcon class="sub-metrics__arrow" :class="{ 'sub-metrics__arrow--open': isOpen }" />
     </button>
     <Transition name="expand">
