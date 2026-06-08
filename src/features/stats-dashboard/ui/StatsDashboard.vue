@@ -145,7 +145,7 @@ const ratingDistribution = computed(() => {
 
     <!-- 세부 지표 레이더 -->
     <div class="dashboard__section">
-      <h3 class="dashboard__section-title">세부 지표 평균</h3>
+      <h3 class="dashboard__section-title">세부 평가 평균</h3>
       <RadarChart :values="subMetricAverages" :labels="subMetricLabels" :max="5" />
     </div>
 
