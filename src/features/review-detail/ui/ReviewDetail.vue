@@ -65,11 +65,13 @@ function openLightbox(photos: string[], index: number) {
   lightboxPhotos.value = photos
   lightboxIndex.value = index
   document.addEventListener('keydown', onKeydown)
+  document.body.style.overflow = 'hidden'
 }
 
 function closeLightbox() {
   lightboxIndex.value = null
   document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
 }
 
 function prev() {
@@ -91,6 +93,7 @@ function onKeydown(e: KeyboardEvent) {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
 })
 </script>
 
