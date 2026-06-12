@@ -6,6 +6,7 @@ import { fetchAllRooms } from '@/entities/room/api'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import ReviewCard from '@/features/review-list/ui/ReviewCard.vue'
+import { getTrailStepLabel } from '@/entities/review/lib/trail-grade'
 import ReviewCardSkeleton from '@/features/review-list/ui/ReviewCardSkeleton.vue'
 import { getRoomPosterUrl } from '@/shared/api/storage'
 import { ERRORS } from '@/shared/lib/messages'
@@ -30,10 +31,12 @@ const successRate = computed(() => {
   return Math.round((ok / totalCount.value) * 100)
 })
 
-const avgRating = computed(() => {
+/** 평균 rating을 가장 가까운 길 단계 라벨로 */
+const avgTrailLabel = computed(() => {
   if (!totalCount.value) return null
   const sum = reviews.value.reduce((s, r) => s + r.rating, 0)
-  return +(sum / totalCount.value).toFixed(1)
+  const rounded = Math.min(5, Math.max(1, Math.round(sum / totalCount.value)))
+  return getTrailStepLabel(rounded)
 })
 
 onMounted(async () => {
@@ -57,7 +60,7 @@ onMounted(async () => {
   <div class="author-page">
     <button class="author-page__back" @click="router.back()">← 돌아가기</button>
 
-    <header class="author-page__hero dot-bg-dark">
+    <header class="author-page__hero dot-bg">
       <span class="author-page__hero-label">작성자</span>
       <h1 class="author-page__hero-name">{{ authorName }}</h1>
       <div v-if="!loading" class="author-page__hero-stats tnum">
@@ -66,9 +69,9 @@ onMounted(async () => {
           <span class="author-page__hero-sep">·</span>
           <span>성공률 <strong>{{ successRate }}%</strong></span>
         </template>
-        <template v-if="avgRating !== null">
+        <template v-if="avgTrailLabel !== null">
           <span class="author-page__hero-sep">·</span>
-          <span>평균 <strong>{{ avgRating }}</strong>점</span>
+          <span>평균 <strong>{{ avgTrailLabel }}</strong></span>
         </template>
       </div>
     </header>
@@ -92,6 +95,7 @@ onMounted(async () => {
         :theme-name="rooms[review.roomId]?.themeName ?? ''"
         :region="rooms[review.roomId]?.region ?? ''"
         :is-success="review.visitMeta.isSuccess"
+        :would-revisit="review.visitMeta.wouldRevisit"
         :genre-tags="review.visitMeta.genreTags"
         :author-name="null"
         :visited-at="review.visitedAt"
@@ -131,15 +135,16 @@ onMounted(async () => {
 .author-page__hero {
   margin: 0 -16px 16px;
   padding: 22px 20px 18px;
-  background-color: var(--ink-1000);
-  color: var(--paper);
+  background-color: var(--hero-bg);
+  color: var(--hero-text);
+  border: 1px solid var(--hero-line);
   border-radius: 12px;
 }
 
 .author-page__hero-label {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(244, 237, 224, 0.55);
+  color: var(--hero-text-mute);
 }
 
 .author-page__hero-name {
@@ -147,7 +152,7 @@ onMounted(async () => {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  color: var(--paper);
+  color: var(--hero-text);
 }
 
 .author-page__hero-stats {
@@ -156,11 +161,11 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   font-size: 12px;
-  color: rgba(244, 237, 224, 0.7);
+  color: var(--hero-text-dim);
 }
 
 .author-page__hero-stats strong {
-  color: var(--paper);
+  color: var(--hero-text);
   font-weight: 600;
 }
 

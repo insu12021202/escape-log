@@ -8,7 +8,7 @@ import { searchRooms, createRoom, fetchRoomsByVendor, updateRoomPosterPath } fro
 import type { Room } from '@/entities/room/types'
 import { fetchVendors, findOrCreateVendor } from '@/entities/vendor/api'
 import type { Vendor } from '@/entities/vendor/types'
-import StarRating from '@/shared/ui/StarRating.vue'
+import TrailRatingInput from '@/entities/review/ui/TrailRatingInput.vue'
 import BaseSelect from '@/shared/ui/BaseSelect.vue'
 import PosterPicker from '@/shared/ui/PosterPicker.vue'
 import AppChip from '@/shared/ui/AppChip.vue'
@@ -274,7 +274,7 @@ function validateStep(step: number): boolean {
       errors.rating = ''
       errors.summary = ''
       if (form.rating < 1) {
-        errors.rating = '별점을 1점 이상 매겨 주세요'
+        errors.rating = '오늘 걸은 길을 골라 주세요'
         return false
       }
       if (!form.summary.trim()) {
@@ -482,8 +482,8 @@ function navigateAfterSave(reviewId: string) {
 
   <form class="review-form" @submit.prevent="handleSubmit">
 
-    <!-- 위자드 다크 헤더 카드: create 모드만 -->
-    <div v-if="mode === 'create'" class="wizard-head dot-bg-dark">
+    <!-- 위자드 헤더 카드: create 모드만 -->
+    <div v-if="mode === 'create'" class="wizard-head dot-bg">
       <div class="wizard-head__top">
         <span class="wizard-head__step">{{ currentStep }}단계</span>
         <span class="wizard-head__count mono">{{ String(currentStep).padStart(2, '0') }} / 04</span>
@@ -588,8 +588,8 @@ function navigateAfterSave(reviewId: string) {
       </header>
 
       <div class="review-form__field">
-        <label class="review-form__label">총평 별점 *</label>
-        <StarRating v-model="form.rating" />
+        <label class="review-form__label">오늘의 길 *</label>
+        <TrailRatingInput v-model="form.rating" />
         <p v-if="errors.rating" class="review-form__field-error" role="alert">{{ errors.rating }}</p>
       </div>
 
@@ -768,12 +768,13 @@ function navigateAfterSave(reviewId: string) {
   padding-bottom: 80px;
 }
 
-/* ── 위자드 다크 헤더 카드 ── */
+/* ── 위자드 헤더 카드 ── */
 .wizard-head {
   padding: 18px 20px 16px;
   margin-bottom: 0;
-  background-color: var(--ink-1000);
-  color: var(--paper);
+  background-color: var(--hero-bg);
+  color: var(--hero-text);
+  border: 1px solid var(--hero-line);
   border-radius: 12px;
 }
 
@@ -793,12 +794,12 @@ function navigateAfterSave(reviewId: string) {
 .wizard-head__step {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(244, 237, 224, 0.55);
+  color: var(--hero-text-mute);
 }
 
 .wizard-head__count {
   font-size: 11.5px;
-  color: rgba(244, 237, 224, 0.7);
+  color: var(--hero-text-dim);
   letter-spacing: 0.04em;
 }
 
@@ -806,7 +807,7 @@ function navigateAfterSave(reviewId: string) {
   margin-top: 6px;
   font-size: 20px;
   font-weight: 700;
-  color: var(--paper);
+  color: var(--hero-text);
   letter-spacing: -0.005em;
 }
 
@@ -820,7 +821,7 @@ function navigateAfterSave(reviewId: string) {
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: rgba(244, 237, 224, 0.18);
+  background: var(--hero-chip-bg);
   transition: background var(--transition-base);
 }
 
@@ -837,13 +838,13 @@ function navigateAfterSave(reviewId: string) {
   border: none;
   padding: 4px 0;
   font-size: 12px;
-  color: rgba(244, 237, 224, 0.7);
+  color: var(--hero-text-dim);
   cursor: pointer;
   transition: color var(--transition-fast);
 }
 
 .wizard-head__back:hover {
-  color: var(--paper);
+  color: var(--hero-text);
 }
 
 /* ── 섹션 헤더 ── */
@@ -976,7 +977,7 @@ function navigateAfterSave(reviewId: string) {
   bottom: 0;
   left: 0;
   width: 3px;
-  background: var(--ink-1000);
+  background: var(--brand-500);
 }
 
 .review-form__spoiler-label {
@@ -992,7 +993,7 @@ function navigateAfterSave(reviewId: string) {
 .review-form__checkbox {
   width: 18px;
   height: 18px;
-  accent-color: var(--ink-1000);
+  accent-color: var(--brand-500);
 }
 
 .review-form__spoiler-hint {
@@ -1048,7 +1049,7 @@ function navigateAfterSave(reviewId: string) {
 
 .review-form__room-submit {
   padding: 10px;
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
   border: none;
   border-radius: 10px;
@@ -1060,7 +1061,7 @@ function navigateAfterSave(reviewId: string) {
 }
 
 .review-form__room-submit:hover:not(:disabled) {
-  background: var(--ink-900);
+  background: var(--brand-600);
 }
 
 .review-form__room-submit:disabled {
@@ -1080,7 +1081,7 @@ function navigateAfterSave(reviewId: string) {
 .review-form__submit {
   width: 100%;
   padding: 14px;
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
   border: none;
   border-radius: 12px;
@@ -1095,7 +1096,7 @@ function navigateAfterSave(reviewId: string) {
 }
 
 .review-form__submit:hover:not(:disabled) {
-  background: var(--ink-900);
+  background: var(--brand-600);
 }
 
 .review-form__submit:disabled {
@@ -1177,7 +1178,7 @@ function navigateAfterSave(reviewId: string) {
 .draft-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(11, 14, 20, 0.5);
+  background: rgba(35, 26, 30, 0.5);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1234,12 +1235,12 @@ function navigateAfterSave(reviewId: string) {
 }
 
 .draft-dialog__btn--primary {
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
   border: none;
 }
 
 .draft-dialog__btn--primary:hover {
-  background: var(--ink-900);
+  background: var(--brand-600);
 }
 </style>
