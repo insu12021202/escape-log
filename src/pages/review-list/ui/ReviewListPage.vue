@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { fetchReviews } from "@/entities/review/api";
+import { fetchReviews, fetchMyJourney } from "@/entities/review/api";
 import { fetchAllRooms } from "@/entities/room/api";
-import type { Review } from "@/entities/review/types";
+import type { JourneyPoint, Review } from "@/entities/review/types";
 import type { Room } from "@/entities/room/types";
 import ReviewCard from "@/features/review-list/ui/ReviewCard.vue";
+import ReviewTimeline from "@/features/review-list/ui/ReviewTimeline.vue";
 import ReviewCardSkeleton from "@/features/review-list/ui/ReviewCardSkeleton.vue";
 import BaseSelect from "@/shared/ui/BaseSelect.vue";
 import AppChip from "@/shared/ui/AppChip.vue";
 import { getRoomPosterUrl } from "@/shared/api/storage";
 import { useSessionStore } from "@/app/stores/session";
 import { ERRORS, EMPTY } from "@/shared/lib/messages";
+import {
+  TRAIL_META,
+  getTrailGrade,
+  type TrailGrade,
+} from "@/entities/review/lib/trail-grade";
 
 const session = useSessionStore();
 
 const reviews = ref<Review[]>([]);
+const journey = ref<JourneyPoint[]>([]);
 const rooms = ref<Record<string, Room>>({});
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -24,13 +31,23 @@ const activeTab = ref<Tab>("mine");
 
 const searchQuery = ref("");
 const regionFilter = ref("");
-const ratingFilter = ref(0);
+const gradeFilter = ref<Set<TrailGrade>>(new Set());
 const sortOrder = ref<"" | "asc" | "desc">("");
+
+// 재미 등급 필터 — 색 도트 + 쉬운 말 병기 토글 칩 (다중 선택)
+const gradeChips: TrailGrade[] = ["flower", "grass", "dirt"];
+
+function toggleGrade(grade: TrailGrade) {
+  const next = new Set(gradeFilter.value);
+  if (next.has(grade)) next.delete(grade);
+  else next.add(grade);
+  gradeFilter.value = next;
+}
 
 const sortOptions: Array<{ value: "" | "asc" | "desc"; label: string }> = [
   { value: "", label: "최신순" },
-  { value: "desc", label: "평점 높은순" },
-  { value: "asc", label: "평점 낮은순" },
+  { value: "desc", label: "꽃길순" },
+  { value: "asc", label: "흙길순" },
 ];
 
 const myUserId = computed(() => session.user?.id ?? null);
@@ -54,15 +71,6 @@ const regionOptions = computed(() => [
   ...regions.value.map((r) => ({ value: r, label: r })),
 ]);
 
-const ratingOptions = [
-  { value: 0, label: "전체 평점" },
-  { value: 1, label: "1점 이상" },
-  { value: 2, label: "2점 이상" },
-  { value: 3, label: "3점 이상" },
-  { value: 4, label: "4점 이상" },
-  { value: 5, label: "5점 이상" },
-];
-
 const totalCount = computed(() => baseReviews.value.length);
 const successRate = computed(() => {
   if (!totalCount.value) return null;
@@ -76,7 +84,7 @@ const hasActiveFilter = computed(
   () =>
     !!searchQuery.value.trim() ||
     !!regionFilter.value ||
-    ratingFilter.value > 0 ||
+    gradeFilter.value.size > 0 ||
     !!sortOrder.value,
 );
 
@@ -88,7 +96,11 @@ const filteredReviews = computed(() => {
     if (q && !`${room.vendorName} ${room.themeName}`.toLowerCase().includes(q))
       return false;
     if (regionFilter.value && room.region !== regionFilter.value) return false;
-    if (ratingFilter.value && review.rating < ratingFilter.value) return false;
+    if (
+      gradeFilter.value.size > 0 &&
+      !gradeFilter.value.has(getTrailGrade(review.rating))
+    )
+      return false;
     return true;
   });
   if (sortOrder.value === "desc")
@@ -101,7 +113,7 @@ const filteredReviews = computed(() => {
 function clearFilters() {
   searchQuery.value = "";
   regionFilter.value = "";
-  ratingFilter.value = 0;
+  gradeFilter.value = new Set();
   sortOrder.value = "";
 }
 
@@ -109,7 +121,7 @@ function switchTab(tab: Tab) {
   activeTab.value = tab;
   searchQuery.value = "";
   regionFilter.value = "";
-  ratingFilter.value = 0;
+  gradeFilter.value = new Set();
   sortOrder.value = "";
 }
 
@@ -138,11 +150,13 @@ async function loadMore() {
 
 onMounted(async () => {
   try {
-    const [data, allRooms] = await Promise.all([
+    const [data, allRooms, myJourney] = await Promise.all([
       fetchReviews({ limit: PAGE_SIZE }),
       fetchAllRooms(),
+      fetchMyJourney(),
     ]);
     reviews.value = data;
+    journey.value = myJourney;
     if (data.length < PAGE_SIZE) hasMore.value = false;
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]));
   } catch (e) {
@@ -156,8 +170,8 @@ onMounted(async () => {
 
 <template>
   <div class="review-list">
-    <!-- 다크 hero -->
-    <section class="review-list__hero dot-bg-dark">
+    <!-- 밝은 hero -->
+    <section class="review-list__hero dot-bg">
       <h1 class="review-list__hero-title">방탈출 일지</h1>
       <div class="review-list__hero-stats tnum">
         <span class="review-list__hero-stat">
@@ -229,34 +243,85 @@ onMounted(async () => {
         </div>
         <div class="review-list__filters">
           <BaseSelect v-model="regionFilter" :options="regionOptions" />
-          <BaseSelect v-model="ratingFilter" :options="ratingOptions" />
           <BaseSelect v-model="sortOrder" :options="sortOptions" />
+        </div>
+
+        <!-- 재미 등급 토글 칩 — 색 도트 + 쉬운 말 병기 (다중 선택) -->
+        <div
+          class="review-list__grades scroll-x-hidden"
+          role="group"
+          aria-label="재미 등급 필터"
+        >
+          <button
+            type="button"
+            class="review-list__grade-chip"
+            :class="{ 'review-list__grade-chip--active': gradeFilter.size === 0 }"
+            :aria-pressed="gradeFilter.size === 0"
+            @click="gradeFilter = new Set()"
+          >
+            전체
+          </button>
+          <button
+            v-for="grade in gradeChips"
+            :key="grade"
+            type="button"
+            class="review-list__grade-chip"
+            :class="{ 'review-list__grade-chip--active': gradeFilter.has(grade) }"
+            :aria-pressed="gradeFilter.has(grade)"
+            :style="
+              gradeFilter.has(grade)
+                ? {
+                    background: TRAIL_META[grade].softToken,
+                    borderColor: TRAIL_META[grade].token,
+                    color: TRAIL_META[grade].strongToken,
+                  }
+                : {}
+            "
+            @click="toggleGrade(grade)"
+          >
+            <span
+              class="review-list__grade-dot"
+              :style="{ background: TRAIL_META[grade].token }"
+            />
+            <strong>{{ TRAIL_META[grade].label }}</strong>
+            <span class="review-list__grade-hint">{{ TRAIL_META[grade].hint }}</span>
+          </button>
         </div>
       </div>
 
-      <!-- 리뷰 그리드 -->
-      <div v-if="filteredReviews.length" class="review-list__grid">
-        <ReviewCard
-          v-for="review in filteredReviews"
-          :key="review.id"
-          :data-id="review.id"
-          :rating="review.rating"
-          :summary="review.summary"
-          :vendor-name="rooms[review.roomId]?.vendorName ?? ''"
-          :theme-name="rooms[review.roomId]?.themeName ?? ''"
-          :region="rooms[review.roomId]?.region ?? ''"
-          :is-success="review.visitMeta.isSuccess"
-          :genre-tags="review.visitMeta.genreTags"
-          :author-name="review.authorName"
-          :visited-at="review.visitedAt"
-          :remaining-minutes="review.visitMeta.remainingMinutes"
-          :has-spoiler="review.hasSpoiler"
-          :poster-url="
-            rooms[review.roomId]?.posterPath
-              ? getRoomPosterUrl(rooms[review.roomId]!.posterPath!)
-              : null
-          "
+      <!-- 리뷰 목록: 내 기록 = 여정 타임라인 / 전체 = 카드 그리드 -->
+      <template v-if="filteredReviews.length">
+        <ReviewTimeline
+          v-if="activeTab === 'mine'"
+          :reviews="filteredReviews"
+          :rooms="rooms"
+          :journey="journey"
+          :group-by-month="!sortOrder"
         />
+        <div v-else class="review-list__grid">
+          <ReviewCard
+            v-for="review in filteredReviews"
+            :key="review.id"
+            :data-id="review.id"
+            :rating="review.rating"
+            :summary="review.summary"
+            :vendor-name="rooms[review.roomId]?.vendorName ?? ''"
+            :theme-name="rooms[review.roomId]?.themeName ?? ''"
+            :region="rooms[review.roomId]?.region ?? ''"
+            :is-success="review.visitMeta.isSuccess"
+            :would-revisit="review.visitMeta.wouldRevisit"
+            :genre-tags="review.visitMeta.genreTags"
+            :author-name="review.authorName"
+            :visited-at="review.visitedAt"
+            :remaining-minutes="review.visitMeta.remainingMinutes"
+            :has-spoiler="review.hasSpoiler"
+            :poster-url="
+              rooms[review.roomId]?.posterPath
+                ? getRoomPosterUrl(rooms[review.roomId]!.posterPath!)
+                : null
+            "
+          />
+        </div>
 
         <button
           v-if="hasMore && !hasActiveFilter"
@@ -267,7 +332,7 @@ onMounted(async () => {
         >
           {{ loadingMore ? '불러오는 중...' : '더 보기' }}
         </button>
-      </div>
+      </template>
       <div v-else class="review-list__empty">
         <pre class="review-list__empty-art mono">┌──────────────┐
 │   ESC LOG    │
@@ -304,15 +369,16 @@ onMounted(async () => {
 .review-list__hero {
   margin: -20px -16px 0;
   padding: 24px 20px 20px;
-  background-color: var(--ink-1000);
-  color: var(--paper);
+  background-color: var(--hero-bg);
+  color: var(--hero-text);
+  border-bottom: 1px solid var(--hero-line);
 }
 
 .review-list__hero-title {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--paper);
+  color: var(--hero-text);
 }
 
 .review-list__hero-stats {
@@ -321,11 +387,11 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   font-size: 12px;
-  color: rgba(244, 237, 224, 0.7);
+  color: var(--hero-text-dim);
 }
 
 .review-list__hero-stat strong {
-  color: var(--paper);
+  color: var(--hero-text);
   font-weight: 600;
 }
 
@@ -347,7 +413,7 @@ onMounted(async () => {
   z-index: 10;
   margin: 0 -16px;
   padding: 12px 16px;
-  background: rgba(244, 245, 247, 0.94);
+  background: rgba(250, 248, 248, 0.94);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -392,6 +458,51 @@ onMounted(async () => {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 10px;
+}
+
+/* ── 재미 등급 토글 칩 ── */
+.review-list__grades {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.review-list__grade-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 12.5px;
+  color: var(--ink-600);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.review-list__grade-chip strong {
+  font-weight: 700;
+}
+
+.review-list__grade-chip--active {
+  border-color: var(--ink-700);
+  color: var(--ink-1000);
+}
+
+.review-list__grade-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.review-list__grade-hint {
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 /* ── 그리드 ── */
@@ -445,7 +556,7 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   padding: 12px 22px;
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
   border-radius: 10px;
   font-size: 14px;
@@ -455,7 +566,7 @@ onMounted(async () => {
 }
 
 .review-list__empty-cta:hover {
-  background: var(--ink-900);
+  background: var(--brand-600);
 }
 
 .review-list__empty-btn {
@@ -475,7 +586,9 @@ onMounted(async () => {
 }
 
 .review-list__load-more {
-  margin-top: 8px;
+  display: block;
+  width: 100%;
+  margin-top: 12px;
   padding: 12px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
