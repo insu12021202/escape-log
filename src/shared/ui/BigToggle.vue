@@ -98,9 +98,9 @@ function select(value: string) {
 }
 
 .big-toggle__opt--active {
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
-  border-color: var(--ink-1000);
+  border-color: var(--brand-500);
 }
 
 .big-toggle__opt--active::before {

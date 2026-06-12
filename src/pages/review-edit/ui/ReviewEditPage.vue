@@ -75,7 +75,7 @@ const initialData = computed(() => {
   gap: 4px;
   margin-bottom: 16px;
   font-size: 0.875rem;
-  color: #4a90d9;
+  color: var(--brand-500);
   text-decoration: none;
 }
 

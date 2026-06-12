@@ -173,8 +173,8 @@ function getPreviewUrl(file: File): string {
 }
 
 .poster-picker__add:hover:not(:disabled) {
-  border-color: #4a90d9;
-  color: #4a90d9;
+  border-color: var(--brand-500);
+  color: var(--brand-500);
 }
 
 .poster-picker__add:disabled {

@@ -7,50 +7,74 @@
  */
 
 :root {
-  /* Brand — light theme (default: blue) */
-  --brand-500: #4a90d9;
-  --brand-600: #357abd;
-  --brand-50: #eef4fc;
+  /* Brand — v3 (딥 틸). 미스터리·세련. 등급 트리오(핑크/초록/갈색)와
+   * 안 겹치는 주조색. 바탕은 거의 흰색으로 비우고 색은 포인트에만. */
+  --brand-500: #11867a;
+  --brand-600: #0c6b61;
+  --brand-50: #e9f5f3;
 
-  /* Ink scale — escape-room "deep dark" */
-  --ink-1000: #0a0c0f;
-  --ink-900: #16191e;
-  --ink-800: #232830;
-  --ink-700: #3a4150;
-  --ink-600: #555c6b;
-  --ink-500: #7a8090;
-  --ink-400: #9aa0ad;
-  --ink-300: #c4c8d0;
-  --ink-200: #e2e4e9;
-  --ink-150: #ecedf0;
-  --ink-100: #f3f4f6;
-  --ink-50: #f8f9fb;
+  /* Ink scale — v3 클린 뉴트럴 (아주 옅은 웜 캐스트만).
+   * 누런 베이지를 걷어내고 깨끗한 화이트 베이스로. */
+  --ink-1000: #1c1719;
+  --ink-900: #292325;
+  --ink-800: #3a3335;
+  --ink-700: #4f4749;
+  --ink-600: #6b6264;
+  --ink-500: #877e80;
+  --ink-400: #a59c9e;
+  --ink-300: #c9c2c4;
+  --ink-200: #e6e1e2;
+  --ink-150: #eeeaeb;
+  --ink-100: #f4f1f2;
+  --ink-50: #f9f7f8;
   --ink-0: #ffffff;
 
-  /* Cream paper highlight (ink 위 텍스트) */
-  --paper: #f4ede0;
+  /* Paper — 어두운/브랜드 배경 위 텍스트 (살짝 따뜻한 화이트) */
+  --paper: #fdf7f4;
 
   /* Semantic (legacy 호환 alias — 기존 컴포넌트 그대로 동작) */
   --color-primary: var(--brand-500);
   --color-primary-dark: var(--brand-600);
   --color-primary-bg: var(--brand-50);
 
-  --color-bg: #f4f5f7;
-  --color-bg-subtle: #ebecf0;
+  --color-bg: #faf8f8;
+  --color-bg-subtle: #f1eeee;
   --color-surface: #ffffff;
 
-  --color-border: #e3e5ea;
-  --color-border-light: #ecedf0;
+  --color-border: #eae5e6;
+  --color-border-light: #f2eeef;
 
   --color-text: var(--ink-1000);
-  --color-text-sub: #4b5563;
-  --color-text-muted: #8a8f99;
+  --color-text-sub: #57504e;
+  --color-text-muted: #968d8f;
 
   --color-success: #16a34a;
   --color-success-bg: #ecfdf3;
   --color-error: #dc2626;
   --color-error-bg: #fef2f2;
-  --color-star: #f5b400;
+
+  /* Trail grade — 재미 등급(꽃길/풀길/흙길). 글자 그대로 핑크/초록/갈색.
+   * 단계별 3톤: 기본(노드/바) · strong(칩 텍스트) · soft(칩 배경).
+   * rating 매핑은 entities/review/lib/trail-grade.ts 가 SSOT. */
+  --trail-flower: #ec6f9b; /* 꽃길 — 맑은 핑크 */
+  --trail-flower-strong: #c54375;
+  --trail-flower-soft: #fdebf2;
+  --trail-grass: #7cb15c; /* 풀길 — 프레시 그린 */
+  --trail-grass-strong: #557e39;
+  --trail-grass-soft: #eef6e6;
+  --trail-dirt: #b3865c; /* 흙길 — 라이트 탄 */
+  --trail-dirt-strong: #8a6240;
+  --trail-dirt-soft: #f6eee5;
+
+  /* Hero — v3 bright (무채색 뉴트럴 헤더).
+   * 색 면을 깔지 않는다 — 색은 브랜드 틸(컨트롤)과 등급 칩에만.
+   * 두 hero(목록/상세)가 이 토큰을 공유. 다크로 되돌리려면 값만 교체. */
+  --hero-bg: #f6f4f5;
+  --hero-text: var(--ink-1000);
+  --hero-text-dim: var(--ink-600);
+  --hero-text-mute: var(--ink-400);
+  --hero-line: rgba(28, 23, 25, 0.08);
+  --hero-chip-bg: rgba(28, 23, 25, 0.05);
 
   /* Radius */
   --radius-sm: 4px;
@@ -60,11 +84,11 @@
   --radius-pill: 999px;
 
   /* Shadow */
-  --shadow-xs: 0 1px 2px rgba(11, 14, 20, 0.04);
-  --shadow-card: 0 1px 3px rgba(11, 14, 20, 0.06), 0 4px 12px rgba(11, 14, 20, 0.04);
-  --shadow-card-hover: 0 8px 28px rgba(11, 14, 20, 0.1), 0 2px 6px rgba(11, 14, 20, 0.04);
-  --shadow-modal: 0 16px 48px rgba(11, 14, 20, 0.18);
-  --shadow-ink: 0 4px 18px rgba(11, 14, 20, 0.22);
+  --shadow-xs: 0 1px 2px rgba(35, 26, 30, 0.04);
+  --shadow-card: 0 1px 3px rgba(35, 26, 30, 0.06), 0 4px 12px rgba(35, 26, 30, 0.04);
+  --shadow-card-hover: 0 8px 28px rgba(35, 26, 30, 0.1), 0 2px 6px rgba(35, 26, 30, 0.04);
+  --shadow-modal: 0 16px 48px rgba(35, 26, 30, 0.18);
+  --shadow-ink: 0 4px 18px rgba(35, 26, 30, 0.22);
 
   /* Transition */
   --transition-fast: 0.12s ease;
@@ -76,21 +100,21 @@
   --font-mono: 'JetBrains Mono', 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-/* Accent themes — html[data-theme] 로 토글 */
+/* Accent themes — html[data-theme] 로 토글. v3 natural 팔레트로 재튜닝 */
 html[data-theme='ink'] {
-  --brand-500: #2a2f3a;
-  --brand-600: #16191e;
-  --brand-50: #ecedf0;
+  --brand-500: #4a3b30;
+  --brand-600: #34281f;
+  --brand-50: #efe8dd;
 }
-html[data-theme='indigo'] {
-  --brand-500: #5b5bd6;
-  --brand-600: #3e3eb8;
-  --brand-50: #eef0fc;
+html[data-theme='forest'] {
+  --brand-500: #4f7038;
+  --brand-600: #3b5429;
+  --brand-50: #e8f0e0;
 }
-html[data-theme='green'] {
-  --brand-500: #16a34a;
-  --brand-600: #15803d;
-  --brand-50: #ecfdf3;
+html[data-theme='clay'] {
+  --brand-500: #a8623f;
+  --brand-600: #8a4d30;
+  --brand-50: #f6e7dd;
 }
 
 /* Reset */
@@ -156,7 +180,7 @@ select {
 
 /* 도트 패턴 (light) */
 .dot-bg {
-  background-image: radial-gradient(rgba(11, 14, 20, 0.06) 1px, transparent 1.2px);
+  background-image: radial-gradient(rgba(35, 26, 30, 0.06) 1px, transparent 1.2px);
   background-size: 14px 14px;
   background-position: 0 0;
 }

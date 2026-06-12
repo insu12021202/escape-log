@@ -226,13 +226,13 @@ async function handleSignOut() {
   height: 52px;
   margin-top: -10px;
   border-radius: 50%;
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    0 6px 16px rgba(11, 14, 20, 0.28),
+    0 6px 16px rgba(35, 26, 30, 0.28),
     inset 0 0 0 1px rgba(244, 237, 224, 0.06);
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
@@ -241,15 +241,15 @@ async function handleSignOut() {
   content: '';
   position: absolute;
   inset: -3px;
-  border: 1.5px solid var(--brand-500);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
   border-radius: 999px;
-  opacity: 0.55;
+  opacity: 0.7;
   pointer-events: none;
 }
 
 .app-tab--fab:hover .app-tab__fab,
 .app-tab--fab-active .app-tab__fab {
-  background: var(--ink-900);
+  background: var(--brand-600);
 }
 
 .app-tab--fab:active .app-tab__fab {

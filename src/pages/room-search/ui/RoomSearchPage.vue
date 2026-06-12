@@ -395,7 +395,7 @@ async function submitNewRoom() {
 
 .room-search__input:focus {
   outline: none;
-  border-color: #4a90d9;
+  border-color: var(--brand-500);
 }
 
 /* 그룹 리스트 */
@@ -528,10 +528,10 @@ async function submitNewRoom() {
   align-items: center;
   gap: 4px;
   padding: 10px 14px;
-  border: 1px solid #4a90d9;
+  border: 1px solid var(--brand-500);
   border-radius: 8px;
   background: #fff;
-  color: #4a90d9;
+  color: var(--brand-500);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -578,7 +578,7 @@ async function submitNewRoom() {
 
 .room-search__submit-btn {
   padding: 10px;
-  background: #4a90d9;
+  background: var(--brand-500);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -608,7 +608,7 @@ async function submitNewRoom() {
 .room-search__link-btn {
   align-self: flex-start;
   font-size: 0.8125rem;
-  color: #4a90d9;
+  color: var(--brand-500);
   background: none;
   border: none;
   padding: 0;
@@ -634,7 +634,7 @@ async function submitNewRoom() {
 }
 
 .room-search__action-btn:hover {
-  color: #4a90d9;
+  color: var(--brand-500);
   background: #f0f4ff;
 }
 

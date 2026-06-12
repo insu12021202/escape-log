@@ -213,7 +213,7 @@ function toggleMode() {
 }
 
 .login__input:focus {
-  border-color: #4a90d9;
+  border-color: var(--brand-500);
 }
 
 .login__error {
@@ -244,23 +244,23 @@ function toggleMode() {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  accent-color: #4a90d9;
+  accent-color: var(--brand-500);
 }
 
 .login__policy-link {
-  color: #4a90d9;
+  color: var(--brand-500);
   text-decoration: underline;
 }
 
 .login__policy-link:hover {
-  color: #357abd;
+  color: var(--brand-600);
 }
 
 .login__submit-btn {
   padding: 12px;
   border: none;
   border-radius: 8px;
-  background: #4a90d9;
+  background: var(--brand-500);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -269,7 +269,7 @@ function toggleMode() {
 }
 
 .login__submit-btn:hover:not(:disabled) {
-  background: #357abd;
+  background: var(--brand-600);
 }
 
 .login__submit-btn:disabled {
@@ -280,7 +280,7 @@ function toggleMode() {
 .login__link-btn {
   background: none;
   border: none;
-  color: #4a90d9;
+  color: var(--brand-500);
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0;
