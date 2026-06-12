@@ -21,6 +21,18 @@ export interface VisitMeta {
   wouldRevisit: boolean
 }
 
+/**
+ * 여정 선(TrailPath)용 경량 포인트.
+ * 전체 기록을 페이지네이션 없이 그리기 위해 등급·날짜·성공만 담는다.
+ */
+export interface JourneyPoint {
+  id: string
+  rating: number
+  isSuccess: boolean
+  /** visited_at ?? created_at */
+  date: string
+}
+
 /** 리뷰 엔티티. Spec: §3, §4.1 */
 export interface Review {
   id: string

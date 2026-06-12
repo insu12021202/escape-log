@@ -1,5 +1,5 @@
 import { supabase } from "@/shared/api/supabase";
-import type { Review, Visibility } from "../types";
+import type { JourneyPoint, Review, Visibility } from "../types";
 import type { Room } from "@/entities/room/types";
 
 /** UUID v4 생성 (getRandomValues는 HTTP/HTTPS 모두 지원) */
@@ -92,6 +92,30 @@ export async function fetchReviews(opts?: {
   const { data, error } = await query;
   if (error) throw error;
   return ((data ?? []) as unknown as Record<string, unknown>[]).map(toReview);
+}
+
+/**
+ * 내 전체 여정 경량 조회 — 여정 선(TrailPath)용.
+ * 목록 페이지네이션과 무관하게 전체 기록의 등급·날짜·성공만 가져온다.
+ */
+export async function fetchMyJourney(): Promise<JourneyPoint[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id, overall_rating, success, visited_at, created_at")
+    .eq("user_id", user.id);
+  if (error) throw error;
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    id: row.id as string,
+    rating: row.overall_rating as number,
+    isSuccess: row.success as boolean,
+    date: ((row.visited_at as string | null) ?? (row.created_at as string)).slice(0, 10),
+  }));
 }
 
 /** 특정 사용자가 작성한 리뷰 목록. 작성자 프로필 페이지용. */
