@@ -216,6 +216,9 @@
 - [x] 다크모드 PWA 로고 가시성 — 아이콘 페이퍼색 베이크 + maskable 전용 분리 (PR #71)
 - [x] 모바일 앱 하드닝 — 줌 차단·viewport-fit=cover·터치(tap-highlight/overscroll/touch-action)·세이프에어리어·텍스트 선택 방지 (PR #72)
 - [x] 로컬 전용 스크린샷 도구(scripts/) gitignore 처리 (PR #73)
+- [x] 입력 컨트롤 디자인 일관성 통일 — 폼 컨트롤 토큰(높이 48·radius 12·소프트 링) 단일 소스, 구형 색 토큰화, BaseSelect 포커스 정합 (PR #74)
+- [x] 여정 점 그라데이션 수정 — OKLCH 보간(탁한 중간색 제거) + background-origin border-box(사각 이음새 제거) (PR #75)
+- [x] 목록 상단 히어로 제거, '총 N개'를 탭 줄로 이동 (PR #76)
 - [ ] 반갈죽 정밀화 — rooms.time_limit_min 컬럼 추가 (후속, 현재 60분 가정)
 - [ ] 대량 기록 시 내 기록 타임라인 가상화 (후속)
 

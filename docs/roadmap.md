@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 12 완료** (모바일 앱 폴리시 — 포스터·PWA 아이콘·터치/줌 하드닝)
-- 마지막 완료 PR: chore: 로컬 전용 스크린샷 도구 gitignore 처리 (#73)
+- 현재 Phase: **Phase 13 완료** (UI 일관성·정리 — 입력 디자인 통일·여정 점 수정·목록 히어로 제거)
+- 마지막 완료 PR: refactor: 상단 '방탈출 일지' 히어로 제거 (#76)
 - 참고: #41~#50(shared 유틸·StatCard 정리·v2 폴리시·페이지네이션·스포일러 노출 유지·작성자 프로필)은 roadmap 미반영분으로 별도 정리 필요
 
 ### 완료된 작업 요약
@@ -414,6 +414,11 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 다크모드 PWA 로고 가시성 수정: 투명 배경+검정 로고 → 전 아이콘에 페이퍼색(#faf8f8) 베이크, maskable 전용 아이콘(세이프존 78%) 분리 — PR #71
 - 모바일 앱 하드닝: 핀치/더블탭 줌 차단(user-scalable=no), viewport-fit=cover, text-size-adjust·tap-highlight 제거·overscroll·touch-action, 세이프에어리어(헤더 top/좌우·탭바·sticky bar·라이트박스), 앱 UI 탭 시 텍스트 선택(파란 배경) 방지 — PR #72
 - 로컬 전용 스크린샷 도구(scripts/) gitignore 처리 — PR #73
+
+#### Phase 13 — UI 일관성·정리 완료
+- 입력 컨트롤 디자인 일관성 통일(토스풍 에어리): global.css 폼 컨트롤 토큰(--control-height 48·--control-radius 12·--control-focus-ring) 단일 소스, 구형 페이지 하드코딩 색 토큰화, BaseSelect 옛 파란 포커스→브랜드 링, 버튼·스텝퍼·칩 톤 정렬 — PR #74
+- 여정 점 그라데이션 수정: 경계 단계(흙풀길/풀꽃길) OKLCH 보간으로 탁한 중간색 제거 + 인라인 background-origin: border-box·no-repeat로 사각 이음새 제거(TrailPath·TrailMilestone·TrailRatingInput) — PR #75
+- 목록 상단 '방탈출 일지' 히어로 제거(헤더 로고와 중복), '총 N개'는 탭 줄 우측으로 이동(탭별 갱신), 성공률 표기 제거, 탭 줄 상단 여백 정리 — PR #76
 
 ### 미완료 항목
 - [x] README 정리 — Phase 6
