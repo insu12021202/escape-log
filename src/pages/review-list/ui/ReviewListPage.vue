@@ -80,13 +80,6 @@ const regionOptions = computed(() => [
 ]);
 
 const totalCount = computed(() => baseReviews.value.length);
-const successRate = computed(() => {
-  if (!totalCount.value) return null;
-  const succeeded = baseReviews.value.filter(
-    (r) => r.visitMeta.isSuccess,
-  ).length;
-  return Math.round((succeeded / totalCount.value) * 100);
-});
 
 const hasActiveFilter = computed(
   () =>
@@ -180,22 +173,6 @@ onMounted(async () => {
 
 <template>
   <div class="review-list">
-    <!-- 밝은 hero -->
-    <section class="review-list__hero dot-bg">
-      <h1 class="review-list__hero-title">방탈출 일지</h1>
-      <div class="review-list__hero-stats tnum">
-        <span class="review-list__hero-stat">
-          총 <strong>{{ totalCount }}</strong>개
-        </span>
-        <template v-if="successRate !== null">
-          <span class="review-list__hero-sep">·</span>
-          <span class="review-list__hero-stat">
-            성공률 <strong>{{ successRate }}%</strong>
-          </span>
-        </template>
-      </div>
-    </section>
-
     <!-- 스켈레톤 로딩 -->
     <div v-if="loading" class="review-list__grid">
       <ReviewCardSkeleton v-for="i in 3" :key="i" />
@@ -206,24 +183,29 @@ onMounted(async () => {
     </template>
 
     <template v-else>
-      <!-- 탭 -->
-      <div class="review-list__tabs" role="tablist" aria-label="리뷰 범위">
-        <AppChip
-          role="tab"
-          :aria-selected="activeTab === 'mine'"
-          :active="activeTab === 'mine'"
-          @click="switchTab('mine')"
-        >
-          내 기록
-        </AppChip>
-        <AppChip
-          role="tab"
-          :aria-selected="activeTab === 'all'"
-          :active="activeTab === 'all'"
-          @click="switchTab('all')"
-        >
-          전체
-        </AppChip>
+      <!-- 탭 + 총 개수 -->
+      <div class="review-list__tabbar">
+        <div class="review-list__tabs" role="tablist" aria-label="리뷰 범위">
+          <AppChip
+            role="tab"
+            :aria-selected="activeTab === 'mine'"
+            :active="activeTab === 'mine'"
+            @click="switchTab('mine')"
+          >
+            내 기록
+          </AppChip>
+          <AppChip
+            role="tab"
+            :aria-selected="activeTab === 'all'"
+            :active="activeTab === 'all'"
+            @click="switchTab('all')"
+          >
+            전체
+          </AppChip>
+        </div>
+        <span v-if="totalCount" class="review-list__count tnum">
+          총 <strong>{{ totalCount }}</strong>개
+        </span>
       </div>
 
       <!-- 검색 + 필터 (sticky) -->
@@ -375,45 +357,29 @@ onMounted(async () => {
   position: relative;
 }
 
-/* ── 다크 hero ── */
-.review-list__hero {
-  margin: -20px -16px 0;
-  padding: 24px 20px 20px;
-  background-color: var(--hero-bg);
-  color: var(--hero-text);
-  border-bottom: 1px solid var(--hero-line);
-}
-
-.review-list__hero-title {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--hero-text);
-}
-
-.review-list__hero-stats {
-  margin-top: 14px;
-  display: inline-flex;
+/* ── 탭 + 총 개수 ── */
+.review-list__tabbar {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: var(--hero-text-dim);
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 0 12px;
 }
 
-.review-list__hero-stat strong {
-  color: var(--hero-text);
-  font-weight: 600;
-}
-
-.review-list__hero-sep {
-  opacity: 0.4;
-}
-
-/* ── 탭 ── */
 .review-list__tabs {
   display: flex;
   gap: 8px;
-  padding: 16px 0 12px;
+}
+
+.review-list__count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ink-500);
+}
+
+.review-list__count strong {
+  color: var(--ink-800);
+  font-weight: 700;
 }
 
 /* ── 검색 + 필터 sticky ── */
@@ -621,11 +587,6 @@ onMounted(async () => {
 }
 
 @media (min-width: 640px) {
-  .review-list__hero {
-    margin: -28px -24px 0;
-    padding: 32px 28px 24px;
-  }
-
   .review-list__sticky-bar {
     margin: 0 -24px;
     padding: 12px 24px;
