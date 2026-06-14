@@ -687,8 +687,8 @@ onUnmounted(() => {
 
 .lightbox__close {
   position: fixed;
-  top: 16px;
-  right: 20px;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(20px + env(safe-area-inset-right, 0px));
   background: none;
   border: none;
   color: var(--paper);

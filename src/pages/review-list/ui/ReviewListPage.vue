@@ -419,7 +419,8 @@ onMounted(async () => {
 /* ── 검색 + 필터 sticky ── */
 .review-list__sticky-bar {
   position: sticky;
-  top: 52px;
+  /* 헤더(52px) + 노치 inset 아래에 정확히 붙도록 (env=0이면 52px) */
+  top: calc(52px + env(safe-area-inset-top, 0px));
   z-index: 10;
   margin: 0 -16px;
   padding: 12px 16px;

@@ -132,6 +132,14 @@ body,
   height: 100%;
 }
 
+html {
+  /* 가로 전환 시 iOS 글자 자동확대 방지 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* 탭 시 회색 깜빡임 제거 — 앱 느낌 (요소별 의도적 하이라이트는 개별 지정) */
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -140,6 +148,10 @@ body {
   background-color: var(--color-bg);
   font-size: 1rem;
   line-height: 1.5;
+  /* 스크롤 끝 고무줄·당겨서 새로고침 차단 — 설치형 앱 동작 */
+  overscroll-behavior-y: none;
+  /* 더블탭 줌·300ms 탭 지연 제거 (핀치줌은 viewport에서 차단) */
+  touch-action: manipulation;
 }
 
 button {

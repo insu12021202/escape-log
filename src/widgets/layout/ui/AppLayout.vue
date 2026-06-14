@@ -103,8 +103,11 @@ async function handleSignOut() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  height: 52px;
+  /* 노치/다이내믹 아일랜드 + 가로 노치 대응 (env=0이면 기존값과 동일) */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: calc(20px + env(safe-area-inset-left, 0px));
+  padding-right: calc(20px + env(safe-area-inset-right, 0px));
+  height: calc(52px + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid var(--color-border);
   background-color: var(--color-surface);
   position: sticky;
@@ -153,6 +156,9 @@ async function handleSignOut() {
 .app-main {
   flex: 1;
   padding: 20px 16px;
+  /* 가로 노치 대응 좌우 inset (세로에선 0 → 기존값 유지) */
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
   /* 하단 탭바 높이(56px) + safe-area 만큼 여백 확보 */
   padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 20px);
   max-width: 640px;
@@ -168,6 +174,8 @@ async function handleSignOut() {
   right: 0;
   height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   display: flex;
   align-items: stretch;
   background: rgba(255, 255, 255, 0.94);
