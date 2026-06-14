@@ -561,7 +561,7 @@ onUnmounted(() => {
 
 .review-detail__metric-fill {
   height: 100%;
-  background: var(--ink-1000);
+  background: var(--brand-500);
   border-radius: 2px;
   transition: width var(--transition-base);
 }

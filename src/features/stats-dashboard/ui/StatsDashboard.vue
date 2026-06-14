@@ -9,6 +9,7 @@ import {
   TRAIL_META,
   TRAIL_STEPS,
   getTrailGrade,
+  getTrailStepColor,
   getTrailStepLabel,
 } from '@/entities/review/lib/trail-grade'
 
@@ -145,6 +146,7 @@ const ratingDistribution = computed(() => {
   return counts.map((value, i) => ({
     label: TRAIL_STEPS[i]!.label,
     value: value ?? 0,
+    color: getTrailStepColor(i + 1),
   }))
 })
 </script>
@@ -157,8 +159,8 @@ const ratingDistribution = computed(() => {
     <div class="dashboard__cards">
       <StatCard label="총 플레이" :value="totalCount" unit="개" accent="var(--brand-500)" />
       <StatCard label="탈출 성공률" :value="`${successRate}%`" accent="var(--color-success)" />
-      <StatCard label="평균 길" :value="avgTrail.label" :accent="avgTrail.color" />
-      <StatCard label="평균 인원" :value="avgHeadcount" unit="명" accent="#8b5cf6" />
+      <StatCard label="평균 길" :value="avgTrail.label" :accent="avgTrail.color" :mono="false" />
+      <StatCard label="평균 인원" :value="avgHeadcount" unit="명" accent="var(--ink-400)" />
     </div>
 
     <!-- 세부 지표 레이더 -->
@@ -195,7 +197,7 @@ const ratingDistribution = computed(() => {
     <!-- 길 분포 -->
     <div class="dashboard__section">
       <h3 class="dashboard__section-title">길 분포</h3>
-      <HorizontalBarChart :items="ratingDistribution" color="var(--trail-flower)" />
+      <HorizontalBarChart :items="ratingDistribution" />
     </div>
   </section>
 </template>

@@ -121,7 +121,7 @@ function toggleMode() {
               <RouterLink to="/terms" target="_blank" rel="noopener" class="login__policy-link">
                 이용약관
               </RouterLink>
-              에 동의합니다 (필수)
+              에 동의해요 (필수)
             </span>
           </label>
           <label class="login__consent-row">
@@ -130,7 +130,7 @@ function toggleMode() {
               <RouterLink to="/privacy" target="_blank" rel="noopener" class="login__policy-link">
                 개인정보 처리방침
               </RouterLink>
-              에 동의합니다 (필수)
+              에 동의해요 (필수)
             </span>
           </label>
         </div>

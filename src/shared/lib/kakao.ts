@@ -32,7 +32,8 @@ export interface ShareReviewParams {
   token: string
   vendorName: string
   themeName: string
-  rating: number
+  /** 재미 등급 라벨(꽃길/풀길… 또는 인생테마). 호출부(page/feature)에서 계산해 전달 */
+  gradeLabel: string
   summary: string
   isSuccess: boolean
 }
@@ -49,7 +50,7 @@ export async function shareReviewViaKakao(params: ShareReviewParams): Promise<'k
   initKakao()
 
   const title = `${params.vendorName} · ${params.themeName}`
-  const desc = `★${params.rating} | ${params.summary}`
+  const desc = `${params.gradeLabel} | ${params.summary}`
 
   if (typeof Kakao !== 'undefined' && Kakao.isInitialized()) {
     Kakao.Share.sendDefault({
