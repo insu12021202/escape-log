@@ -23,6 +23,9 @@ dist-ssr
 # Vercel
 .vercel
 
+# 로컬 전용 톤 점검 스크린샷 도구 (커밋 대상 아님)
+scripts/
+
 # Claude Code local settings
 .claude/settings.local.json
 
