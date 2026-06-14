@@ -204,16 +204,25 @@ function toggleMode() {
 
 .login__input {
   width: 100%;
-  padding: 11px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
+  height: var(--control-height);
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  background: var(--color-surface);
+  font-size: 15px;
+  color: var(--ink-1000);
   outline: none;
   box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.login__input::placeholder {
+  color: var(--ink-400);
 }
 
 .login__input:focus {
   border-color: var(--brand-500);
+  box-shadow: var(--control-focus-ring);
 }
 
 .login__error {
@@ -257,12 +266,13 @@ function toggleMode() {
 }
 
 .login__submit-btn {
-  padding: 12px;
+  height: var(--control-height);
+  padding: 0 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--control-radius);
   background: var(--brand-500);
-  color: #fff;
-  font-size: 0.9375rem;
+  color: var(--paper);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   width: 100%;

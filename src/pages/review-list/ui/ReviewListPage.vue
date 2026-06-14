@@ -444,12 +444,12 @@ onMounted(async () => {
 
 .review-list__search-input {
   width: 100%;
-  height: 44px;
+  height: var(--control-height);
   padding: 0 12px 0 38px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--control-radius);
   background: var(--color-surface);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--ink-1000);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -461,7 +461,7 @@ onMounted(async () => {
 .review-list__search-input:focus {
   outline: none;
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px var(--brand-50);
+  box-shadow: var(--control-focus-ring);
 }
 
 .review-list__filters {

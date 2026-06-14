@@ -83,6 +83,12 @@
   --radius-xl: 20px;
   --radius-pill: 999px;
 
+  /* Form controls — 입력 일관성 단일 소스 (토스풍 에어리·소프트).
+   * 전 입력/검색/셀렉트/텍스트영역이 이 값을 공유한다. */
+  --control-height: 48px;
+  --control-radius: 12px;
+  --control-focus-ring: 0 0 0 3px var(--brand-50);
+
   /* Shadow */
   --shadow-xs: 0 1px 2px rgba(35, 26, 30, 0.04);
   --shadow-card: 0 1px 3px rgba(35, 26, 30, 0.06), 0 4px 12px rgba(35, 26, 30, 0.04);

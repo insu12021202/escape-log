@@ -917,21 +917,24 @@ function navigateAfterSave(reviewId: string) {
   box-sizing: border-box;
   padding: 11px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--control-radius);
   font-size: 15px;
   color: var(--ink-1000);
   background: var(--color-surface);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  min-height: 44px;
+  min-height: var(--control-height);
   max-width: 100%;
+}
+
+.review-form__input::placeholder,
+.review-form__textarea::placeholder {
+  color: var(--ink-400);
 }
 
 .review-form__input--short {
   max-width: 120px;
-  height: 44px;
+  height: var(--control-height);
   min-height: 0;
-  padding-top: 8px;
-  padding-bottom: 8px;
   line-height: 1.2;
 }
 
@@ -940,7 +943,7 @@ function navigateAfterSave(reviewId: string) {
 .review-form__textarea:focus {
   outline: none;
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px var(--brand-50);
+  box-shadow: var(--control-focus-ring);
 }
 
 .review-form__textarea {

@@ -60,15 +60,15 @@ function inc() {
 .app-stepper {
   display: inline-flex;
   align-items: stretch;
-  height: 44px;
+  height: var(--control-height);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--control-radius);
   background: var(--color-surface);
   overflow: hidden;
 }
 
 .app-stepper__btn {
-  width: 44px;
+  width: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
