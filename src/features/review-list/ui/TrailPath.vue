@@ -90,6 +90,8 @@ function scrollToId(id: string) {
               class="trail-path__dot"
               :style="{
                 background: dot.color,
+                backgroundOrigin: 'border-box',
+                backgroundRepeat: 'no-repeat',
                 width: `${dot.size}px`,
                 height: `${dot.size}px`,
               }"
@@ -117,7 +119,11 @@ function scrollToId(id: string) {
               :class="{ 'trail-path__dot--fail': !point.isSuccess }"
               :style="
                 point.isSuccess
-                  ? { background: getTrailStepColor(point.rating) }
+                  ? {
+                      background: getTrailStepColor(point.rating),
+                      backgroundOrigin: 'border-box',
+                      backgroundRepeat: 'no-repeat',
+                    }
                   : { borderColor: getTrailMeta(point.rating).token }
               "
               :aria-label="`${group.label} ${getTrailStepLabel(point.rating)} 기록으로 이동`"

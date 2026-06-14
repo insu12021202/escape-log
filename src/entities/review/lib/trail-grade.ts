@@ -79,19 +79,23 @@ export function getTrailStepLabel(rating: number): string {
 }
 
 /**
- * 단계 색 (CSS background 값) — 경계 단계는 두 버킷의 그라데이션.
+ * 단계 색 (CSS background 값) — 경계 단계는 두 버킷의 부드러운 그라데이션.
  * 흙풀길(2)=갈색→초록, 풀꽃길(4)=초록→핑크. 나머지는 단색.
+ *
+ * OKLCH 색공간에서 보간한다(`in oklch`). sRGB로 섞으면 초록↔핑크의
+ * 중간이 탁한 올리브/회색으로 죽지만, OKLCH는 채도를 유지한 채 색상환을
+ * 따라 이어져 경계 없이 부드럽고 생생하게 전환된다.
  */
 export function getTrailStepColor(rating: number): string {
   switch (normalizeRating(rating)) {
     case 1:
       return 'var(--trail-dirt)'
     case 2:
-      return 'linear-gradient(135deg, var(--trail-dirt) 20%, var(--trail-grass) 80%)'
+      return 'linear-gradient(135deg in oklch, var(--trail-dirt), var(--trail-grass))'
     case 3:
       return 'var(--trail-grass)'
     case 4:
-      return 'linear-gradient(135deg, var(--trail-grass) 20%, var(--trail-flower) 80%)'
+      return 'linear-gradient(135deg in oklch, var(--trail-grass), var(--trail-flower))'
     default:
       return 'var(--trail-flower)'
   }

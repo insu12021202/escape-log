@@ -50,6 +50,8 @@ const currentStep = computed(
           selected >= step.value
             ? {
                 background: getTrailStepColor(step.value),
+                backgroundOrigin: 'border-box',
+                backgroundRepeat: 'no-repeat',
                 borderColor: TRAIL_META[step.grade].token,
               }
             : {}
