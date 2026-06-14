@@ -25,6 +25,7 @@ const props = defineProps<{
   visitedAt?: string | null
   remainingMinutes?: number | null
   hasSpoiler?: boolean
+  posterUrl?: string | null
 }>()
 
 const meta = computed(() => getTrailMeta(props.rating))
@@ -95,38 +96,45 @@ const revealDelay = computed(() => `${(props.index % 6) * 45}ms`)
 
     <!-- 오른쪽 카드 -->
     <div class="trail-milestone__card">
-      <div class="trail-milestone__head">
-        <span
-          class="trail-milestone__grade"
-          :class="{ 'trail-milestone__grade--life': lifeTheme }"
-          :style="{
-            color: lifeTheme ? 'var(--paper)' : meta.strongToken,
-            background: lifeTheme ? meta.strongToken : getTrailStepSoftColor(rating),
-          }"
-        >
-          {{ lifeTheme ? LIFE_THEME_LABEL : getTrailStepLabel(rating) }}
-        </span>
-        <span class="trail-milestone__serial label">{{ serial }}</span>
-        <SpeedBadge :remaining-minutes="remainingMinutes" :is-success="isSuccess" />
-        <span
-          v-if="!isSuccess"
-          class="trail-milestone__fail"
-          aria-label="실패"
-        >실패</span>
+      <div class="trail-milestone__content">
+        <div class="trail-milestone__head">
+          <span
+            class="trail-milestone__grade"
+            :class="{ 'trail-milestone__grade--life': lifeTheme }"
+            :style="{
+              color: lifeTheme ? 'var(--paper)' : meta.strongToken,
+              background: lifeTheme ? meta.strongToken : getTrailStepSoftColor(rating),
+            }"
+          >
+            {{ lifeTheme ? LIFE_THEME_LABEL : getTrailStepLabel(rating) }}
+          </span>
+          <span class="trail-milestone__serial label">{{ serial }}</span>
+          <SpeedBadge :remaining-minutes="remainingMinutes" :is-success="isSuccess" />
+          <span
+            v-if="!isSuccess"
+            class="trail-milestone__fail"
+            aria-label="실패"
+          >실패</span>
+        </div>
+
+        <div class="trail-milestone__title">
+          <span class="trail-milestone__vendor">{{ vendorName }}</span>
+          <span class="trail-milestone__theme">{{ themeName }}</span>
+        </div>
+
+        <p v-if="hasSpoiler" class="trail-milestone__spoiler">
+          스포일러 · 상세에서 확인
+        </p>
+        <p v-else-if="summary" class="trail-milestone__summary">{{ summary }}</p>
+
+        <div v-if="metaParts.length" class="trail-milestone__meta tnum">
+          {{ metaParts.join(' · ') }}
+        </div>
       </div>
 
-      <div class="trail-milestone__title">
-        <span class="trail-milestone__vendor">{{ vendorName }}</span>
-        <span class="trail-milestone__theme">{{ themeName }}</span>
-      </div>
-
-      <p v-if="hasSpoiler" class="trail-milestone__spoiler">
-        스포일러 · 상세에서 확인
-      </p>
-      <p v-else-if="summary" class="trail-milestone__summary">{{ summary }}</p>
-
-      <div v-if="metaParts.length" class="trail-milestone__meta tnum">
-        {{ metaParts.join(' · ') }}
+      <!-- 포스터 — 이 길목의 기억 (있을 때만, 레일은 그대로 hero) -->
+      <div v-if="posterUrl" class="trail-milestone__poster">
+        <img :src="posterUrl" :alt="`${themeName} 포스터`" loading="lazy" />
       </div>
     </div>
   </RouterLink>
@@ -208,7 +216,35 @@ const revealDelay = computed(() => `${(props.index % 6) * 45}ms`)
 .trail-milestone__card {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
   padding: 0 0 22px;
+}
+
+.trail-milestone__content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 포스터 — 카드 우측 썸네일. 글머리 행은 노드와 정렬되도록 content는 위 고정,
+   포스터만 텍스트 블록 기준 세로 중앙으로 맞춰 빈 공간 없이 균형 잡음. */
+.trail-milestone__poster {
+  flex-shrink: 0;
+  align-self: center;
+  width: 56px;
+  aspect-ratio: 2 / 3;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--ink-100);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.trail-milestone__poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .trail-milestone__head {
