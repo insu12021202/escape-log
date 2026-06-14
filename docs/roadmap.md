@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 11 완료** (v3 자연 톤·'길' 체계·여정 타임라인 + 후속 다듬기)
-- 마지막 완료 PR: style: 전체 탭 카드 v3 리디자인 main 재반영 (#69)
+- 현재 Phase: **Phase 12 완료** (모바일 앱 폴리시 — 포스터·PWA 아이콘·터치/줌 하드닝)
+- 마지막 완료 PR: chore: 로컬 전용 스크린샷 도구 gitignore 처리 (#73)
 - 참고: #41~#50(shared 유틸·StatCard 정리·v2 폴리시·페이지네이션·스포일러 노출 유지·작성자 프로필)은 roadmap 미반영분으로 별도 정리 필요
 
 ### 완료된 작업 요약
@@ -408,6 +408,12 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 내 기록 전체 로드(fetchReviewsByUser)로 여정 선·월 점프 일관화, fetchMyJourney 폐기 — PR #67
 - 전체 탭 카드 리디자인(포스터 없음 박스 제거, 스파인 등급 색, 시리얼 제거) — PR #68→main 재반영 #69
   - 주의: #68이 스택 base(feature/speed-badge)로 머지돼 main 누락 → #69로 cherry-pick 재반영. 같은 파일 연속 작업은 앞 PR 머지 후 main에서 새 브랜치를 딸 것
+
+#### Phase 12 — 모바일 앱 폴리시 완료
+- 내 기록 여정 타임라인 마일스톤 카드에 포스터 썸네일(56×84, 2:3) 노출 — 레일(길) 컨셉 유지 위해 카드 우측 배치, 텍스트 기준 세로 중앙, 포스터 없으면 본문 풀폭 — PR #70
+- 다크모드 PWA 로고 가시성 수정: 투명 배경+검정 로고 → 전 아이콘에 페이퍼색(#faf8f8) 베이크, maskable 전용 아이콘(세이프존 78%) 분리 — PR #71
+- 모바일 앱 하드닝: 핀치/더블탭 줌 차단(user-scalable=no), viewport-fit=cover, text-size-adjust·tap-highlight 제거·overscroll·touch-action, 세이프에어리어(헤더 top/좌우·탭바·sticky bar·라이트박스), 앱 UI 탭 시 텍스트 선택(파란 배경) 방지 — PR #72
+- 로컬 전용 스크린샷 도구(scripts/) gitignore 처리 — PR #73
 
 ### 미완료 항목
 - [x] README 정리 — Phase 6

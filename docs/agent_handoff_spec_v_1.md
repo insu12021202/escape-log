@@ -212,6 +212,10 @@
 - [x] 반갈죽/삼갈죽 탈출 속도 자동 뱃지 (60분 가정, SpeedBadge) (PR #66)
 - [x] 내 기록 전체 로드로 여정 선·월 점프 일관화 (fetchMyJourney 폐기) (PR #67)
 - [x] 전체 탭 카드 리디자인 (포스터 없음 박스 제거·스파인 등급 색·시리얼 제거) (PR #68→main 재반영 #69)
+- [x] 내 기록 여정 타임라인 마일스톤 카드 포스터 썸네일 노출 (레일 컨셉 유지·우측 세로 중앙) (PR #70)
+- [x] 다크모드 PWA 로고 가시성 — 아이콘 페이퍼색 베이크 + maskable 전용 분리 (PR #71)
+- [x] 모바일 앱 하드닝 — 줌 차단·viewport-fit=cover·터치(tap-highlight/overscroll/touch-action)·세이프에어리어·텍스트 선택 방지 (PR #72)
+- [x] 로컬 전용 스크린샷 도구(scripts/) gitignore 처리 (PR #73)
 - [ ] 반갈죽 정밀화 — rooms.time_limit_min 컬럼 추가 (후속, 현재 60분 가정)
 - [ ] 대량 기록 시 내 기록 타임라인 가상화 (후속)
 
