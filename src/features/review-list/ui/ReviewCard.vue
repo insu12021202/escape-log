@@ -278,6 +278,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
 /* 태그 */
 .review-card__tags {
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: nowrap;
   overflow: hidden;
