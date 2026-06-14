@@ -204,7 +204,8 @@ onMounted(async () => {
           </AppChip>
         </div>
         <span v-if="totalCount" class="review-list__count tnum">
-          총 <strong>{{ totalCount }}</strong>개
+          총 <strong>{{ totalCount }}</strong
+          >개
         </span>
       </div>
 
@@ -247,7 +248,9 @@ onMounted(async () => {
           <button
             type="button"
             class="review-list__grade-chip"
-            :class="{ 'review-list__grade-chip--active': gradeFilter.size === 0 }"
+            :class="{
+              'review-list__grade-chip--active': gradeFilter.size === 0,
+            }"
             :aria-pressed="gradeFilter.size === 0"
             @click="gradeFilter = new Set()"
           >
@@ -258,7 +261,9 @@ onMounted(async () => {
             :key="grade"
             type="button"
             class="review-list__grade-chip"
-            :class="{ 'review-list__grade-chip--active': gradeFilter.has(grade) }"
+            :class="{
+              'review-list__grade-chip--active': gradeFilter.has(grade),
+            }"
             :aria-pressed="gradeFilter.has(grade)"
             :style="
               gradeFilter.has(grade)
@@ -276,7 +281,9 @@ onMounted(async () => {
               :style="{ background: TRAIL_META[grade].token }"
             />
             <strong>{{ TRAIL_META[grade].label }}</strong>
-            <span class="review-list__grade-hint">{{ TRAIL_META[grade].hint }}</span>
+            <span class="review-list__grade-hint">{{
+              TRAIL_META[grade].hint
+            }}</span>
           </button>
         </div>
       </div>
@@ -322,13 +329,15 @@ onMounted(async () => {
           :disabled="loadingMore"
           @click="loadMore"
         >
-          {{ loadingMore ? '불러오는 중...' : '더 보기' }}
+          {{ loadingMore ? "불러오는 중..." : "더 보기" }}
         </button>
       </template>
       <div v-else class="review-list__empty">
-        <pre class="review-list__empty-art mono">┌──────────────┐
+        <pre class="review-list__empty-art mono">
+┌──────────────┐
 │   ESC LOG    │
-└──────────────┘</pre>
+└──────────────┘</pre
+        >
         <template v-if="hasActiveFilter">
           <p class="review-list__empty-title">{{ EMPTY.noSearchTitle }}</p>
           <p class="review-list__empty-desc">{{ EMPTY.noSearchMessage }}</p>
@@ -363,7 +372,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 16px 0 12px;
+  padding: 0px 0 12px;
 }
 
 .review-list__tabs {
@@ -417,7 +426,9 @@ onMounted(async () => {
   background: var(--color-surface);
   font-size: 14px;
   color: var(--ink-1000);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .review-list__search-input::placeholder {
@@ -457,7 +468,9 @@ onMounted(async () => {
   font-size: 12.5px;
   color: var(--ink-600);
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast),
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
     color var(--transition-fast);
 }
 
@@ -555,7 +568,9 @@ onMounted(async () => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .review-list__empty-btn:hover {
