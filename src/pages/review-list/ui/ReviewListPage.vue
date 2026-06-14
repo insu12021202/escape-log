@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { fetchReviews, fetchMyJourney } from "@/entities/review/api";
+import { fetchReviews, fetchReviewsByUser } from "@/entities/review/api";
 import { fetchAllRooms } from "@/entities/room/api";
 import type { JourneyPoint, Review } from "@/entities/review/types";
 import type { Room } from "@/entities/room/types";
@@ -20,8 +20,8 @@ import {
 
 const session = useSessionStore();
 
-const reviews = ref<Review[]>([]);
-const journey = ref<JourneyPoint[]>([]);
+const reviews = ref<Review[]>([]); // 전체 탭 (페이지네이션)
+const myReviews = ref<Review[]>([]); // 내 기록 탭 (전부 로드 — 여정 선·월 점프 일관성)
 const rooms = ref<Record<string, Room>>({});
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -53,9 +53,17 @@ const sortOptions: Array<{ value: "" | "asc" | "desc"; label: string }> = [
 const myUserId = computed(() => session.user?.id ?? null);
 
 const baseReviews = computed(() =>
-  activeTab.value === "mine"
-    ? reviews.value.filter((r) => r.userId === myUserId.value)
-    : reviews.value,
+  activeTab.value === "mine" ? myReviews.value : reviews.value,
+);
+
+// 여정 선 — 내 기록 전체에서 파생 (페이지네이션과 무관하게 항상 전체 여정)
+const journey = computed<JourneyPoint[]>(() =>
+  myReviews.value.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    isSuccess: r.visitMeta.isSuccess,
+    date: (r.visitedAt ?? r.createdAt).slice(0, 10),
+  })),
 );
 
 const regions = computed(() => [
@@ -150,13 +158,15 @@ async function loadMore() {
 
 onMounted(async () => {
   try {
-    const [data, allRooms, myJourney] = await Promise.all([
+    // 라우터 가드가 navigation 전에 session.init()을 await → 여기서 myUserId 보장됨
+    const uid = myUserId.value;
+    const [data, allRooms, mine] = await Promise.all([
       fetchReviews({ limit: PAGE_SIZE }),
       fetchAllRooms(),
-      fetchMyJourney(),
+      uid ? fetchReviewsByUser(uid) : Promise.resolve([]),
     ]);
     reviews.value = data;
-    journey.value = myJourney;
+    myReviews.value = mine;
     if (data.length < PAGE_SIZE) hasMore.value = false;
     rooms.value = Object.fromEntries(allRooms.map((r) => [r.id, r]));
   } catch (e) {
@@ -324,7 +334,7 @@ onMounted(async () => {
         </div>
 
         <button
-          v-if="hasMore && !hasActiveFilter"
+          v-if="activeTab === 'all' && hasMore && !hasActiveFilter"
           type="button"
           class="review-list__load-more"
           :disabled="loadingMore"
