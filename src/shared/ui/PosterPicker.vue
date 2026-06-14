@@ -24,7 +24,7 @@ function acceptFile(file: File): boolean {
   sizeError.value = ''
   if (!file.type.startsWith('image/')) return false
   if (file.size > MAX_BYTES) {
-    sizeError.value = '파일 크기가 5MB를 초과합니다.'
+    sizeError.value = '사진은 5MB까지 올릴 수 있어요'
     return false
   }
   emit('update:modelValue', file)

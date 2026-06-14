@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    items: Array<{ label: string; value: number }>
+    items: Array<{ label: string; value: number; color?: string }>
     color?: string
     showCount?: boolean
   }>(),
@@ -22,7 +22,7 @@ const maxValue = computed(() => Math.max(...props.items.map((i) => i.value), 1))
           class="h-bar-chart__fill"
           :style="{
             width: `${(item.value / maxValue) * 100}%`,
-            background: color,
+            background: item.color ?? color,
           }"
         />
       </div>

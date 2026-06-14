@@ -5,6 +5,11 @@ import { fetchReviewById, enableSharing, deleteReview } from '@/entities/review/
 import { searchRooms } from '@/entities/room/api'
 import { supabase } from '@/shared/api/supabase'
 import { shareReviewViaKakao } from '@/shared/lib/kakao'
+import {
+  getTrailStepLabel,
+  isLifeTheme,
+  LIFE_THEME_LABEL,
+} from '@/entities/review/lib/trail-grade'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import { ArrowLeftIcon, PencilSquareIcon, ShareIcon, TrashIcon } from '@heroicons/vue/24/outline'
@@ -36,13 +41,18 @@ async function handleShare() {
     const token = await enableSharing(review.value.id)
     review.value = { ...review.value, shareToken: token, visibility: 'link' }
 
+    const r = review.value
+    const gradeLabel = isLifeTheme(r.rating, r.visitMeta.wouldRevisit)
+      ? LIFE_THEME_LABEL
+      : getTrailStepLabel(r.rating)
+
     const result = await shareReviewViaKakao({
       token,
       vendorName: room.value.vendorName,
       themeName: room.value.themeName,
-      rating: review.value.rating,
-      summary: review.value.summary,
-      isSuccess: review.value.visitMeta.isSuccess,
+      gradeLabel,
+      summary: r.summary,
+      isSuccess: r.visitMeta.isSuccess,
     })
 
     if (result === 'copied') toast.info(TOAST.linkCopied)
