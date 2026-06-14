@@ -89,6 +89,8 @@ const revealDelay = computed(() => `${(props.index % 6) * 45}ms`)
         :style="{
           '--node-color': meta.token,
           background: isSuccess ? getTrailStepColor(rating) : 'var(--color-surface)',
+          backgroundOrigin: 'border-box',
+          backgroundRepeat: 'no-repeat',
           borderColor: meta.token,
         }"
       />
