@@ -191,67 +191,77 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
+/* 뒤로가기 — 밑줄 링크가 아니라 중립 고스트 칩 */
 .review-detail-page__back {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.875rem;
-  color: var(--color-primary);
+  margin-left: -6px;
+  padding: 7px 13px 7px 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-600);
   text-decoration: none;
+  border-radius: 999px;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .review-detail-page__back:hover {
-  text-decoration: underline;
+  background: var(--ink-100);
+  color: var(--ink-900);
 }
 
 .review-detail-page__back-icon {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
 }
 
 .review-detail-page__actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
 }
 
+/* 액션 — 테두리 박스가 아니라 고스트 원형 아이콘 버튼 */
 .review-detail-page__action-btn {
-  color: var(--color-primary);
-  text-decoration: none;
-  padding: 6px;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  display: flex;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
   align-items: center;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  justify-content: center;
+  color: var(--ink-500);
   background: none;
+  border: none;
+  border-radius: 999px;
+  text-decoration: none;
   cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .review-detail-page__action-btn:hover {
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--ink-100);
+  color: var(--ink-900);
 }
 
 .review-detail-page__action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.review-detail-page__action-btn--danger {
-  color: var(--color-error);
-  border-color: var(--color-error);
+.review-detail-page__action-btn:disabled:hover {
+  background: none;
+  color: var(--ink-500);
 }
 
 .review-detail-page__action-btn--danger:hover {
-  background: var(--color-error);
-  color: #fff;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .review-detail-page__action-icon {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
 }
 
 .review-detail-page__status {
