@@ -2,8 +2,15 @@
 import { ref, computed, onUnmounted } from 'vue'
 import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
-import StarRating from '@/shared/ui/StarRating.vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
+import TrailDots from '@/entities/review/ui/TrailDots.vue'
+import {
+  getTrailMeta,
+  getTrailStepSoftColor,
+  getTrailStepLabel,
+  isLifeTheme,
+  LIFE_THEME_LABEL,
+} from '@/entities/review/lib/trail-grade'
 import { getPhotoPublicUrl, getRoomPosterUrl } from '@/shared/api/storage'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatFullDate, formatVisitedDate } from '@/shared/lib/date'
@@ -14,6 +21,16 @@ const props = defineProps<{
   review: Review
   room: Room
 }>()
+
+const trailMeta = computed(() => getTrailMeta(props.review.rating))
+const trailLabel = computed(() =>
+  isLifeTheme(props.review.rating, props.review.visitMeta.wouldRevisit)
+    ? LIFE_THEME_LABEL
+    : getTrailStepLabel(props.review.rating),
+)
+const lifeTheme = computed(() =>
+  isLifeTheme(props.review.rating, props.review.visitMeta.wouldRevisit),
+)
 
 const SUB_METRIC_LABELS: Record<string, string> = {
   puzzleQuality: '퍼즐 퀄리티',
@@ -100,7 +117,7 @@ onUnmounted(() => {
 <template>
   <article class="review-detail">
     <!-- 다크 hero 카드 -->
-    <header class="review-detail__hero dot-bg-dark">
+    <header class="review-detail__hero dot-bg">
       <div class="review-detail__hero-top">
         <span class="review-detail__hero-label">리뷰 기록</span>
         <span class="review-detail__hero-serial mono">{{ serial }}</span>
@@ -123,10 +140,17 @@ onUnmounted(() => {
 
       <div class="review-detail__hero-result">
         <div class="review-detail__hero-rating">
-          <StarRating :model-value="review.rating" readonly :size="18" />
-          <span class="review-detail__hero-rating-num mono tnum">
-            {{ review.rating.toFixed(1) }}
-          </span>
+          <span
+            class="review-detail__hero-grade"
+            :class="{ 'review-detail__hero-grade--life': lifeTheme }"
+            :style="{
+              color: lifeTheme ? 'var(--paper)' : trailMeta.strongToken,
+              background: lifeTheme
+                ? trailMeta.strongToken
+                : getTrailStepSoftColor(review.rating),
+            }"
+          >{{ trailLabel }}</span>
+          <TrailDots :rating="review.rating" size="md" />
         </div>
         <AppBadge :kind="review.visitMeta.isSuccess ? 'success' : 'error'" size="md">
           {{ review.visitMeta.isSuccess ? '성공' : '실패' }}
@@ -303,11 +327,12 @@ onUnmounted(() => {
   gap: 14px;
 }
 
-/* ── 다크 hero ── */
+/* ── 밝은 hero ── */
 .review-detail__hero {
   position: relative;
-  background-color: var(--ink-1000);
-  color: var(--paper);
+  background-color: var(--hero-bg);
+  color: var(--hero-text);
+  border: 1px solid var(--hero-line);
   border-radius: 14px;
   padding: 22px 20px 20px;
 }
@@ -321,12 +346,12 @@ onUnmounted(() => {
 .review-detail__hero-label {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(244, 237, 224, 0.5);
+  color: var(--hero-text-mute);
 }
 
 .review-detail__hero-serial {
   font-size: 10.5px;
-  color: rgba(244, 237, 224, 0.4);
+  color: var(--hero-text-mute);
   letter-spacing: 0.08em;
 }
 
@@ -349,13 +374,13 @@ onUnmounted(() => {
   object-fit: cover;
   border-radius: 8px;
   margin-top: 14px;
-  background: rgba(244, 237, 224, 0.08);
+  background: var(--hero-chip-bg);
 }
 
 .review-detail__hero-vendor {
   margin-top: 14px;
   font-size: 12.5px;
-  color: rgba(244, 237, 224, 0.6);
+  color: var(--hero-text-dim);
   letter-spacing: 0.02em;
 }
 
@@ -364,15 +389,15 @@ onUnmounted(() => {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--paper);
+  color: var(--hero-text);
 }
 
 .review-detail__hero-region {
   display: inline-block;
   margin-top: 10px;
   padding: 3px 9px;
-  background: rgba(244, 237, 224, 0.12);
-  color: var(--paper);
+  background: var(--hero-chip-bg);
+  color: var(--hero-text);
   border-radius: 999px;
   font-size: 11.5px;
   font-weight: 500;
@@ -384,7 +409,7 @@ onUnmounted(() => {
   justify-content: space-between;
   margin-top: 16px;
   padding-top: 14px;
-  border-top: 1px solid rgba(244, 237, 224, 0.1);
+  border-top: 1px solid var(--hero-line);
 }
 
 .review-detail__hero-rating {
@@ -393,10 +418,16 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.review-detail__hero-rating-num {
-  font-size: 17px;
+.review-detail__hero-grade {
+  font-size: 13px;
   font-weight: 700;
-  color: var(--paper);
+  padding: 4px 13px;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
+}
+
+.review-detail__hero-grade--life {
+  box-shadow: 0 1px 8px color-mix(in srgb, var(--trail-flower) 35%, transparent);
 }
 
 /* ── 한줄평 카드 ── */

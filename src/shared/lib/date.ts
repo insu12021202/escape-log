@@ -21,3 +21,11 @@ export function formatVisitedDate(dateStr: string): string {
 export function formatFullDate(iso: string): string {
   return new Date(iso).toISOString().slice(0, 10).replace(/-/g, '.')
 }
+
+/**
+ * "YYYY-MM-DD" 또는 ISO 문자열을 "YYYY.MM"으로.
+ * 타임라인 월 구분 헤더·여정 선 월 라벨용.
+ */
+export function formatMonth(dateStr: string): string {
+  return dateStr.slice(0, 7).replace('-', '.')
+}

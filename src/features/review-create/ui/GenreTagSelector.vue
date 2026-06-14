@@ -88,8 +88,8 @@ function onCustomInput(e: Event) {
 }
 
 .genre-selector__chip--active {
-  background: #4a90d9;
-  border-color: #4a90d9;
+  background: var(--brand-500);
+  border-color: var(--brand-500);
   color: #fff;
 }
 

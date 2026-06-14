@@ -212,8 +212,8 @@ const canAddMore = () => !props.disabled && totalCount() < MAX_PHOTOS
 }
 
 .photo-uploader__add:hover {
-  border-color: #4a90d9;
-  color: #4a90d9;
+  border-color: var(--brand-500);
+  color: var(--brand-500);
 }
 
 .photo-uploader__add-icon {

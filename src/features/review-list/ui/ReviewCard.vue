@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, useAttrs } from 'vue'
-import StarRating from '@/shared/ui/StarRating.vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
+import TrailDots from '@/entities/review/ui/TrailDots.vue'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatYearMonth } from '@/shared/lib/date'
 import { hasRevealedSpoiler, markSpoilerRevealed } from '@/shared/lib/spoiler'
+import {
+  getTrailMeta,
+  getTrailStepSoftColor,
+  getTrailStepLabel,
+  isLifeTheme,
+  LIFE_THEME_LABEL,
+} from '@/entities/review/lib/trail-grade'
 
 const props = defineProps<{
   rating: number
@@ -13,6 +20,7 @@ const props = defineProps<{
   themeName: string
   region: string
   isSuccess: boolean
+  wouldRevisit: boolean
   genreTags: string[]
   authorName?: string | null
   visitedAt?: string | null
@@ -20,6 +28,9 @@ const props = defineProps<{
   hasSpoiler?: boolean
   posterUrl?: string | null
 }>()
+
+const trailMeta = computed(() => getTrailMeta(props.rating))
+const lifeTheme = computed(() => isLifeTheme(props.rating, props.wouldRevisit))
 
 const attrs = useAttrs()
 const reviewId = computed(() => (attrs['data-id'] as string | undefined) ?? '')
@@ -85,7 +96,15 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
       </div>
       <p v-else class="review-card__summary">{{ summary }}</p>
 
-      <div v-if="visibleTags.length" class="review-card__tags">
+      <div class="review-card__tags">
+        <span
+          class="review-card__grade"
+          :class="{ 'review-card__grade--life': lifeTheme }"
+          :style="{
+            color: lifeTheme ? 'var(--paper)' : trailMeta.strongToken,
+            background: lifeTheme ? trailMeta.strongToken : getTrailStepSoftColor(rating),
+          }"
+        >{{ lifeTheme ? LIFE_THEME_LABEL : getTrailStepLabel(rating) }}</span>
         <span v-for="tag in visibleTags" :key="tag" class="review-card__tag">
           {{ tag }}
         </span>
@@ -97,8 +116,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
 
       <div class="review-card__footer">
         <div class="review-card__rating">
-          <StarRating :model-value="rating" readonly size="sm" mute />
-          <span class="review-card__rating-num mono tnum">{{ rating }}</span>
+          <TrailDots :rating="rating" size="sm" />
         </div>
         <div v-if="metaParts.length" class="review-card__meta tnum">
           {{ metaParts.join(' · ') }}
@@ -280,6 +298,21 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   color: var(--ink-500);
 }
 
+/* 재미 등급 칩 — 꽃길/풀길/흙길 (전체 탭 공통 언어) */
+.review-card__grade {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.review-card__grade--life {
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--trail-flower) 35%, transparent);
+}
+
 /* 푸터 */
 .review-card__footer {
   display: flex;
@@ -292,12 +325,6 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-
-.review-card__rating-num {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--ink-900);
 }
 
 .review-card__meta {

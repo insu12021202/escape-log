@@ -53,8 +53,8 @@ function onClick() {
 }
 
 .app-chip--active {
-  background: var(--ink-1000);
+  background: var(--brand-500);
   color: var(--paper);
-  box-shadow: inset 0 0 0 1px var(--ink-1000);
+  box-shadow: inset 0 0 0 1px var(--brand-500);
 }
 </style>

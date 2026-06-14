@@ -15,9 +15,9 @@ const props = withDefaults(
 const styles = computed(() => {
   switch (props.kind) {
     case 'success':
-      return { background: '#0d2f1d', color: '#7be3a4', border: 'transparent' }
+      return { background: 'var(--color-success-bg)', color: 'var(--color-success)', border: 'transparent' }
     case 'error':
-      return { background: '#3a1216', color: '#ffb1b1', border: 'transparent' }
+      return { background: 'var(--color-error-bg)', color: 'var(--color-error)', border: 'transparent' }
     case 'primary':
       return { background: 'var(--brand-500)', color: '#ffffff', border: 'transparent' }
     case 'outline':

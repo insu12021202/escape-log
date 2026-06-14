@@ -68,7 +68,7 @@ onMounted(async () => {
 
 .shared-review__badge {
   font-size: 0.8125rem;
-  color: #4a90d9;
+  color: var(--brand-500);
   background: #e8f0fe;
   padding: 4px 12px;
   border-radius: 4px;

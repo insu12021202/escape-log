@@ -5,6 +5,12 @@ import type { Room } from '@/entities/room/types'
 import StatCard from '@/shared/ui/StatCard.vue'
 import RadarChart from '@/shared/ui/RadarChart.vue'
 import HorizontalBarChart from './HorizontalBarChart.vue'
+import {
+  TRAIL_META,
+  TRAIL_STEPS,
+  getTrailGrade,
+  getTrailStepLabel,
+} from '@/entities/review/lib/trail-grade'
 
 const props = defineProps<{
   reviews: Review[]
@@ -25,6 +31,15 @@ const avgRating = computed(() => {
   if (!totalCount.value) return 0
   const sum = props.reviews.reduce((s, r) => s + r.rating, 0)
   return +(sum / totalCount.value).toFixed(1)
+})
+
+/** 평균 rating을 가장 가까운 길 단계로 표시 */
+const avgTrail = computed(() => {
+  const rounded = Math.min(5, Math.max(1, Math.round(avgRating.value)))
+  return {
+    label: getTrailStepLabel(rounded),
+    color: TRAIL_META[getTrailGrade(rounded)].token,
+  }
 })
 
 const avgHeadcount = computed(() => {
@@ -119,7 +134,7 @@ const monthlyTrend = computed(() => {
 
 const monthlyMax = computed(() => Math.max(...monthlyTrend.value.map((m) => m.value), 1))
 
-/* ── 평점 분포 ── */
+/* ── 길 분포 (rating 1~5 = 흙길~꽃길 5단계) ── */
 
 const ratingDistribution = computed(() => {
   const counts: number[] = [0, 0, 0, 0, 0]
@@ -127,7 +142,10 @@ const ratingDistribution = computed(() => {
     const idx = Math.round(r.rating) - 1
     if (idx >= 0 && idx < 5) counts[idx] = (counts[idx] ?? 0) + 1
   }
-  return counts.map((value, i) => ({ label: `${i + 1}점`, value: value ?? 0 }))
+  return counts.map((value, i) => ({
+    label: TRAIL_STEPS[i]!.label,
+    value: value ?? 0,
+  }))
 })
 </script>
 
@@ -139,7 +157,7 @@ const ratingDistribution = computed(() => {
     <div class="dashboard__cards">
       <StatCard label="총 플레이" :value="totalCount" unit="개" accent="var(--brand-500)" />
       <StatCard label="탈출 성공률" :value="`${successRate}%`" accent="var(--color-success)" />
-      <StatCard label="평균 평점" :value="avgRating" unit="/ 5" accent="var(--color-star)" />
+      <StatCard label="평균 길" :value="avgTrail.label" :accent="avgTrail.color" />
       <StatCard label="평균 인원" :value="avgHeadcount" unit="명" accent="#8b5cf6" />
     </div>
 
@@ -174,10 +192,10 @@ const ratingDistribution = computed(() => {
       </div>
     </div>
 
-    <!-- 평점 분포 -->
+    <!-- 길 분포 -->
     <div class="dashboard__section">
-      <h3 class="dashboard__section-title">평점 분포</h3>
-      <HorizontalBarChart :items="ratingDistribution" color="var(--color-star)" />
+      <h3 class="dashboard__section-title">길 분포</h3>
+      <HorizontalBarChart :items="ratingDistribution" color="var(--trail-flower)" />
     </div>
   </section>
 </template>

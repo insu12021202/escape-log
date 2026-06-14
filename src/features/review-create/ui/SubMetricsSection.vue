@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { ChevronRightIcon } from '@heroicons/vue/24/outline'
 import type { SubMetrics } from '@/entities/review/types'
-import StarRating from '@/shared/ui/StarRating.vue'
+import LevelSelect from '@/shared/ui/LevelSelect.vue'
 
 const props = defineProps<{
   modelValue: SubMetrics
@@ -38,7 +38,11 @@ function update(key: keyof SubMetrics, value: number) {
     <div v-if="isOpen" class="sub-metrics__body">
       <div v-for="item in labels" :key="item.key" class="sub-metrics__row">
         <span class="sub-metrics__label">{{ item.label }}</span>
-        <StarRating :model-value="modelValue[item.key]" @update:model-value="update(item.key, $event)" />
+        <LevelSelect
+          :model-value="modelValue[item.key]"
+          :label="item.label"
+          @update:model-value="update(item.key, $event)"
+        />
       </div>
     </div>
     </Transition>
