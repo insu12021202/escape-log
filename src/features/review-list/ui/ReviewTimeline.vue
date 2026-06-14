@@ -4,6 +4,7 @@ import type { JourneyPoint, Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import TrailPath from '@/features/review-list/ui/TrailPath.vue'
 import TrailMilestone from '@/features/review-list/ui/TrailMilestone.vue'
+import { getRoomPosterUrl } from '@/shared/api/storage'
 import { formatMonth } from '@/shared/lib/date'
 
 const props = withDefaults(
@@ -77,6 +78,7 @@ const sections = computed(() => {
             :visited-at="review.visitedAt"
             :remaining-minutes="review.visitMeta.remainingMinutes"
             :has-spoiler="review.hasSpoiler"
+            :poster-url="room.posterPath ? getRoomPosterUrl(room.posterPath) : null"
           />
         </div>
       </template>
