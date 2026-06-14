@@ -75,29 +75,45 @@ function onCustomInput(e: Event) {
 }
 
 .genre-selector__chip {
-  font-size: 0.8125rem;
-  padding: 4px 12px;
-  border: 1px solid #ddd;
-  border-radius: 16px;
-  background: #fff;
-  color: #555;
+  font-size: 12.5px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--ink-700);
   cursor: pointer;
   transition:
-    background 0.15s,
-    border-color 0.15s;
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .genre-selector__chip--active {
   background: var(--brand-500);
   border-color: var(--brand-500);
-  color: #fff;
+  color: var(--paper);
 }
 
 .genre-selector__custom {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  height: var(--control-height);
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  background: var(--color-surface);
+  font-size: 15px;
+  color: var(--ink-1000);
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.genre-selector__custom::placeholder {
+  color: var(--ink-400);
+}
+
+.genre-selector__custom:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: var(--control-focus-ring);
 }
 </style>

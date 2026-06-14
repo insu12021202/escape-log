@@ -90,7 +90,7 @@ onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
   gap: 4px;
   height: 34px;
   padding: 0 12px;
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 99px;
   font-size: 0.8125rem;
   font-weight: 500;
@@ -115,7 +115,7 @@ onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
 }
 
 .base-select__trigger--open {
-  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+  box-shadow: var(--control-focus-ring);
 }
 
 .base-select__label--pill {
@@ -190,10 +190,10 @@ onUnmounted(() => document.removeEventListener("mousedown", onClickOutside));
 
 .base-select__trigger--input {
   width: 100%;
-  border-radius: var(--radius-sm);
-  min-height: 48px;
-  padding: 11px 14px;
-  font-size: 1rem;
+  border-radius: var(--control-radius);
+  min-height: var(--control-height);
+  padding: 0 14px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--color-text);
   justify-content: space-between;

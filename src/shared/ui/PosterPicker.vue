@@ -114,9 +114,9 @@ function getPreviewUrl(file: File): string {
   position: relative;
   width: 72px;
   height: 108px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
 }
 
 .poster-picker__thumb--existing {
@@ -159,9 +159,9 @@ function getPreviewUrl(file: File): string {
 .poster-picker__add {
   width: 72px;
   height: 108px;
-  border: 1.5px dashed #ccc;
-  border-radius: 6px;
-  background: #fafafa;
+  border: 1.5px dashed var(--ink-300);
+  border-radius: var(--radius-md);
+  background: var(--ink-50);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -169,7 +169,7 @@ function getPreviewUrl(file: File): string {
   justify-content: center;
   gap: 4px;
   font-size: 0.75rem;
-  color: #888;
+  color: var(--ink-500);
 }
 
 .poster-picker__add:hover:not(:disabled) {
