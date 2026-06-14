@@ -4,6 +4,7 @@ import type { Review } from '@/entities/review/types'
 import type { Room } from '@/entities/room/types'
 import AppBadge from '@/shared/ui/AppBadge.vue'
 import TrailDots from '@/entities/review/ui/TrailDots.vue'
+import SpeedBadge from '@/entities/review/ui/SpeedBadge.vue'
 import {
   getTrailMeta,
   getTrailStepSoftColor,
@@ -152,9 +153,15 @@ onUnmounted(() => {
           >{{ trailLabel }}</span>
           <TrailDots :rating="review.rating" size="md" />
         </div>
-        <AppBadge :kind="review.visitMeta.isSuccess ? 'success' : 'error'" size="md">
-          {{ review.visitMeta.isSuccess ? '성공' : '실패' }}
-        </AppBadge>
+        <div class="review-detail__hero-status">
+          <SpeedBadge
+            :remaining-minutes="review.visitMeta.remainingMinutes"
+            :is-success="review.visitMeta.isSuccess"
+          />
+          <AppBadge :kind="review.visitMeta.isSuccess ? 'success' : 'error'" size="md">
+            {{ review.visitMeta.isSuccess ? '성공' : '실패' }}
+          </AppBadge>
+        </div>
       </div>
     </header>
 
@@ -410,6 +417,12 @@ onUnmounted(() => {
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid var(--hero-line);
+}
+
+.review-detail__hero-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .review-detail__hero-rating {

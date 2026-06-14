@@ -2,6 +2,7 @@
 import { computed, ref, useAttrs } from 'vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
 import TrailDots from '@/entities/review/ui/TrailDots.vue'
+import SpeedBadge from '@/entities/review/ui/SpeedBadge.vue'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatYearMonth } from '@/shared/lib/date'
 import { hasRevealedSpoiler, markSpoilerRevealed } from '@/shared/lib/spoiler'
@@ -117,6 +118,7 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
       <div class="review-card__footer">
         <div class="review-card__rating">
           <TrailDots :rating="rating" size="sm" />
+          <SpeedBadge :remaining-minutes="remainingMinutes" :is-success="isSuccess" />
         </div>
         <div v-if="metaParts.length" class="review-card__meta tnum">
           {{ metaParts.join(' · ') }}

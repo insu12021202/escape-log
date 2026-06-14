@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, type ComponentPublicInstance } from 'vue'
+import SpeedBadge from '@/entities/review/ui/SpeedBadge.vue'
 import { makeSerial } from '@/shared/lib/serial'
 import { formatYearMonth } from '@/shared/lib/date'
 import {
@@ -106,6 +107,7 @@ const revealDelay = computed(() => `${(props.index % 6) * 45}ms`)
           {{ lifeTheme ? LIFE_THEME_LABEL : getTrailStepLabel(rating) }}
         </span>
         <span class="trail-milestone__serial label">{{ serial }}</span>
+        <SpeedBadge :remaining-minutes="remainingMinutes" :is-success="isSuccess" />
         <span
           v-if="!isSuccess"
           class="trail-milestone__fail"
