@@ -3,11 +3,11 @@ import { computed, ref, useAttrs } from 'vue'
 import AppBadge from '@/shared/ui/AppBadge.vue'
 import TrailDots from '@/entities/review/ui/TrailDots.vue'
 import SpeedBadge from '@/entities/review/ui/SpeedBadge.vue'
-import { makeSerial } from '@/shared/lib/serial'
 import { formatYearMonth } from '@/shared/lib/date'
 import { hasRevealedSpoiler, markSpoilerRevealed } from '@/shared/lib/spoiler'
 import {
   getTrailMeta,
+  getTrailStepColor,
   getTrailStepSoftColor,
   getTrailStepLabel,
   isLifeTheme,
@@ -32,6 +32,8 @@ const props = defineProps<{
 
 const trailMeta = computed(() => getTrailMeta(props.rating))
 const lifeTheme = computed(() => isLifeTheme(props.rating, props.wouldRevisit))
+// 왼쪽 스파인 — 성공/실패가 아니라 '길' 등급 색 (제품 정체성)
+const spineColor = computed(() => getTrailStepColor(props.rating))
 
 const attrs = useAttrs()
 const reviewId = computed(() => (attrs['data-id'] as string | undefined) ?? '')
@@ -41,8 +43,6 @@ function reveal() {
   revealed.value = true
   markSpoilerRevealed(reviewId.value)
 }
-
-const serial = computed(() => makeSerial(reviewId.value))
 
 const metaParts = computed(() => {
   const parts: string[] = []
@@ -61,13 +61,10 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   <RouterLink
     :to="`/review/${$attrs['data-id']}`"
     class="review-card"
-    :class="{ 'review-card--fail': !isSuccess }"
+    :style="{ '--spine': spineColor }"
   >
     <div v-if="posterUrl" class="review-card__poster">
       <img :src="posterUrl" :alt="`${themeName} 포스터`" />
-    </div>
-    <div v-else class="review-card__poster review-card__poster--empty">
-      <span class="review-card__poster-empty-text">포스터 없음</span>
     </div>
 
     <div class="review-card__body">
@@ -76,12 +73,9 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
           <span class="review-card__vendor">{{ vendorName }}</span>
           <span class="review-card__theme">{{ themeName }}</span>
         </div>
-        <div class="review-card__head-right">
-          <span class="review-card__serial label">{{ serial }}</span>
-          <AppBadge :kind="isSuccess ? 'success' : 'error'" size="sm">
-            {{ isSuccess ? '성공' : '실패' }}
-          </AppBadge>
-        </div>
+        <AppBadge :kind="isSuccess ? 'success' : 'error'" size="sm">
+          {{ isSuccess ? '성공' : '실패' }}
+        </AppBadge>
       </div>
 
       <div
@@ -147,42 +141,24 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   transform: translateY(-1px);
 }
 
+/* 왼쪽 스파인 — '길' 등급 색 (경계 단계는 그라데이션) */
 .review-card::before {
   content: '';
   position: absolute;
-  top: 14px;
-  bottom: 14px;
+  top: 12px;
+  bottom: 12px;
   left: 0;
-  width: 3px;
-  background: var(--color-success);
-  border-radius: 0 2px 2px 0;
+  width: 4px;
+  background: var(--spine);
+  border-radius: 0 3px 3px 0;
 }
 
-.review-card--fail::before {
-  background: var(--color-error);
-}
-
-.review-card__serial {
-  font-size: 9.5px;
-  color: var(--ink-400);
-  letter-spacing: 0.08em;
-  line-height: 1;
-}
-
-.review-card__head-right {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-/* 포스터 */
+/* 포스터 — 있을 때만 렌더 (없으면 본문 풀폭) */
 .review-card__poster {
   flex-shrink: 0;
-  width: 72px;
-  height: 96px;
-  border-radius: 6px;
+  width: 64px;
+  height: 86px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--ink-100);
 }
@@ -192,17 +168,6 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.review-card__poster--empty {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.review-card__poster-empty-text {
-  font-size: 11px;
-  color: var(--ink-400);
 }
 
 /* 컨텐츠 */
@@ -222,9 +187,14 @@ const extraTagCount = computed(() => Math.max(0, props.genreTags.length - 3))
 }
 
 .review-card__title {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+.review-card__head :deep(.app-badge) {
+  flex-shrink: 0;
 }
 
 .review-card__vendor {
