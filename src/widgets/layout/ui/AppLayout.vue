@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   ArrowRightOnRectangleIcon,
@@ -23,6 +23,14 @@ const route = useRoute()
 const router = useRouter()
 
 const showLogoutDialog = ref(false)
+
+/**
+ * 몰입형 작성/수정 화면: 하단 글로벌 탭바를 숨긴다.
+ * 작성 중에는 ＋FAB(=리뷰 작성)가 중복이고, 폼의 sticky 저장 버튼과 하단을 두고 겹치기 때문.
+ */
+const isImmersive = computed(
+  () => route.name === 'review-create' || route.name === 'review-edit',
+)
 
 async function handleSignOut() {
   showLogoutDialog.value = false
@@ -48,7 +56,7 @@ async function handleSignOut() {
       </button>
     </header>
 
-    <main class="app-main">
+    <main class="app-main" :class="{ 'app-main--immersive': isImmersive }">
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
           <component :is="Component" />
@@ -56,7 +64,7 @@ async function handleSignOut() {
       </RouterView>
     </main>
 
-    <nav class="app-tab-bar">
+    <nav v-if="!isImmersive" class="app-tab-bar">
       <RouterLink to="/" class="app-tab" exact-active-class="app-tab--active">
         <ListBulletSolidIcon v-if="route.name === 'review-list'" class="app-tab__icon" />
         <ListBulletIcon v-else class="app-tab__icon" />
@@ -164,6 +172,11 @@ async function handleSignOut() {
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
+}
+
+/* 몰입형(작성/수정): 탭바가 없으므로 과도한 하단 여백 제거 → sticky 저장 버튼이 화면 끝에 붙음 */
+.app-main--immersive {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ── 하단 탭바 ── */
