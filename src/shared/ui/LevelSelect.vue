@@ -46,7 +46,7 @@ const emit = defineEmits<{
 }
 
 .level-select__seg--filled {
-  background: var(--ink-1000);
+  background: var(--brand-500);
 }
 
 .level-select__seg:hover {
@@ -54,7 +54,7 @@ const emit = defineEmits<{
 }
 
 .level-select__seg--filled:hover {
-  background: var(--ink-800);
+  background: var(--brand-600);
 }
 
 .level-select__num {
