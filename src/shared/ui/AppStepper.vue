@@ -40,7 +40,7 @@ function inc() {
     >
       −
     </button>
-    <div class="app-stepper__value">
+    <div class="app-stepper__value" aria-live="polite" aria-atomic="true">
       <span class="app-stepper__num mono">{{ modelValue }}</span>
       <span v-if="unit" class="app-stepper__unit">{{ unit }}</span>
     </div>
