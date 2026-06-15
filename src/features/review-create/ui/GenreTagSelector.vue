@@ -38,6 +38,7 @@ function onCustomInput(e: Event) {
         type="button"
         class="genre-selector__chip"
         :class="{ 'genre-selector__chip--active': modelValue.includes(tag) }"
+        :aria-pressed="modelValue.includes(tag)"
         @click="toggle(tag, modelValue)"
       >
         {{ tag }}
