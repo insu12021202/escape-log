@@ -244,3 +244,45 @@ textarea,
 .scroll-x-hidden::-webkit-scrollbar {
   display: none;
 }
+
+/* ── 전역 스크롤바: 얇게 + 위·아래 화살표 버튼 제거 ── */
+/* Chromium·Edge·Safari: ::-webkit-scrollbar 커스텀으로 화살표 없는 얇은 막대.
+   주의(Chromium 121+): 표준 scrollbar-width/scrollbar-color를 함께 선언하면
+   이 webkit 규칙이 통째로 무시되어 OS 화살표 스크롤바가 되살아난다.
+   그래서 표준 속성은 webkit 미지원 브라우저(Firefox)에만 적용한다. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ink-300);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-400);
+}
+
+/* 위·아래(좌·우) 화살표 버튼 숨김 */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox 등 webkit 미지원 브라우저 전용 (Chromium엔 적용되지 않음) */
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-300) transparent;
+  }
+}
