@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import {
   TRAIL_STEPS,
   TRAIL_META,
@@ -29,11 +29,36 @@ const meta = computed(() =>
 const currentStep = computed(
   () => TRAIL_STEPS.find((s) => s.value === selected.value) ?? null,
 )
+
+// ── 키보드 접근성 (radiogroup 표준 패턴) ──
+const trackRef = ref<HTMLElement | null>(null)
+
+/** roving tabindex: 선택된 디딤돌(없으면 1번)만 Tab 도달 가능 */
+function tabindexForStep(value: number) {
+  const active = selected.value >= 1 ? selected.value : 1
+  return value === active ? 0 : -1
+}
+
+function onStoneKey(e: KeyboardEvent) {
+  const cur = selected.value
+  let next: number
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') next = Math.min(5, (cur || 0) + 1)
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') next = Math.max(1, (cur || 1) - 1)
+  else if (e.key === 'Home') next = 1
+  else if (e.key === 'End') next = 5
+  else return
+  e.preventDefault()
+  emit('update:modelValue', next)
+  nextTick(() => {
+    const stones = trackRef.value?.querySelectorAll<HTMLElement>('.trail-rating__stone')
+    stones?.[next - 1]?.focus()
+  })
+}
 </script>
 
 <template>
   <div class="trail-rating">
-    <div class="trail-rating__track" role="radiogroup" aria-label="재미 등급">
+    <div class="trail-rating__track" ref="trackRef" role="radiogroup" aria-label="재미 등급">
       <button
         v-for="step in TRAIL_STEPS"
         :key="step.value"
@@ -41,6 +66,7 @@ const currentStep = computed(
         role="radio"
         :aria-checked="selected === step.value"
         :aria-label="`${step.label} · ${step.hint}`"
+        :tabindex="tabindexForStep(step.value)"
         class="trail-rating__stone"
         :class="{
           'trail-rating__stone--walked': selected >= step.value,
@@ -57,6 +83,7 @@ const currentStep = computed(
             : {}
         "
         @click="emit('update:modelValue', step.value)"
+        @keydown="onStoneKey"
       >
         <span class="trail-rating__stone-label" :class="{ mono: false }">
           {{ step.value }}
