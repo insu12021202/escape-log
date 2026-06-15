@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Review, SubMetrics, Visibility } from '@/entities/review/types'
 import { fetchGenreTags, createReview, updateReview, attachReviewPhoto, detachReviewPhoto } from '@/entities/review/api'
@@ -84,6 +84,15 @@ const vendorRooms = ref<Room[]>([])
 const rooms = ref<Room[]>([]) // edit 모드에서 현재 방 표시용
 const genreTagOptions = ref<Array<{ id: string; name: string }>>([])
 const submitting = ref(false)
+
+// 한줄평 textarea: 내용 높이에 맞춰 자동 확장 (긴 한줄평이 잘리지 않게)
+const summaryRef = ref<HTMLTextAreaElement | null>(null)
+function autoGrowSummary() {
+  const el = summaryRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${el.scrollHeight}px`
+}
 
 // 인라인 테마 추가
 const showRoomForm = ref(false)
@@ -203,6 +212,10 @@ watch(selectedVendorId, async (vendorId) => {
 })
 
 watch([() => ({ ...form }), currentStep], saveDraft, { deep: true })
+
+// 한줄평 값/스텝 변화 시 textarea 높이 재계산 (타이핑·임시저장 복원·edit 초기값 모두 커버)
+watch([() => form.summary, currentStep], () => nextTick(autoGrowSummary))
+onMounted(() => nextTick(autoGrowSummary))
 
 async function handleCreateRoom() {
   roomFormError.value = ''
@@ -504,7 +517,7 @@ function navigateAfterSave(reviewId: string) {
 
     <!-- 섹션 1: 어디서 -->
     <section v-if="mode === 'edit' || currentStep === 1" class="review-form__section">
-      <header class="section-head">
+      <header v-if="mode === 'edit'" class="section-head">
         <span class="section-head__eyebrow">1단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[1] }}</h3>
       </header>
@@ -582,7 +595,7 @@ function navigateAfterSave(reviewId: string) {
 
     <!-- 섹션 2: 어땠나 -->
     <section v-if="mode === 'edit' || currentStep === 2" class="review-form__section">
-      <header class="section-head">
+      <header v-if="mode === 'edit'" class="section-head">
         <span class="section-head__eyebrow">2단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[2] }}</h3>
       </header>
@@ -595,13 +608,15 @@ function navigateAfterSave(reviewId: string) {
 
       <div class="review-form__field">
         <label class="review-form__label" for="summary-input">한줄평 *</label>
-        <input
+        <textarea
           id="summary-input"
+          ref="summaryRef"
           v-model="form.summary"
-          class="review-form__input"
-          type="text"
+          class="review-form__input review-form__summary"
           maxlength="100"
+          rows="1"
           placeholder="100자 이내로 작성"
+          @input="autoGrowSummary"
           :aria-invalid="!!errors.summary"
           :aria-describedby="errors.summary ? 'summary-error' : undefined"
         />
@@ -620,7 +635,7 @@ function navigateAfterSave(reviewId: string) {
 
     <!-- 섹션 3: 어떻게 -->
     <section v-if="mode === 'edit' || currentStep === 3" class="review-form__section">
-      <header class="section-head">
+      <header v-if="mode === 'edit'" class="section-head">
         <span class="section-head__eyebrow">3단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[3] }}</h3>
       </header>
@@ -676,7 +691,7 @@ function navigateAfterSave(reviewId: string) {
 
     <!-- 섹션 4: 더 남길 것 -->
     <section v-if="mode === 'edit' || currentStep === 4" class="review-form__section">
-      <header class="section-head">
+      <header v-if="mode === 'edit'" class="section-head">
         <span class="section-head__eyebrow">4단계</span>
         <h3 class="section-head__title">{{ sectionShortTitles[4] }}</h3>
       </header>
@@ -951,6 +966,13 @@ function navigateAfterSave(reviewId: string) {
   min-height: 120px;
 }
 
+/* 한줄평: 내용에 맞춰 자동 높이(JS) — 수동 리사이즈·스크롤 없이 전체 문장이 보이게 */
+.review-form__summary {
+  resize: none;
+  overflow: hidden;
+  line-height: 1.45;
+}
+
 .review-form__counter {
   font-size: 11px;
   color: var(--ink-400);
@@ -1078,7 +1100,8 @@ function navigateAfterSave(reviewId: string) {
   bottom: 0;
   background: var(--color-bg);
   margin: 0 -16px;
-  padding: 12px 16px;
+  /* 탭바가 없는 몰입형 화면에서 저장 버튼이 홈 인디케이터에 가리지 않도록 safe-area 반영 */
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
 }
 
 .review-form__submit {

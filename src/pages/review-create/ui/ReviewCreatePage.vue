@@ -3,14 +3,8 @@ import ReviewCreateForm from '@/features/review-create/ui/ReviewCreateForm.vue'
 </script>
 
 <template>
+  <!-- 몰입형 위자드: 별도 페이지 제목 없이 위자드 헤더 카드가 제목 역할을 함 -->
   <div class="review-create">
-    <h2 class="review-create__title">리뷰 작성</h2>
     <ReviewCreateForm />
   </div>
 </template>
-
-<style scoped>
-.review-create__title {
-  margin-bottom: 20px;
-}
-</style>
