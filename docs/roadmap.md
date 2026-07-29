@@ -243,8 +243,8 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 
 ## 현재 상태 기록 (수동 업데이트)
 
-- 현재 Phase: **Phase 14 완료** (리뷰 작성 플로우 마감 품질 — 탭바 숨김·한줄평 textarea·막대 브랜드색·중복 제목 정리)
-- 마지막 완료 PR: feat: 리뷰 작성 플로우 마감 품질 개선 4종 (#77)
+- 현재 Phase: **Phase 15 완료** (접근성·상태 유지 — 폼 키보드/ARIA·목록 필터 URL 유지·스크롤바 정리)
+- 마지막 완료 PR: style: 전역 스크롤바 얇게 + 화살표 제거 (#78) — 같은 회차 머지: #79, #80
 - 참고: #41~#50(shared 유틸·StatCard 정리·v2 폴리시·페이지네이션·스포일러 노출 유지·작성자 프로필)은 roadmap 미반영분으로 별도 정리 필요
 
 ### 완료된 작업 요약
@@ -426,12 +426,23 @@ Claude Code는 **아래 Phase 중 현재 프로젝트가 어디에 속하는지 
 - 세부평가 막대 채움색 `--ink-1000`(검정) → 브랜드색(LevelSelect): 디딤돌·칩·토글과의 시각 불일치 정리 — PR #77
 - 작성 위자드 상단 중복 제목 정리: create 모드는 위자드 카드를 단일 제목으로 사용(페이지 h2·섹션 헤더 제거), edit 모드는 섹션 헤더 유지 — PR #77
 
+#### Phase 15 — 접근성·상태 유지 완료
+- 전역 `:focus-visible` 포커스 링 기본선 도입(global.css): 키보드 이동 시에만 표시, 마우스 클릭 시에는 미표시 — PR #79
+- BaseSelect 키보드·ARIA 완성: `role=combobox/listbox/option` + `aria-expanded`/`aria-selected`/`aria-activedescendant`, ↑↓·Home/End·Enter/Space·Esc 조작. 네이티브 select 대비 접근성 회귀 해소 — PR #79
+- 디딤돌 평점(TrailRatingInput)·세부평가(LevelSelect) radiogroup roving tabindex + 화살표/Home/End 키보드 평가 — PR #79
+- BigToggle `role=radiogroup`+`aria-checked`+화살표 이동, AppChip·장르 칩 `aria-pressed`, AppStepper 값 변경 `aria-live`, PosterPicker `:focus-visible` 링 — PR #79
+- 목록 탭·필터 상태 URL 쿼리 동기화(`tab`/`q`/`region`/`grade`/`sort`): 새로고침·상세에서 뒤로가기 시 초기화되던 문제 해소, 필터된 목록 링크 공유 가능. 기본값 생략·`replace` 사용·검색어 300ms 디바운스 — PR #80
+- 전역 스크롤바 얇게(8px) + 위아래 화살표 버튼 제거. Chromium 121+에서 표준 `scrollbar-*` 병행 선언 시 `::-webkit-scrollbar`가 무시되는 문제를 `@supports not selector(...)`로 회피 — PR #78
+
 ### 미완료 항목
 - [x] README 정리 — Phase 6
 - [ ] Vercel 배포 최종 확인
 - [ ] UX 라이팅 토스화 잔여 화면: 로그인/레이아웃, 리뷰 목록, 리뷰 작성/수정, 방 검색, 프로필, 공유/정책, 작성자 프로필 — Phase 10
 - [ ] #41~#50 roadmap/handoff 미반영분 백필
-- [ ] 접근성 묶음 — 전역 `:focus-visible`, BaseSelect/디딤돌 키보드·ARIA, BigToggle/AppChip `aria-pressed` (#77 범위 제외, `feature/a11y-form-controls` 브랜치에서 작업 중·미머지)
+- [ ] 폼 컨트롤 그룹 접근명 연결 — BigToggle/BaseSelect의 `ariaLabel`/`label` prop을 ReviewCreateForm에서 `aria-labelledby`로 연결 (#79 범위 제외)
+- [ ] '전체' 탭 서버 측 필터링 — 현재 클라이언트 필터라 필터 시 '더 보기'가 숨겨짐 (#80 범위 제외)
+- [ ] 목록 뒤로가기 시 스크롤 위치 복원 (#80 범위 제외)
+- [ ] 스크롤바 실제 Edge 시각 확인 — headless 캡처 불가로 미검증 (#78)
 - [ ] 카피 어미 통일 — placeholder `~선택하세요` ↔ 에러 `~선택해 주세요`, 위자드 타이틀 `~하셨어요?`/`~하시겠어요?` (#77 범위 제외)
 - [ ] PhotoUploader — 초과·12MB 오류 시 조용한 손실 피드백 추가, `createObjectURL` 미해제 누수 수정 (#77 범위 제외)
 - [ ] 터치 타깃 확대 — 장르칩(~30px)·디딤돌(36px)·사진 제거 ×버튼(18px) (#77 범위 제외)

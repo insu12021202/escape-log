@@ -137,6 +137,9 @@
 - 별점 전면 폐기 → "길" 체계로 통일: `rating`(1~5)과 1:1인 **5단계 사다리(흙길/흙풀길/풀길/풀꽃길/꽃길)** 를 도입해 입력(작성 폼 디딤돌 선택)·표시(카드/상세/타임라인 칩+도트)·필터("풀길 이상" 등)·정렬(꽃길순/흙길순)·통계(길 분포, 평균 길) 전부 교체. 보조지표(1~5)는 길 의미가 아니므로 별 대신 세그먼트 바 입력(`shared/ui/LevelSelect`). `StarRating` 컴포넌트·`--color-star` 토큰 삭제. DB는 `overall_rating` 그대로.
 - 재미 등급("길") 표시 체계 도입: 방탈출 업계 은어를 차용해 `rating`(1~5)을 **꽃길(4~5)/풀길(3)/흙길(1~2)** 3단계로 표시. **5점 + 재방문 의사 → 인생테마**(꽃길 특별형). 신규 DB 컬럼 없이 `rating`에서 파생하는 순수 로직(`entities/review/lib/trail-grade.ts`가 SSOT). 목록의 "내 기록" 탭은 이 등급으로 색을 입힌 **여정 타임라인**으로 표현, "전체" 탭은 카드 구조를 유지하되 등급 칩만 공통 적용(성공/실패 시각은 그대로 유지).
 
+- 목록 필터 상태의 단일 소스: **URL 쿼리**(`tab`/`q`/`region`/`grade`/`sort`). 컴포넌트 `ref`만 쓰면 새로고침·상세에서 뒤로가기 때마다 초기화돼 조합을 다시 만들어야 했다. localStorage 대신 쿼리를 택한 이유는 뒤로가기 복원과 **필터된 목록 링크 공유**까지 함께 되기 때문. 기본값(내 기록 탭·빈 필터)은 쿼리에서 생략해 평소 URL은 `/` 유지, 히스토리 오염 방지를 위해 `push`가 아닌 `replace`, 검색어는 300ms 디바운스. 알 수 없는 값은 조용히 기본값으로 폴백 (PR #80).
+- 커스텀 폼 컨트롤 접근성 원칙: UI 라이브러리를 쓰지 않아 네이티브가 공짜로 주는 접근성을 직접 채워야 한다. 커스텀 위젯은 **WAI-ARIA 표준 패턴을 그대로 따른다** — 셀렉트=combobox+listbox(↑↓/Home/End/Enter/Esc), 단계 선택=radiogroup+roving tabindex(화살표 이동), 토글=`aria-pressed`. 포커스 표시는 `:focus`가 아닌 `:focus-visible`로 통일해 마우스 클릭 시에는 링이 뜨지 않게 한다 (PR #79).
+
 ---
 
 ## 8. HANDOFF CHECKLIST
@@ -223,7 +226,14 @@
 - [x] 한줄평 input → 자동 확장 textarea (100자 잘림 해소) (PR #77)
 - [x] 세부평가 막대 채움색 검정 → 브랜드색 통일 (PR #77)
 - [x] 작성 위자드 상단 중복 제목 정리 (create 단일 제목, edit 섹션 헤더 유지) (PR #77)
-- [ ] 접근성 묶음 — 전역 `:focus-visible`, BaseSelect·디딤돌 키보드/ARIA, BigToggle·AppChip `aria-pressed` (작업 중, 미머지)
+- [x] 전역 `:focus-visible` 포커스 링 (PR #79)
+- [x] BaseSelect 키보드 조작 + combobox/listbox ARIA (PR #79)
+- [x] 디딤돌·세부평가 radiogroup roving tabindex + 화살표 키 평가 (PR #79)
+- [x] BigToggle·AppChip·AppStepper·PosterPicker 상태 ARIA/포커스 보강 (PR #79)
+- [x] 목록 탭·필터 상태 URL 쿼리 유지 (새로고침·뒤로가기·링크 공유) (PR #80)
+- [x] 전역 스크롤바 얇게 + 화살표 버튼 제거 (PR #78)
+- [ ] 폼 컨트롤 그룹 접근명 — `aria-labelledby` 연결 (PR #79 범위 제외)
+- [ ] '전체' 탭 서버 측 필터링 + 목록 스크롤 위치 복원 (PR #80 범위 제외)
 - [ ] 카피 어미 통일 — placeholder/에러/위자드 타이틀 종결어미 불일치
 - [ ] PhotoUploader — 초과·용량 초과 시 손실 피드백 + `createObjectURL` 해제
 - [ ] 터치 타깃 확대 — 장르칩·디딤돌·사진 제거 버튼
