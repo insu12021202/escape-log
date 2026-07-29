@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { fetchReviews, fetchReviewsByUser } from "@/entities/review/api";
 import { fetchAllRooms } from "@/entities/room/api";
 import type { JourneyPoint, Review } from "@/entities/review/types";
@@ -27,15 +28,43 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 
 type Tab = "mine" | "all";
-const activeTab = ref<Tab>("mine");
-
-const searchQuery = ref("");
-const regionFilter = ref("");
-const gradeFilter = ref<Set<TrailGrade>>(new Set());
-const sortOrder = ref<"" | "asc" | "desc">("");
 
 // 재미 등급 필터 — 색 도트 + 쉬운 말 병기 토글 칩 (다중 선택)
 const gradeChips: TrailGrade[] = ["flower", "grass", "dirt"];
+
+/**
+ * 탭·필터 상태는 URL 쿼리를 단일 소스로 삼는다.
+ * ref만 쓰면 새로고침·상세에서 뒤로가기 시 전부 초기화돼 다시 조작해야 했다.
+ * 쿼리로 두면 새로고침·뒤로가기 유지에 더해 필터된 목록을 링크로 공유할 수도 있다.
+ */
+const route = useRoute();
+const router = useRouter();
+
+function readString(key: string) {
+  const raw = route.query[key];
+  return typeof raw === "string" ? raw : "";
+}
+
+const activeTab = ref<Tab>(readString("tab") === "all" ? "all" : "mine");
+const searchQuery = ref(readString("q"));
+const regionFilter = ref(readString("region"));
+const gradeFilter = ref<Set<TrailGrade>>(
+  new Set(
+    readString("grade")
+      .split(",")
+      // 손으로 고친 URL·구버전 링크의 알 수 없는 값은 조용히 버린다
+      .filter((g): g is TrailGrade =>
+        (gradeChips as string[]).includes(g),
+      ),
+  ),
+);
+const sortOrder = ref<"" | "asc" | "desc">(
+  readString("sort") === "asc"
+    ? "asc"
+    : readString("sort") === "desc"
+      ? "desc"
+      : "",
+);
 
 function toggleGrade(grade: TrailGrade) {
   const next = new Set(gradeFilter.value);
@@ -120,11 +149,42 @@ function clearFilters() {
 
 function switchTab(tab: Tab) {
   activeTab.value = tab;
-  searchQuery.value = "";
-  regionFilter.value = "";
-  gradeFilter.value = new Set();
-  sortOrder.value = "";
+  clearFilters();
 }
+
+// ── URL 쿼리 동기화 ──
+
+/** 기본값인 항목은 쿼리에서 빼 URL을 짧게 유지한다 */
+const filterQuery = computed<Record<string, string>>(() => {
+  const q: Record<string, string> = {};
+  if (activeTab.value !== "mine") q.tab = activeTab.value;
+  if (searchQuery.value.trim()) q.q = searchQuery.value.trim();
+  if (regionFilter.value) q.region = regionFilter.value;
+  if (gradeFilter.value.size)
+    q.grade = gradeChips.filter((g) => gradeFilter.value.has(g)).join(",");
+  if (sortOrder.value) q.sort = sortOrder.value;
+  return q;
+});
+
+// 검색어는 타이핑마다 라우팅하지 않도록 잠깐 모아서 반영
+let syncTimer: ReturnType<typeof setTimeout> | undefined;
+
+function syncQueryToUrl() {
+  const next = filterQuery.value;
+  const current = route.query;
+  const sameKeyCount = Object.keys(current).length === Object.keys(next).length;
+  if (sameKeyCount && Object.entries(next).every(([k, v]) => current[k] === v))
+    return;
+  // replace — 필터 조작이 뒤로가기 기록을 채우면 목록 이탈이 어려워진다
+  router.replace({ query: next }).catch(() => {});
+}
+
+watch(filterQuery, () => {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncQueryToUrl, 300);
+});
+
+onUnmounted(() => clearTimeout(syncTimer));
 
 // 페이지네이션 — 초기 50건 fetch, '더 보기'로 50건씩 추가.
 const PAGE_SIZE = 50;
