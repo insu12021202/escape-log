@@ -172,6 +172,13 @@ select {
   font-size: 1rem;
 }
 
+/* 키보드 포커스 표시 — 마우스 클릭엔 안 나오고 키보드 이동 시에만 (a11y 기본선).
+ * outline:none으로 이를 지운 커스텀 컴포넌트는 각자 :focus-visible를 다시 정의한다. */
+:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
 /* 앱 UI(버튼·링크·탭·라벨) 탭 시 텍스트 선택(파란 배경) 방지 — 앱 느낌.
  * 읽기 콘텐츠(본문)·입력칸은 아래에서 선택 가능하게 되돌린다. */
 button,

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, nextTick } from 'vue'
+
 type IconKind = 'check' | 'cross'
 
 interface ToggleOption {
@@ -8,26 +10,56 @@ interface ToggleOption {
   accent?: string
 }
 
-defineProps<{
+const props = defineProps<{
   modelValue: string
   options: ToggleOption[]
+  /** radiogroup 라벨 (스크린리더용) */
+  label?: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
 
+const rootRef = ref<HTMLElement | null>(null)
+
 function select(value: string) {
   emit('update:modelValue', value)
+}
+
+/** roving tabindex: 선택 옵션(없으면 첫 옵션)만 Tab 도달 가능 */
+function tabindexFor(value: string) {
+  const idx = props.options.findIndex((o) => o.value === props.modelValue)
+  const activeValue = idx >= 0 ? props.modelValue : props.options[0]?.value
+  return value === activeValue ? 0 : -1
+}
+
+function onKey(e: KeyboardEvent) {
+  const idx = props.options.findIndex((o) => o.value === props.modelValue)
+  let nextIdx: number
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextIdx = idx < 0 ? 0 : Math.min(props.options.length - 1, idx + 1)
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') nextIdx = idx < 0 ? 0 : Math.max(0, idx - 1)
+  else return
+  e.preventDefault()
+  const next = props.options[nextIdx]
+  if (!next) return
+  emit('update:modelValue', next.value)
+  nextTick(() => {
+    const btns = rootRef.value?.querySelectorAll<HTMLElement>('.big-toggle__opt')
+    btns?.[nextIdx]?.focus()
+  })
 }
 </script>
 
 <template>
-  <div class="big-toggle">
+  <div ref="rootRef" class="big-toggle" role="radiogroup" :aria-label="label">
     <button
       v-for="opt in options"
       :key="opt.value"
       type="button"
+      role="radio"
+      :aria-checked="modelValue === opt.value"
+      :tabindex="tabindexFor(opt.value)"
       class="big-toggle__opt"
       :class="{ 'big-toggle__opt--active': modelValue === opt.value }"
       :style="
@@ -36,6 +68,7 @@ function select(value: string) {
           : undefined
       "
       @click="select(opt.value)"
+      @keydown="onKey"
     >
       <span v-if="opt.icon" class="big-toggle__icon" aria-hidden="true">
         <svg

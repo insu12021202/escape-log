@@ -22,6 +22,7 @@ function onClick() {
     class="app-chip"
     :class="{ 'app-chip--active': active }"
     :disabled="disabled"
+    :aria-pressed="active"
     @click="onClick"
   >
     <slot />

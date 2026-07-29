@@ -182,8 +182,12 @@ function getPreviewUrl(file: File): string {
   cursor: not-allowed;
 }
 
-.poster-picker:focus {
-  outline: none;
+/* 키보드 포커스 표시 — Ctrl+V 붙여넣기 영역이 포커스됐음을 알 수 있게.
+   마우스 클릭(:focus)엔 안 나오고 키보드 이동(:focus-visible)에만. */
+.poster-picker:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
 }
 
 .poster-picker__add-icon {
